@@ -1,0 +1,2 @@
+2025-09-02 17:21:03 [ERROR]: 데이터베이스 쿼리 실패 | {"error":"","query":"SELECT * FROM personal_info ORDER BY id DESC LIMIT 1","params":[],"duration":"6ms"}
+2025-09-02 17:21:55 [ERROR]: 데이터베이스 쿼리 실패 | {"error":"","query":"SELECT * FROM personal_info ORDER BY id DESC LIMIT 1","params":[],"duration":"5ms"}
