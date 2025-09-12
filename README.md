@@ -1,6 +1,6 @@
 # 🚀 Portfolio Project
 
-![Portfolio Preview](./portfolio-next/public/images/portfolio-preview.png)
+![Portfolio Preview](https://github.com/seungwoo505/Portfolio2/blob/main/image/mainImage.png)
 
 **Next.js + Express.js 풀스택 포트폴리오 웹사이트**
 
@@ -79,8 +79,6 @@ npm run dev
 
 ## 📁 프로젝트 구조
 
-![Architecture](./portfolio-next/public/images/architecture.png)
-
 ```
 Portfolio2/
 ├── portfolio-next/     # Next.js 프론트엔드
@@ -102,7 +100,8 @@ Portfolio2/
 
 ## ✨ 주요 기능
 
-![Homepage](./portfolio-next/public/images/homepage.png) ![Admin Dashboard](./portfolio-next/public/images/admin-dashboard.png)
+![Homepage](https://github.com/seungwoo505/Portfolio2/blob/main/image/mainImage.png)
+![Admin Dashboard](https://github.com/seungwoo505/Portfolio2/blob/main/image/adminPage.png)
 
 ### 🏠 포트폴리오
 
