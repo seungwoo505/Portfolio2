@@ -1,0 +1,35 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/seungwoo/portfolio-server/logs/.c297364d0ea869da1cd47cc5a83d9f6b30d4e1dc-audit.json",
+    "files": [
+        {
+            "date": 1756801263403,
+            "name": "/Users/seungwoo/portfolio-server/logs/2025-09-02.log",
+            "hash": "56893423946ca468cbad6f2172067268682b43b1967dcf57ddf2e879eeb31705"
+        },
+        {
+            "date": 1757056796409,
+            "name": "/Users/seungwoo/portfolio-server/logs/2025-09-05.log",
+            "hash": "f3ca215c308114daf59572cc5649b549794c10bb6db6f1078308bb3393d736c1"
+        },
+        {
+            "date": 1757487426339,
+            "name": "/Users/seungwoo/portfolio-server/logs/2025-09-10.log",
+            "hash": "9af00938a54aea15e538fdd8c648d37e351eb78635db6ab2fffad5fc54d301de"
+        },
+        {
+            "date": 1757580092487,
+            "name": "/Users/seungwoo/portfolio-server/logs/2025-09-11.log",
+            "hash": "b1dcdc7efcf4d83235d5d74cd9f87c0f77c65cd0ccdade48cfef8a906e08d1a6"
+        },
+        {
+            "date": 1757646535128,
+            "name": "/Users/seungwoo/portfolio-server/logs/2025-09-12.log",
+            "hash": "2d7315a537b45765a9f32d82eab6a7d2e6450557abddbdaeb4d12ca209fede8b"
+        }
+    ],
+    "hashType": "sha256"
+}
