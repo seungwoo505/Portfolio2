@@ -27,6 +27,7 @@
 - **Features**: 블로그, 프로젝트 포트폴리오, 관리자 대시보드
 - **Deployment**: 정적 사이트 생성 + API 서버
 - **Live Demo**: [https://seungwoo.i234.me](https://seungwoo.i234.me)
+- **서버 운영 시간** : 08:00 ~ 23:59
 
 ## 🛠 기술 스택
 
