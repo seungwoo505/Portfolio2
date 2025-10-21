@@ -153,7 +153,6 @@ pm2 start server.js
 
 ### 상세 문서
 
-- [🎨 프론트엔드 문서](./portfolio-next/README.md)
 - [🔧 백엔드 문서](./portfolio-server/README.md)
 - [🔐 관리자 가이드](./portfolio-server/ADMIN_GUIDE.md)
 - [🚀 배포 가이드](./portfolio-server/DEPLOYMENT_GUIDE.md)
