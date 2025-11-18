@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "setup:db": "node setup-database.js",
+    "migrate:ip": "node run-ip-useragent-migration.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

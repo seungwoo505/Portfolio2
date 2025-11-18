@@ -372,7 +372,10 @@ const Projects = {
     },
 
     async create(data) {
-        const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        
+        // project_url을 demo_url로 매핑 (프론트엔드 호환성)
+        const finalDemoUrl = demo_url || project_url;
         
         // 슬러그 생성 (제목 기반)
         const slug = this.generateSlug(title);
@@ -388,7 +391,7 @@ const Projects = {
             meta_description || null,
             thumbnail_image || null,
             featured_image || null,
-            demo_url || null,
+            finalDemoUrl || null,
             github_url || null,
             start_date || null,
             end_date || null,
@@ -413,7 +416,10 @@ const Projects = {
     },
 
     async update(id, data) {
-        const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        
+        // project_url을 demo_url로 매핑 (프론트엔드 호환성)
+        const finalDemoUrl = demo_url || project_url;
         
         // 슬러그 생성 (제목이 있을 때만)
         const slug = title ? this.generateSlug(title) : null;
@@ -461,7 +467,7 @@ const Projects = {
         if (meta_description !== undefined) updateFields.push('meta_description = ?'), updateValues.push(meta_description);
         if (thumbnail_image !== undefined) updateFields.push('thumbnail_image = ?'), updateValues.push(thumbnail_image);
         if (featured_image !== undefined) updateFields.push('featured_image = ?'), updateValues.push(featured_image);
-        if (demo_url !== undefined) updateFields.push('demo_url = ?'), updateValues.push(demo_url);
+        if (finalDemoUrl !== undefined) updateFields.push('demo_url = ?'), updateValues.push(finalDemoUrl);
         if (github_url !== undefined) updateFields.push('github_url = ?'), updateValues.push(github_url);
         if (start_date !== undefined) updateFields.push('start_date = ?'), updateValues.push(start_date);
         if (end_date !== undefined) updateFields.push('end_date = ?'), updateValues.push(end_date);
