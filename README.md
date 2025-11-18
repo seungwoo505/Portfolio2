@@ -36,6 +36,7 @@
 - **TypeScript** - 타입 안전성
 - **Tailwind CSS** - 유틸리티 우선 CSS
 - **Framer Motion** - 애니메이션
+- **GitHub Repo**: [seungwoo505/portfolio-next](https://github.com/seungwoo505/portfolio-next) (프론트엔드 원격 저장소)
 
 ### Backend
 
