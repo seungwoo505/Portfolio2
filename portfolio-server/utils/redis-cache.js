@@ -2,12 +2,20 @@ const redis = require('redis');
 const logger = require('../log');
 
 class RedisCache {
+    /**
+     * @description constructor for Redis Cache Util.
+     * @returns {any} 처리 결과
+     */
     constructor() {
         this.client = null;
         this.isConnected = false;
         this.init();
     }
 
+    /**
+     * @description init for Redis Cache Util.
+     * @returns {Promise<any>} 처리 결과
+     */
     async init() {
         try {
             const redisConfig = {
@@ -53,6 +61,11 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description get for Redis Cache Util.
+      * @param {*} key 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async get(key) {
         if (!this.isConnected || !this.client) {
             return null;
@@ -67,6 +80,13 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description set for Redis Cache Util.
+      * @param {*} key 입력값
+      * @param {*} value 입력값
+      * @param {*} ttl 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async set(key, value, ttl = 3600) {
         if (!this.isConnected || !this.client) {
             return false;
@@ -82,6 +102,11 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description del for Redis Cache Util.
+      * @param {*} key 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async del(key) {
         if (!this.isConnected || !this.client) {
             return false;
@@ -96,6 +121,11 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description del Pattern for Redis Cache Util.
+      * @param {*} pattern 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async delPattern(pattern) {
         if (!this.isConnected || !this.client) {
             return false;
@@ -113,6 +143,10 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description flush for Redis Cache Util.
+     * @returns {Promise<any>} 처리 결과
+     */
     async flush() {
         if (!this.isConnected || !this.client) {
             return false;
@@ -127,6 +161,10 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description Retrieves Redis Cache Util Stats.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getStats() {
         if (!this.isConnected || !this.client) {
             return { connected: false };
@@ -147,6 +185,10 @@ class RedisCache {
         }
     }
 
+    /**
+     * @description disconnect for Redis Cache Util.
+     * @returns {Promise<any>} 처리 결과
+     */
     async disconnect() {
         if (this.client && this.isConnected) {
             await this.client.quit();

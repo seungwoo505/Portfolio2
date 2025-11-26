@@ -1,6 +1,10 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const Skills = {
+    /**
+     * @description Retrieves Skills Model All With Categories.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getAllWithCategories() {
         return await executeQuery(`
             SELECT s.*, sc.name as category_name 
@@ -10,6 +14,10 @@ const Skills = {
         `);
     },
 
+    /**
+     * @description Retrieves Skills Model Categories.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getCategories() {
         return await executeQuery(`
             SELECT sc.*, COUNT(s.id) as skill_count
@@ -20,6 +28,10 @@ const Skills = {
         `);
     },
 
+    /**
+     * @description Retrieves Skills Model Featured.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getFeatured() {
         return await executeQuery(`
             SELECT s.*, sc.name as category_name 
@@ -30,6 +42,11 @@ const Skills = {
         `);
     },
 
+    /**
+     * @description Creates Skills Model Skill.
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async createSkill(data) {
         const { category_id, name, proficiency_level, display_order, is_featured } = data;
         const query = `
@@ -40,6 +57,11 @@ const Skills = {
         return result.insertId;
     },
 
+    /**
+     * @description Creates Skills Model Category.
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async createCategory(data) {
         const { name, description, display_order } = data;
         const query = `
@@ -50,6 +72,12 @@ const Skills = {
         return result.insertId;
     },
 
+    /**
+     * @description Updates Skills Model Skill.
+      * @param {*} id 입력값
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async updateSkill(id, data) {
         const { category_id, name, proficiency_level, display_order, is_featured } = data;
         const query = `
@@ -62,6 +90,11 @@ const Skills = {
         return await this.getSkillById(id);
     },
 
+    /**
+     * @description Retrieves Skills Model Skill By Id.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getSkillById(id) {
         return await executeQuerySingle(`
             SELECT s.*, sc.name as category_name 
@@ -71,6 +104,11 @@ const Skills = {
         `, [id]);
     },
 
+    /**
+     * @description Deletes Skills Model Skill.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async deleteSkill(id) {
         await executeQuery('DELETE FROM skills WHERE id = ?', [id]);
     },
@@ -81,6 +119,11 @@ const Skills = {
         `, [name]);
     },
 
+    /**
+     * @description Creates Skills Model Category.
+      * @param {*} name 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async createCategory(name) {
         const query = `
             INSERT INTO skill_categories (name, display_order)
@@ -90,6 +133,11 @@ const Skills = {
         return result.insertId;
     },
 
+    /**
+     * @description Deletes Skills Model Category.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async deleteCategory(id) {
         await executeQuery('DELETE FROM skill_categories WHERE id = ?', [id]);
     },
@@ -100,6 +148,12 @@ const Skills = {
         `, [categoryId]);
     },
 
+    /**
+     * @description Retrieves Skills Model By Display Order.
+      * @param {*} displayOrder 입력값
+      * @param {*} excludeId 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getByDisplayOrder(displayOrder, excludeId = null) {
         let query = `
             SELECT id, name, display_order FROM skills WHERE display_order = ? AND is_featured = TRUE

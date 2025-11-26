@@ -3,6 +3,13 @@ const { v4: uuidv4 } = require('uuid');
 const CacheUtils = require('../utils/cache');
 
 const BlogPosts = {
+    /**
+     * @description 블로그 글 목록을 캐시를 활용해 조회한다.
+     * @param {number} [limit=10] 최대 조회 개수
+     * @param {number} [offset=0] 시작 오프셋
+     * @param {boolean} [published_only=true] 게시된 글만 가져올지 여부
+     * @returns {Promise<Array>} 블로그 글 목록
+     */
     async getAll(limit = 10, offset = 0, published_only = true) {
         const cacheKey = CacheUtils.generateKey('blog_posts', 'all', limit, offset, published_only);
         
@@ -30,6 +37,11 @@ const BlogPosts = {
         }, 300); // 5분 캐시
     },
 
+    /**
+     * @description 검색어, 태그, 정렬 조건 등을 이용해 블로그 글을 조회한다.
+     * @param {Object} filters 필터 옵션
+     * @returns {Promise<Array>} 필터링된 블로그 글 목록
+     */
     async getWithFilters(filters = {}) {
         const {
             limit = 10,
@@ -117,6 +129,11 @@ const BlogPosts = {
         }));
     },
 
+    /**
+     * @description 필터 조건에 맞는 블로그 글 개수를 반환한다.
+     * @param {Object} filters 필터 옵션
+     * @returns {Promise<number>} 조건에 해당하는 글 수
+     */
     async getCountWithFilters(filters = {}) {
         const {
             search = '',
@@ -181,6 +198,11 @@ const BlogPosts = {
         return result.total || 0;
     },
 
+    /**
+     * @description 슬러그를 이용해 단일 블로그 글을 조회한다.
+     * @param {string} slug 블로그 글 슬러그
+     * @returns {Promise<Object|null>} 블로그 글 데이터 또는 null
+     */
     async getBySlug(slug) {
         const cacheKey = CacheUtils.generateKey('blog_post', 'slug', slug);
         
@@ -205,6 +227,11 @@ const BlogPosts = {
         }, 600); // 10분 캐시 (개별 포스트는 더 오래 캐시)
     },
 
+    /**
+     * @description 관리자용으로 슬러그 기반 블로그 글을 조회한다.
+     * @param {string} slug 블로그 글 슬러그
+     * @returns {Promise<Object|null>} 블로그 글 데이터 또는 null
+     */
     async getBySlugAdmin(slug) {
         const cacheKey = CacheUtils.generateKey('blog_post_admin', 'slug', slug);
         
@@ -229,6 +256,11 @@ const BlogPosts = {
         }, 600); // 10분 캐시 (개별 포스트는 더 오래 캐시)
     },
 
+    /**
+     * @description ID로 블로그 글을 조회한다.
+     * @param {number} id 블로그 글 ID
+     * @returns {Promise<Object|null>} 블로그 글 데이터 또는 null
+     */
     async getById(id) {
         const post = await executeQuerySingle('SELECT * FROM blog_posts WHERE id = ?', [id]);
         
@@ -247,10 +279,20 @@ const BlogPosts = {
         };
     },
 
+    /**
+     * @description UUID로 블로그 글을 조회한다.
+     * @param {string} uuid 블로그 글 UUID
+     * @returns {Promise<Object|null>} 블로그 글 데이터 또는 null
+     */
     async getByUuid(uuid) {
         return await executeQuerySingle('SELECT * FROM blog_posts WHERE uuid = ?', [uuid]);
     },
 
+    /**
+     * @description 블로그 글을 생성하는 내부 헬퍼.
+     * @param {Object} data 블로그 글 데이터
+     * @returns {Promise<number>} 생성된 글 ID
+     */
     async _create(data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         const uuid = uuidv4();
@@ -274,6 +316,12 @@ const BlogPosts = {
         return result.insertId;
     },
 
+    /**
+     * @description 블로그 글을 업데이트하는 내부 헬퍼.
+     * @param {number} id 블로그 글 ID
+     * @param {Object} data 업데이트할 데이터
+     * @returns {Promise<void>}
+     */
     async _update(id, data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         
@@ -323,6 +371,11 @@ const BlogPosts = {
         return await this.getById(id);
     },
 
+    /**
+     * @description 블로그 글을 삭제하는 내부 헬퍼.
+     * @param {number} id 블로그 글 ID
+     * @returns {Promise<void>}
+     */
     async _delete(id) {
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [id]);
         await executeQuery('DELETE FROM blog_posts WHERE id = ?', [id]);
@@ -330,6 +383,12 @@ const BlogPosts = {
         await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
+    /**
+     * @description 블로그 글과 태그의 관계를 갱신한다.
+     * @param {number} postId 블로그 글 ID
+     * @param {Array<string>} tagNames 태그 이름 목록
+     * @returns {Promise<void>}
+     */
     async updateTags(postId, tagNames) {
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [postId]);
         
@@ -350,14 +409,29 @@ const BlogPosts = {
         await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
+    /**
+     * @description 태그별 사용량을 재계산한다.
+     * @returns {Promise<void>}
+     */
     async updateTagCounts() {
         await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
+    /**
+     * @description 블로그 글 조회수를 1 증가시킨다.
+     * @param {number} id 블로그 글 ID
+     * @returns {Promise<void>}
+     */
     async incrementView(id) {
         await executeQuery('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?', [id]);
     },
 
+    /**
+     * @description 검색어를 기준으로 블로그 글을 찾는다.
+     * @param {string} query 검색어
+     * @param {number} [limit=10] 최대 조회 개수
+     * @returns {Promise<Array>} 검색 결과 목록
+     */
     async search(query, limit = 10) {
         const searchQuery = `
             SELECT bp.*, 
@@ -386,6 +460,13 @@ const BlogPosts = {
         }));
     },
 
+    /**
+     * @description 태그 슬러그로 블로그 글을 조회한다.
+     * @param {string} tagSlug 태그 슬러그
+     * @param {number} [limit=10] 최대 조회 개수
+     * @param {number} [offset=0] 시작 오프셋
+     * @returns {Promise<Array>} 태그에 해당하는 블로그 글 목록
+     */
     async getByTag(tagSlug, limit = 10, offset = 0) {
         const query = `
             SELECT bp.*, 
@@ -406,6 +487,12 @@ const BlogPosts = {
         }));
     },
 
+    /**
+     * @description 추천 블로그 글을 조회한다.
+     * @param {number} [limit=5] 최대 조회 개수
+     * @param {number} [offset=0] 시작 오프셋
+     * @returns {Promise<Array>} 추천 블로그 글 목록
+     */
     async getFeatured(limit = 5, offset = 0) {
         const cacheKey = CacheUtils.generateKey('blog_posts', 'featured', limit, offset);
         
@@ -430,6 +517,11 @@ const BlogPosts = {
         }, 300); // 5분 캐시
     },
 
+    /**
+     * @description 블로그 관련 캐시 키를 무효화한다.
+     * @param {?number} [postId=null] 특정 글 ID가 있다면 해당 캐시만 무효화
+     * @returns {void}
+     */
     invalidateCache(postId = null) {
         if (postId) {
             CacheUtils.delPattern(`blog_post:${postId}:*`);
@@ -440,18 +532,34 @@ const BlogPosts = {
         CacheUtils.delPattern('blog_posts:featured:*');
     },
 
+    /**
+     * @description 블로그 글을 생성하고 캐시를 무효화한다.
+     * @param {Object} data 블로그 글 데이터
+     * @returns {Promise<number>} 생성된 글 ID
+     */
     async create(data) {
         const result = await this._create(data);
         this.invalidateCache();
         return result;
     },
 
+    /**
+     * @description 블로그 글을 수정하고 관련 캐시를 갱신한다.
+     * @param {number} id 블로그 글 ID
+     * @param {Object} data 수정할 데이터
+     * @returns {Promise<void>}
+     */
     async update(id, data) {
         const result = await this._update(id, data);
         this.invalidateCache(id);
         return result;
     },
 
+    /**
+     * @description 블로그 글을 삭제하고 관련 캐시를 무효화한다.
+     * @param {number} id 블로그 글 ID
+     * @returns {Promise<void>}
+     */
     async delete(id) {
         const result = await this._delete(id);
         this.invalidateCache(id);

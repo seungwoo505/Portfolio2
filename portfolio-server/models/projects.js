@@ -2,6 +2,11 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 const CacheUtils = require('../utils/cache');
 
 const Projects = {
+    /**
+     * @description 프로젝트 제목을 기반으로 URL 슬러그를 생성한다.
+     * @param {string} title 생성할 프로젝트 제목
+     * @returns {string} 정규화된 슬러그
+     */
     generateSlug(title) {
         return title
             .toLowerCase()
@@ -10,6 +15,12 @@ const Projects = {
             .replace(/-+/g, '-') // 연속된 하이픈을 하나로
             .trim('-'); // 앞뒤 하이픈 제거
     },
+    /**
+     * @description 모든 프로젝트를 조회하고 연관된 스킬/태그/이미지 정보를 병합한다.
+     * @param {?number} [limit=null] 조회할 최대 개수
+     * @param {number} [offset=0] 조회 시작 오프셋
+     * @returns {Promise<Array>} 프로젝트 목록
+     */
     async getAll(limit = null, offset = 0) {
         return await (async () => {
             let query = `
@@ -46,6 +57,21 @@ const Projects = {
         })();
     },
 
+    /**
+     * @description 다양한 조건을 조합하여 프로젝트를 검색한다.
+     * @param {Object} filters 필터 옵션
+     * @param {?number} [filters.limit=10] 페이지당 개수
+     * @param {number} [filters.offset=0] 시작 오프셋
+     * @param {string} [filters.search] 검색어
+     * @param {string[]} [filters.tags] 태그 슬러그 배열
+     * @param {string[]} [filters.skills] 스킬 이름 배열
+     * @param {?boolean} [filters.featured=null] 추천 여부
+     * @param {('published'|'draft'|'all')} [filters.status='published'] 게시 상태
+     * @param {('created_at'|'title'|'view_count'|'display_order')} [filters.sort='created_at'] 정렬 기준
+     * @param {('asc'|'desc')} [filters.order='desc'] 정렬 방향
+     * @param {boolean} [filters.published_only=true] 게시된 항목만 포함할지 여부
+     * @returns {Promise<Array>} 필터링된 프로젝트 목록
+     */
     async getWithFilters(filters = {}) {
         const {
             limit = 10,
@@ -160,6 +186,11 @@ const Projects = {
         }));
     },
 
+    /**
+     * @description 필터 조건에 맞는 프로젝트 총 개수를 반환한다.
+     * @param {Object} filters 필터 옵션
+     * @returns {Promise<number>} 프로젝트 총 개수
+     */
     async getCountWithFilters(filters = {}) {
         const {
             search = '',
@@ -241,6 +272,11 @@ const Projects = {
         return result.total || 0;
     },
 
+    /**
+     * @description ID 기반으로 프로젝트 상세 정보를 조회한다.
+     * @param {number} id 프로젝트 ID
+     * @returns {Promise<Object|null>} 프로젝트 정보 또는 null
+     */
     async getById(id) {
         const project = await executeQuerySingle(`
             SELECT * FROM projects WHERE id = ?
@@ -277,6 +313,11 @@ const Projects = {
         };
     },
 
+    /**
+     * @description 슬러그 기반으로 프로젝트 상세 정보를 조회한다.
+     * @param {string} slug 프로젝트 슬러그
+     * @returns {Promise<Object|null>} 프로젝트 정보 또는 null
+     */
     async getBySlug(slug) {
         const project = await executeQuerySingle(`
             SELECT * FROM projects WHERE slug = ?
@@ -314,6 +355,12 @@ const Projects = {
         };
     },
 
+    /**
+     * @description 추천 프로젝트 목록을 조회한다.
+     * @param {number} [limit=5] 최대 조회 개수
+     * @param {number} [offset=0] 시작 오프셋
+     * @returns {Promise<Array>} 추천 프로젝트 목록
+     */
     async getFeatured(limit = 5, offset = 0) {
         return await (async () => {
             let query = `
@@ -348,6 +395,11 @@ const Projects = {
         })();
     },
 
+    /**
+     * @description 새 프로젝트를 생성하고 생성된 ID를 반환한다.
+     * @param {Object} data 프로젝트 데이터
+     * @returns {Promise<number>} 신규 프로젝트 ID
+     */
     async create(data) {
         const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
@@ -389,6 +441,12 @@ const Projects = {
         return projectId;
     },
 
+    /**
+     * @description 프로젝트 레코드를 업데이트하고 최신 데이터를 반환한다.
+     * @param {number} id 수정할 프로젝트 ID
+     * @param {Object} data 업데이트할 필드 값
+     * @returns {Promise<Object>} 갱신된 프로젝트 정보
+     */
     async update(id, data) {
         const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
@@ -466,6 +524,11 @@ const Projects = {
         return await this.getById(id);
     },
 
+    /**
+     * @description 프로젝트와 연관된 하위 데이터를 모두 삭제한다.
+     * @param {number} id 삭제할 프로젝트 ID
+     * @returns {Promise<void>}
+     */
     async delete(id) {
         await executeQuery('DELETE FROM project_skills WHERE project_id = ?', [id]);
         await executeQuery('DELETE FROM project_images WHERE project_id = ?', [id]);
@@ -473,10 +536,21 @@ const Projects = {
         await executeQuery('DELETE FROM projects WHERE id = ?', [id]);
     },
 
+    /**
+     * @description 프로젝트 조회수를 1 증가시킨다.
+     * @param {number} id 프로젝트 ID
+     * @returns {Promise<void>}
+     */
     async incrementView(id) {
         await executeQuery('UPDATE projects SET view_count = view_count + 1 WHERE id = ?', [id]);
     },
 
+    /**
+     * @description 프로젝트에 스킬 관계를 추가한다.
+     * @param {number} projectId 프로젝트 ID
+     * @param {number} skillId 스킬 ID
+     * @returns {Promise<void>}
+     */
     async addSkill(projectId, skillId) {
         const query = `
             INSERT IGNORE INTO project_skills (project_id, skill_id)
@@ -485,10 +559,24 @@ const Projects = {
         await executeQuery(query, [projectId, skillId]);
     },
 
+    /**
+     * @description 프로젝트에서 스킬 관계를 제거한다.
+     * @param {number} projectId 프로젝트 ID
+     * @param {number} skillId 스킬 ID
+     * @returns {Promise<void>}
+     */
     async removeSkill(projectId, skillId) {
         await executeQuery('DELETE FROM project_skills WHERE project_id = ? AND skill_id = ?', [projectId, skillId]);
     },
 
+    /**
+     * @description 프로젝트에 이미지를 추가한다.
+     * @param {number} projectId 프로젝트 ID
+     * @param {string} imageUrl 이미지 URL
+     * @param {?string} [altText=null] 대체 텍스트
+     * @param {number} [displayOrder=0] 노출 순서
+     * @returns {Promise<number>} 생성된 이미지 ID
+     */
     async addImage(projectId, imageUrl, altText = null, displayOrder = 0) {
         const query = `
             INSERT INTO project_images (project_id, image_url, alt_text, display_order)
@@ -498,14 +586,31 @@ const Projects = {
         return result.insertId;
     },
 
+    /**
+     * @description 프로젝트 이미지 레코드를 제거한다.
+     * @param {number} imageId 이미지 ID
+     * @returns {Promise<void>}
+     */
     async removeImage(imageId) {
         await executeQuery('DELETE FROM project_images WHERE id = ?', [imageId]);
     },
 
+    /**
+     * @description 프로젝트 이미지 노출 순서를 갱신한다.
+     * @param {number} imageId 이미지 ID
+     * @param {number} displayOrder 변경할 순서
+     * @returns {Promise<void>}
+     */
     async updateImageOrder(imageId, displayOrder) {
         await executeQuery('UPDATE project_images SET display_order = ? WHERE id = ?', [displayOrder, imageId]);
     },
 
+    /**
+     * @description 프로젝트에 연결된 태그 정보를 재생성한다.
+     * @param {number} projectId 프로젝트 ID
+     * @param {Array<string>} tagNames 태그 이름 목록
+     * @returns {Promise<void>}
+     */
     async updateTags(projectId, tagNames) {
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [projectId]);
         

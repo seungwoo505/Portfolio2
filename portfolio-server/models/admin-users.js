@@ -5,6 +5,14 @@ const crypto = require('crypto');
 const logger = require('../log');
 
 const AdminUsers = {
+    /**
+     * @description login for Admin Users Model.
+      * @param {*} username 입력값
+      * @param {*} password 입력값
+      * @param {*} ipAddress 입력값
+      * @param {*} userAgent 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async login(username, password, ipAddress, userAgent) {
         logger.auth('로그인 시도', null, { username, ipAddress, userAgent });
 
@@ -53,6 +61,12 @@ const AdminUsers = {
         };
     },
 
+    /**
+     * @description Generates Admin Users Model Token.
+      * @param {*} user 입력값
+      * @param {*} ipAddress 입력값
+     * @returns {any} 처리 결과
+     */
     generateToken(user, ipAddress) {
         return jwt.sign(
             {
@@ -67,6 +81,12 @@ const AdminUsers = {
         );
     },
 
+    /**
+     * @description Generates Admin Users Model Refresh Token.
+      * @param {*} user 입력값
+      * @param {*} ipAddress 입력값
+     * @returns {any} 처리 결과
+     */
     generateRefreshToken(user, ipAddress) {
         return jwt.sign(
             {
@@ -81,6 +101,11 @@ const AdminUsers = {
         );
     },
 
+    /**
+     * @description verify Token for Admin Users Model.
+      * @param {*} token 입력값
+     * @returns {any} 처리 결과
+     */
     verifyToken(token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -93,6 +118,11 @@ const AdminUsers = {
         }
     },
 
+    /**
+     * @description verify Refresh Token for Admin Users Model.
+      * @param {*} token 입력값
+     * @returns {any} 처리 결과
+     */
     verifyRefreshToken(token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
@@ -105,6 +135,11 @@ const AdminUsers = {
         }
     },
 
+    /**
+     * @description logout for Admin Users Model.
+      * @param {*} token 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async logout(token) {
         try {
             const decoded = this.verifyToken(token);
@@ -124,6 +159,11 @@ const AdminUsers = {
         }
     },
 
+    /**
+     * @description Retrieves Admin Users Model By Id.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getById(id) {
         const user = await executeQuerySingle(`
             SELECT * FROM admin_users WHERE id = ?
@@ -132,6 +172,11 @@ const AdminUsers = {
         return user ? this.sanitizeUser(user) : null;
     },
 
+    /**
+     * @description Retrieves Admin Users Model By Username.
+      * @param {*} username 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getByUsername(username) {
         const user = await executeQuerySingle(`
             SELECT * FROM admin_users WHERE username = ?
@@ -140,6 +185,10 @@ const AdminUsers = {
         return user ? this.sanitizeUser(user) : null;
     },
 
+    /**
+     * @description Retrieves Admin Users Model All.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getAll() {
         const users = await executeQuery(`
             SELECT * FROM admin_users ORDER BY created_at DESC
@@ -148,6 +197,11 @@ const AdminUsers = {
         return users.map(user => this.sanitizeUser(user));
     },
 
+    /**
+     * @description create for Admin Users Model.
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async create(data) {
         const { username, email, password, full_name, role = 'admin' } = data;
 
@@ -169,6 +223,12 @@ const AdminUsers = {
         return result.insertId;
     },
 
+    /**
+     * @description update for Admin Users Model.
+      * @param {*} id 입력값
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async update(id, data) {
         const { username, email, full_name, role, is_active } = data;
 
@@ -195,6 +255,13 @@ const AdminUsers = {
         return await this.getById(id);
     },
 
+    /**
+     * @description change Password for Admin Users Model.
+      * @param {*} id 입력값
+      * @param {*} oldPassword 입력값
+      * @param {*} newPassword 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async changePassword(id, oldPassword, newPassword) {
         const user = await executeQuerySingle(`
             SELECT password_hash FROM admin_users WHERE id = ?
@@ -219,6 +286,11 @@ const AdminUsers = {
 
     },
 
+    /**
+     * @description delete for Admin Users Model.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async delete(id) {
         await executeQuery('DELETE FROM admin_users WHERE id = ?', [id]);
     },
@@ -235,6 +307,12 @@ const AdminUsers = {
         `, [id]);
     },
 
+    /**
+     * @description Handles Admin Users Model Successful Login.
+      * @param {*} id 입력값
+      * @param {*} ipAddress 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async handleSuccessfulLogin(id, ipAddress) {
         await executeQuery(`
             UPDATE admin_users 
@@ -246,12 +324,22 @@ const AdminUsers = {
         `, [ipAddress, id]);
     },
 
+    /**
+     * @description sanitize User for Admin Users Model.
+      * @param {*} user 입력값
+     * @returns {any} 처리 결과
+     */
     sanitizeUser(user) {
         const { password_hash, ...sanitized } = user;
         return sanitized;
     },
 
 
+    /**
+     * @description Retrieves Admin Users Model User Permissions.
+      * @param {*} userId 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getUserPermissions(userId) {
         return await executeQuery(`
             SELECT p.name, p.resource, p.action, p.description
@@ -261,6 +349,12 @@ const AdminUsers = {
         `, [userId]);
     },
 
+    /**
+     * @description has Permission for Admin Users Model.
+      * @param {*} userId 입력값
+      * @param {*} permissionName 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async hasPermission(userId, permissionName) {
         const permission = await executeQuerySingle(`
             SELECT 1

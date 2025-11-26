@@ -2,6 +2,11 @@ const { executeQuery } = require('../database/connection');
 const logger = require('../log');
 
 class ActivityLogs {
+  /**
+   * @description 활동 로그를 생성한다.
+   * @param {Object} data 로그 데이터
+   * @returns {Promise<Object>} 생성된 로그 정보
+   */
   async create(data) {
     const {
       user_id,
@@ -43,6 +48,11 @@ class ActivityLogs {
     }
   }
 
+  /**
+   * @description 필터 조건으로 활동 로그를 조회한다.
+   * @param {Object} filters 검색 조건
+   * @returns {Promise<Array>} 활동 로그 목록
+   */
   async findWithFilters(filters = {}) {
     const {
       search = '',
@@ -123,6 +133,11 @@ class ActivityLogs {
     }
   }
 
+  /**
+   * @description 필터 조건으로 활동 로그 총 개수를 구한다.
+   * @param {Object} filters 검색 조건
+   * @returns {Promise<number>} 활동 로그 수
+   */
   async countWithFilters(filters = {}) {
     const {
       search = '',
@@ -195,6 +210,10 @@ class ActivityLogs {
     }
   }
 
+  /**
+   * @description 활동 로그 현황 통계를 계산한다.
+   * @returns {Promise<{total:number,today:number,uniqueUsers:number,uniqueResources:number}>} 통계 데이터
+   */
   async getStats() {
     try {
       const totalResult = await executeQuery('SELECT COUNT(*) as total FROM activity_logs');
@@ -221,6 +240,12 @@ class ActivityLogs {
     }
   }
 
+  /**
+   * @description 특정 사용자의 활동 로그를 최신순으로 조회한다.
+   * @param {number} userId 사용자 ID
+   * @param {number} [limit=100] 최대 조회 개수
+   * @returns {Promise<Array>} 활동 로그 목록
+   */
   async findByUser(userId, limit = 100) {
     const query = `
       SELECT * FROM activity_logs 
@@ -238,6 +263,11 @@ class ActivityLogs {
     }
   }
 
+  /**
+   * @description 일정 기간이 지난 활동 로그를 삭제한다.
+   * @param {number} [daysToKeep=90] 보관 일수
+   * @returns {Promise<number>} 삭제된 레코드 수
+   */
   async cleanupOldLogs(daysToKeep = 90) {
     const query = `
       DELETE FROM activity_logs 

@@ -1,11 +1,21 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const SiteSettings = {
+    /**
+     * @description Retrieves Site Settings Model All.
+      * @param {*} public_only 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getAll(public_only = false) {
         const whereClause = public_only ? 'WHERE is_public = TRUE' : '';
         return await executeQuery(`SELECT * FROM site_settings ${whereClause} ORDER BY setting_key ASC`);
     },
 
+    /**
+     * @description get for Site Settings Model.
+      * @param {*} key 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async get(key) {
         return await executeQuerySingle('SELECT * FROM site_settings WHERE setting_key = ?', [key]);
     },
@@ -30,6 +40,15 @@ const SiteSettings = {
         return value;
     },
 
+    /**
+     * @description set for Site Settings Model.
+      * @param {*} key 입력값
+      * @param {*} value 입력값
+      * @param {*} type 입력값
+      * @param {*} is_public 입력값
+      * @param {*} description 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async set(key, value, type = 'string', is_public = false, description = null) {
         let stringValue = value;
         if (type === 'json') {
@@ -54,6 +73,12 @@ const SiteSettings = {
         return await this.get(key);
     },
 
+    /**
+     * @description update for Site Settings Model.
+      * @param {*} key 입력값
+      * @param {*} updates 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async update(key, updates) {
         const { setting_value, setting_type, is_public, description } = updates;
         
@@ -79,6 +104,11 @@ const SiteSettings = {
         return await this.get(key);
     },
 
+    /**
+     * @description delete for Site Settings Model.
+      * @param {*} key 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async delete(key) {
         await executeQuery('DELETE FROM site_settings WHERE setting_key = ?', [key]);
     },
@@ -106,6 +136,10 @@ const SiteSettings = {
         }, {});
     },
 
+    /**
+     * @description Retrieves Site Settings Model All Settings.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getAllSettings() {
         const settings = await this.getAll(false);
         
@@ -135,12 +169,22 @@ const SiteSettings = {
         }, {});
     },
 
+    /**
+     * @description set Bulk for Site Settings Model.
+      * @param {*} settings 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async setBulk(settings) {
         for (const { key, value, type, is_public, description } of settings) {
             await this.set(key, value, type, is_public, description);
         }
     },
 
+    /**
+     * @description Retrieves Site Settings Model By Pattern.
+      * @param {*} pattern 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getByPattern(pattern) {
         return await executeQuery(`
             SELECT * FROM site_settings 
