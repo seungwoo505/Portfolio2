@@ -1374,6 +1374,13 @@ const storage = multer.diskStorage({
     }
 });
 
+/**
+ * @description file Filter for Admin Route.
+  * @param {*} req 입력값
+  * @param {*} file 입력값
+  * @param {*} cb 입력값
+ * @returns {any} 처리 결과
+ */
 const fileFilter = (req, file, cb) => {
     const allowedMimes = [
         'image/jpeg',

@@ -2,6 +2,10 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 const logger = require('../log');
 
 const PersonalInfo = {
+    /**
+     * @description get for Personal Info Model.
+     * @returns {Promise<any>} 처리 결과
+     */
     async get() {
         logger.debug('PersonalInfo.get() 호출됨');
         const result = await executeQuerySingle('SELECT * FROM personal_info ORDER BY id DESC LIMIT 1');
@@ -20,6 +24,11 @@ const PersonalInfo = {
         return result;
     },
 
+    /**
+     * @description update for Personal Info Model.
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async update(data) {
         try {
             logger.debug('PersonalInfo.update() 호출됨, 받은 데이터:', data);

@@ -2,6 +2,13 @@ const AdminUsers = require('../models/admin-users');
 const AdminActivityLogs = require('../models/admin-activity-logs');
 const logger = require('../log');
 
+/**
+ * @description authenticate Token for Auth.
+  * @param {*} req 입력값
+  * @param {*} res 입력값
+  * @param {*} next 입력값
+ * @returns {Promise<any>} 처리 결과
+ */
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
@@ -106,6 +113,11 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
+/**
+ * @description require Permission for Auth.
+  * @param {*} permissionName 입력값
+ * @returns {any} 처리 결과
+ */
 const requirePermission = (permissionName) => {
     return async (req, res, next) => {
         try {
@@ -141,6 +153,11 @@ const requirePermission = (permissionName) => {
     };
 };
 
+/**
+ * @description require Role for Auth.
+  * @param {*} roles 입력값
+ * @returns {any} 처리 결과
+ */
 const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.admin) {
@@ -165,6 +182,11 @@ const requireRole = (roles) => {
     };
 };
 
+/**
+ * @description log Activity for Auth.
+  * @param {*} action 입력값
+ * @returns {any} 처리 결과
+ */
 const logActivity = (action) => {
     return async (req, res, next) => {
         const originalSend = res.send;
@@ -255,6 +277,11 @@ const logActivity = (action) => {
                             }
                         }
                         
+                        /**
+                         * @description Retrieves Auth Action Korean Name.
+                          * @param {*} actionName 입력값
+                         * @returns {any} 처리 결과
+                         */
                         const getActionKoreanName = (actionName) => {
                             const actionMap = {
                                 'admin_login': '로그인',
@@ -501,6 +528,11 @@ const logActivity = (action) => {
     };
 };
 
+/**
+ * @description restrict To IPs for Auth.
+  * @param {*} allowedIPs 입력값
+ * @returns {any} 처리 결과
+ */
 const restrictToIPs = (allowedIPs) => {
     return (req, res, next) => {
         const clientIP = req.ip || req.connection.remoteAddress;

@@ -1,6 +1,10 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const Experiences = {
+    /**
+     * @description Retrieves Experiences Model All.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getAll() {
         const results = await executeQuery(`
             SELECT * FROM experiences 
@@ -12,6 +16,11 @@ const Experiences = {
         }));
     },
 
+    /**
+     * @description Retrieves Experiences Model By Type.
+      * @param {*} type 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getByType(type) {
         const results = await executeQuery(`
             SELECT * FROM experiences 
@@ -24,6 +33,11 @@ const Experiences = {
         }));
     },
 
+    /**
+     * @description Retrieves Experiences Model By Id.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async getById(id) {
         const result = await executeQuerySingle('SELECT * FROM experiences WHERE id = ?', [id]);
         if (result) {
@@ -35,6 +49,11 @@ const Experiences = {
         return result;
     },
 
+    /**
+     * @description create for Experiences Model.
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async create(data) {
         const { type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order } = data;
         
@@ -53,6 +72,12 @@ const Experiences = {
         return result.insertId;
     },
 
+    /**
+     * @description update for Experiences Model.
+      * @param {*} id 입력값
+      * @param {*} data 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async update(id, data) {
         const { type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order } = data;
         
@@ -81,6 +106,11 @@ const Experiences = {
         return await this.getById(id);
     },
 
+    /**
+     * @description delete for Experiences Model.
+      * @param {*} id 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async delete(id) {
         await executeQuery('DELETE FROM experiences WHERE id = ?', [id]);
     },
@@ -93,22 +123,44 @@ const Experiences = {
         `);
     },
 
+    /**
+     * @description Retrieves Experiences Model Work.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getWork() {
         return await this.getByType('work');
     },
 
+    /**
+     * @description Retrieves Experiences Model Education.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getEducation() {
         return await this.getByType('education');
     },
 
+    /**
+     * @description Retrieves Experiences Model Volunteer.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getVolunteer() {
         return await this.getByType('volunteer');
     },
 
+    /**
+     * @description Retrieves Experiences Model Certifications.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getCertifications() {
         return await this.getByType('certification');
     },
 
+    /**
+     * @description Updates Experiences Model Display Order.
+      * @param {*} id 입력값
+      * @param {*} displayOrder 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async updateDisplayOrder(id, displayOrder) {
         await executeQuery('UPDATE experiences SET display_order = ?, updated_at = NOW() WHERE id = ?', [displayOrder, id]);
     },

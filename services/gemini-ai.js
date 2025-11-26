@@ -2,6 +2,10 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const logger = require('../log');
 
 class GeminiService {
+    /**
+     * @description constructor for Gemini Ai Service.
+     * @returns {any} 처리 결과
+     */
     constructor() {
         this.apiKey = process.env.GEMINI_API_KEY || null;
         
@@ -309,6 +313,12 @@ ${cleanText}
         }
     }
 
+    /**
+     * @description fallback Summary for Gemini Ai Service.
+      * @param {*} content 입력값
+      * @param {*} maxLength 입력값
+     * @returns {any} 처리 결과
+     */
     fallbackSummary(content, maxLength = 160) {
         logger.debug('fallbackSummary 호출됨, content 길이:', content.length);
         
@@ -337,6 +347,12 @@ ${cleanText}
         return this.summarizeMultipleSentences(sentences, maxLength);
     }
 
+    /**
+     * @description Handles Gemini Ai Service Short Content.
+      * @param {*} text 입력값
+      * @param {*} maxLength 입력값
+     * @returns {any} 처리 결과
+     */
     handleShortContent(text, maxLength) {
         let summary = text.trim();
         
@@ -351,6 +367,11 @@ ${cleanText}
         return summary.substring(0, maxLength);
     }
 
+    /**
+     * @description extract Clean Sentences for Gemini Ai Service.
+      * @param {*} text 입력값
+     * @returns {any} 처리 결과
+     */
     extractCleanSentences(text) {
         return text
             .split(/[.!?]+/)
@@ -362,11 +383,21 @@ ${cleanText}
             .map(s => this.cleanSentence(s));
     }
 
+    /**
+     * @description is Connector Sentence for Gemini Ai Service.
+      * @param {*} sentence 입력값
+     * @returns {any} 처리 결과
+     */
     isConnectorSentence(sentence) {
         const connectors = ['그리고', '또한', '하지만', '그러나', '따라서', '그러므로'];
         return connectors.some(conn => sentence.trim().startsWith(conn));
     }
 
+    /**
+     * @description clean Sentence for Gemini Ai Service.
+      * @param {*} sentence 입력값
+     * @returns {any} 처리 결과
+     */
     cleanSentence(sentence) {
         return sentence.replace(/^\s*[,-]\s*/, '').trim();
     }
@@ -379,6 +410,12 @@ ${cleanText}
         return this.handleShortContent(text, maxLength);
     }
 
+    /**
+     * @description format Single Sentence for Gemini Ai Service.
+      * @param {*} sentence 입력값
+      * @param {*} maxLength 입력값
+     * @returns {any} 처리 결과
+     */
     formatSingleSentence(sentence, maxLength) {
         let formatted = sentence.trim();
         if (!formatted.match(/[.!?]$/)) {
@@ -393,6 +430,12 @@ ${cleanText}
         return formatted;
     }
 
+    /**
+     * @description Finds Gemini Ai Service atural Cut Point.
+      * @param {*} text 입력값
+      * @param {*} maxLength 입력값
+     * @returns {any} 처리 결과
+     */
     findNaturalCutPoint(text, maxLength) {
         if (text.length <= maxLength) return text.length;
         
@@ -407,6 +450,12 @@ ${cleanText}
         return maxLength;
     }
 
+    /**
+     * @description summarize Multiple Sentences for Gemini Ai Service.
+      * @param {*} sentences 입력값
+      * @param {*} maxLength 입력값
+     * @returns {any} 처리 결과
+     */
     summarizeMultipleSentences(sentences, maxLength) {
         const prioritized = this.prioritizeSentences(sentences);
         let summary = '';
@@ -429,6 +478,11 @@ ${cleanText}
         return summary;
     }
 
+    /**
+     * @description prioritize Sentences for Gemini Ai Service.
+      * @param {*} sentences 입력값
+     * @returns {any} 처리 결과
+     */
     prioritizeSentences(sentences) {
         const importantKeywords = [
             '개발', '구현', '사용', '적용', '설계', '최적화', '향상',
@@ -448,6 +502,13 @@ ${cleanText}
             .map(item => item.text);
     }
 
+    /**
+     * @description calculate Sentence Score for Gemini Ai Service.
+      * @param {*} sentence 입력값
+      * @param {*} importantKeywords 입력값
+      * @param {*} isFirst 입력값
+     * @returns {any} 처리 결과
+     */
     calculateSentenceScore(sentence, importantKeywords, isFirst) {
         let score = 0;
         
@@ -462,6 +523,12 @@ ${cleanText}
         return score;
     }
 
+    /**
+     * @description Creates Gemini Ai Service Keyword Based Summary.
+      * @param {*} text 입력값
+      * @param {*} maxLength 입력값
+     * @returns {any} 처리 결과
+     */
     createKeywordBasedSummary(text, maxLength) {
         const words = text.match(/[가-힣A-Za-z]+/g) || [];
         const techKeywords = words.filter(word => 
@@ -475,6 +542,12 @@ ${cleanText}
         return '개발 관련 내용입니다.';
     }
 
+    /**
+     * @description fallback Keywords for Gemini Ai Service.
+      * @param {*} content 입력값
+      * @param {*} maxKeywords 입력값
+     * @returns {any} 처리 결과
+     */
     fallbackKeywords(content, maxKeywords) {
         const cleanText = this.cleanMarkdown(content);
         const techKeywords = this.extractTechKeywords(cleanText, {});
@@ -492,6 +565,12 @@ ${cleanText}
         return allKeywords.slice(0, maxKeywords);
     }
 
+    /**
+     * @description extract Tech Keywords for Gemini Ai Service.
+      * @param {*} text 입력값
+      * @param {*} techKeywords 입력값
+     * @returns {any} 처리 결과
+     */
     extractTechKeywords(text, techKeywords) {
         const techTerms = ['React', 'Next.js', 'JavaScript', 'TypeScript', 'Node.js', 'CSS', 'HTML'];
         return techTerms.filter(term => text.includes(term)).slice(0, 5);
@@ -501,6 +580,12 @@ ${cleanText}
         return text.match(/[가-힣A-Za-z]{3,}/g) || [];
     }
 
+    /**
+     * @description extract Phrases for Gemini Ai Service.
+      * @param {*} text 입력값
+      * @param {*} stopWords 입력값
+     * @returns {any} 처리 결과
+     */
     extractPhrases(text, stopWords) {
         const words = text.match(/[가-힣A-Za-z\s]{6,20}/g) || [];
         return words.filter(phrase => phrase.trim().split(' ').length <= 3).slice(0, 3);
@@ -510,12 +595,23 @@ ${cleanText}
         return keyword && keyword.length >= 2 && keyword.length <= 20;
     }
 
+    /**
+     * @description Retrieves Gemini Ai Service Default Keywords.
+      * @param {*} text 입력값
+     * @returns {any} 처리 결과
+     */
     getDefaultKeywords(text) {
         if (text.includes('React') || text.includes('Next')) return ['React', '웹개발'];
         if (text.includes('개발')) return ['개발', '프로그래밍'];
         return ['기술', '개발'];
     }
 
+    /**
+     * @description parse And Clean Keywords for Gemini Ai Service.
+      * @param {*} keywordsText 입력값
+      * @param {*} maxKeywords 입력값
+     * @returns {any} 처리 결과
+     */
     parseAndCleanKeywords(keywordsText, maxKeywords) {
         const delimiters = /[,\n\r\-•|]/;
         let keywords = keywordsText.split(delimiters)
@@ -528,6 +624,11 @@ ${cleanText}
         return [...new Set(keywords)];
     }
 
+    /**
+     * @description clean Single Keyword for Gemini Ai Service.
+      * @param {*} keyword 입력값
+     * @returns {any} 처리 결과
+     */
     cleanSingleKeyword(keyword) {
         return keyword.replace(/^[\d\.\-\*\+\s]*/, '').replace(/['""`]/g, '').trim();
     }
@@ -537,6 +638,12 @@ ${cleanText}
         return invalid.some(inv => keyword.includes(inv)) || keyword.length < 2;
     }
 
+    /**
+     * @description Generates Gemini Ai Service Summary And Keywords.
+      * @param {*} content 입력값
+      * @param {*} techTags 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async generateSummaryAndKeywords(content, techTags = []) {
         const summary = await this.generateSummary(content, 160, techTags);
         const keywords = await this.extractKeywords(content, 10, techTags);

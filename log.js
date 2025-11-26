@@ -161,18 +161,32 @@ logger.stats = {
         slowRequests: 0
     },
     
+    /**
+     * @description Updates Log Stats.
+      * @param {*} type 입력값
+      * @param {*} value 입력값
+     * @returns {any} 처리 결과
+     */
     updateStats(type, value = 1) {
         if (this.counters.hasOwnProperty(type)) {
             this.counters[type] += value;
         }
     },
     
+    /**
+     * @description reset Stats for Log.
+     * @returns {any} 처리 결과
+     */
     resetStats() {
         Object.keys(this.counters).forEach(key => {
             this.counters[key] = 0;
         });
     },
     
+    /**
+     * @description log Stats for Log.
+     * @returns {any} 처리 결과
+     */
     logStats() {
         logger.info('📊 시스템 통계', {
             stats: this.counters,

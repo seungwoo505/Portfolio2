@@ -2,6 +2,13 @@ const db = require('../db');
 const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 
+/**
+ * @description execute Query for Db Utils Model.
+  * @param {*} query 입력값
+  * @param {*} params 입력값
+  * @param {*} options 입력값
+ * @returns {Promise<any>} 처리 결과
+ */
 const executeQuery = async (query, params = [], options = {}) => {
     const start = Date.now();
     const { useCache = false, cacheKey = null, cacheTTL = 300 } = options;
@@ -59,6 +66,13 @@ const executeQuery = async (query, params = [], options = {}) => {
     }
 };
 
+/**
+ * @description execute Query Single for Db Utils Model.
+  * @param {*} query 입력값
+  * @param {*} params 입력값
+  * @param {*} options 입력값
+ * @returns {Promise<any>} 처리 결과
+ */
 const executeQuerySingle = async (query, params = [], options = {}) => {
     const results = await executeQuery(query, params, options);
     return results[0] || null;
@@ -92,6 +106,11 @@ const executeBatch = async (queries) => {
     }
 };
 
+/**
+ * @description execute Transaction for Db Utils Model.
+  * @param {*} callback 입력값
+ * @returns {Promise<any>} 처리 결과
+ */
 const executeTransaction = async (callback) => {
     const connection = await db.getConnection();
     

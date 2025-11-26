@@ -21,6 +21,13 @@ cache.on('flush', () => {
 });
 
 const CacheUtils = {
+    /**
+     * @description set for Cache Util.
+      * @param {*} key 입력값
+      * @param {*} value 입력값
+      * @param {*} ttl 입력값
+     * @returns {any} 처리 결과
+     */
     set(key, value, ttl = 300) {
         try {
             return cache.set(key, value, ttl);
@@ -30,6 +37,11 @@ const CacheUtils = {
         }
     },
 
+    /**
+     * @description get for Cache Util.
+      * @param {*} key 입력값
+     * @returns {any} 처리 결과
+     */
     get(key) {
         try {
             return cache.get(key);
@@ -39,6 +51,11 @@ const CacheUtils = {
         }
     },
 
+    /**
+     * @description del for Cache Util.
+      * @param {*} key 입력값
+     * @returns {any} 처리 결과
+     */
     del(key) {
         try {
             return cache.del(key);
@@ -48,6 +65,11 @@ const CacheUtils = {
         }
     },
 
+    /**
+     * @description has for Cache Util.
+      * @param {*} key 입력값
+     * @returns {any} 처리 결과
+     */
     has(key) {
         return cache.has(key);
     },
@@ -56,10 +78,19 @@ const CacheUtils = {
         return cache.getStats();
     },
 
+    /**
+     * @description flush for Cache Util.
+     * @returns {any} 처리 결과
+     */
     flush() {
         return cache.flushAll();
     },
 
+    /**
+     * @description del Pattern for Cache Util.
+      * @param {*} pattern 입력값
+     * @returns {any} 처리 결과
+     */
     delPattern(pattern) {
         const keys = cache.keys();
         const regex = new RegExp(pattern);
@@ -77,6 +108,12 @@ const CacheUtils = {
         return deletedCount;
     },
 
+    /**
+     * @description Generates Cache Util Key.
+      * @param {*} prefix 입력값
+      * @param {*} params 입력값
+     * @returns {any} 처리 결과
+     */
     generateKey(prefix, ...params) {
         return `${prefix}:${params.join(':')}`;
     },
@@ -97,6 +134,13 @@ const CacheUtils = {
         }
     },
 
+    /**
+     * @description cache Batch for Cache Util.
+      * @param {*} keys 입력값
+      * @param {*} fetchFunction 입력값
+      * @param {*} ttl 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async cacheBatch(keys, fetchFunction, ttl = 600) {
         const results = {};
         const missingKeys = [];
@@ -127,6 +171,12 @@ const CacheUtils = {
         return results;
     },
 
+    /**
+     * @description warmup Cache for Cache Util.
+      * @param {*} warmupFunctions 입력값
+      * @param {*} ttl 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
     async warmupCache(warmupFunctions, ttl = 600) {
         const promises = warmupFunctions.map(async (func) => {
             try {
