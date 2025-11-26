@@ -3,13 +3,11 @@ const logger = require('../log');
 
 class GeminiService {
     constructor() {
-        // Gemini API 키는 환경변수에서 가져오거나 무료 제한 내에서 사용
         this.apiKey = process.env.GEMINI_API_KEY || null;
         
         if (this.apiKey) {
             logger.debug('🔑 GEMINI_API_KEY 발견:', this.apiKey.substring(0, 10) + '...');
             this.genAI = new GoogleGenerativeAI(this.apiKey);
-            // Gemini 2.0 Flash - 안정적이고 검증된 최신 모델
             this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
             logger.debug('✅ Gemini 2.0 Flash 연결됨 - 최신 AI로 초고속 요약/키워드 생성! 🚀');
             logger.debug('📊 this.model 존재 여부:', !!this.model);
@@ -32,37 +30,28 @@ class GeminiService {
      */
     cleanMarkdown(content) {
         const cleaned = content
-            // 코드 블록 제거
             .replace(/```[\s\S]*?```/g, '')
             .replace(/`([^`]*)`/g, '$1') // 인라인 코드의 내용은 유지
             
-            // 이미지 제거
             .replace(/!\[.*?\]\(.*?\)/g, '')
             
-            // 링크를 텍스트만 남기기
             .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
             
-            // 헤딩을 일반 텍스트로 (헤딩 내용 유지)
             .replace(/#{1,6}\s+(.+)/g, '$1')
             
-            // 강조 마크다운 제거하되 내용 유지
             .replace(/\*\*(.*?)\*\*/g, '$1') // 볼드
             .replace(/\*(.*?)\*/g, '$1') // 이탤릭
             .replace(/~~(.*?)~~/g, '$1') // 취소선
             .replace(/_\_(.*?)_\_/g, '$1') // 언더스코어 볼드
             .replace(/_(.*?)_/g, '$1') // 언더스코어 이탤릭
             
-            // 리스트 마커 제거
             .replace(/^\s*[-*+]\s+/gm, '')
             .replace(/^\s*\d+\.\s+/gm, '')
             
-            // 인용문 마커 제거
             .replace(/^\s*>\s+/gm, '')
             
-            // HTML 태그 제거
             .replace(/<[^>]*>/g, '')
             
-            // 공백 정리
             .replace(/\n{3,}/g, '\n\n') // 과도한 줄바꿈 정리
             .replace(/\s{2,}/g, ' ') // 연속 공백을 하나로
             .trim();
@@ -74,7 +63,6 @@ class GeminiService {
      * 마크다운 텍스트에서 순수 텍스트 추출 (기술 명칭 보호 포함)
      */
     async cleanMarkdownWithProtection(content, techTags = []) {
-        // 기본 기술 명칭 (fallback용)
         let techTerms = [
             'Next.js', 'React.js', 'Vue.js', 'Angular', 'Svelte',
             'Node.js', 'Express.js', 'JavaScript', 'TypeScript',
@@ -84,14 +72,12 @@ class GeminiService {
         ];
 
         try {
-            // 클라이언트에서 전달받은 기술 태그 추가
             if (techTags && techTags.length > 0) {
                 const tagNames = techTags.map(tag => tag.name || tag);
                 techTerms = [...new Set([...techTerms, ...tagNames])];
                 logger.debug('클라이언트 태그와 결합된 기술 명칭:', techTerms.length, '개');
             }
 
-            // DB에서 추가 기술 스택 가져오기 (서버 사이드)
             try {
                 const db = require('../db');
                 const [rows] = await db.execute(`
@@ -112,7 +98,6 @@ class GeminiService {
             logger.debug('기본 기술 명칭 사용 (태그 시스템 연동 실패):', error);
         }
 
-        // 기술 명칭 보호
         const protectedTerms = {};
         let protectedContent = content;
         techTerms.forEach((term, index) => {
@@ -122,37 +107,28 @@ class GeminiService {
         });
 
         const cleaned = protectedContent
-            // 코드 블록 제거
             .replace(/```[\s\S]*?```/g, '')
             .replace(/`([^`]*)`/g, '$1') // 인라인 코드의 내용은 유지
             
-            // 이미지 제거
             .replace(/!\[.*?\]\(.*?\)/g, '')
             
-            // 링크를 텍스트만 남기기
             .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
             
-            // 헤딩을 일반 텍스트로 (헤딩 내용 유지)
             .replace(/#{1,6}\s+(.+)/g, '$1')
             
-            // 강조 마크다운 제거하되 내용 유지
             .replace(/\*\*(.*?)\*\*/g, '$1') // 볼드
             .replace(/\*(.*?)\*/g, '$1') // 이탤릭
             .replace(/~~(.*?)~~/g, '$1') // 취소선
             .replace(/_\_(.*?)_\_/g, '$1') // 언더스코어 볼드
             .replace(/_(.*?)_/g, '$1') // 언더스코어 이탤릭
             
-            // 리스트 마커 제거
             .replace(/^\s*[-*+]\s+/gm, '')
             .replace(/^\s*\d+\.\s+/gm, '')
             
-            // 인용문 마커 제거
             .replace(/^\s*>\s+/gm, '')
             
-            // HTML 태그 제거
             .replace(/<[^>]*>/g, '')
             
-            // 공백 정리
             .replace(/\n{3,}/g, '\n\n') // 과도한 줄바꿈 정리
             .replace(/\s{2,}/g, ' ') // 연속 공백을 하나로
             .trim();
@@ -180,7 +156,6 @@ class GeminiService {
         try {
             logger.debug('🔄 generateSummary try 블록 시작');
             
-            // 기술 명칭 보호와 함께 텍스트 정리 (클라이언트에서 전달받은 태그 사용)
             const { cleanText, protectedTerms } = await this.cleanMarkdownWithProtection(content, techTags);
             
             logger.debug('원본 content 길이:', content.length);
@@ -192,7 +167,6 @@ class GeminiService {
                 throw new Error('Content too short for AI summarization');
             }
 
-            // 10자 이하는 API 호출 없이 바로 fallback 사용 (너무 짧은 경우만)
             if (cleanText.length < 10) {
                 logger.debug('Content too short for Gemini API, using fallback method');
                 return this.fallbackSummary(content, maxLength);
@@ -224,7 +198,6 @@ ${cleanText}
             const response = await result.response;
             let summary = response.text().trim();
 
-            // Gemini API 응답이 비어있거나 너무 짧으면 fallback 사용
             if (!summary || summary.trim().length < 5) {
                 logger.debug('Gemini API 응답이 비어있거나 너무 짧음, fallback 사용');
                 return this.fallbackSummary(content, maxLength);
@@ -233,16 +206,13 @@ ${cleanText}
             logger.debug('Gemini API 원본 응답:', summary);
             logger.debug('보호된 기술 명칭들:', protectedTerms);
 
-            // 플레이스홀더를 실제 기술 명칭으로 복원
             Object.entries(protectedTerms).forEach(([placeholder, originalTerm]) => {
                 summary = summary.replace(new RegExp(placeholder, 'g'), originalTerm);
             });
 
             logger.debug('기술 명칭 복원 후 요약:', summary);
 
-            // 길이 제한 적용 (요약이 너무 길 때만)
             if (summary.length > maxLength) {
-                // 자연스러운 문장 끝점 찾기
                 const truncated = summary.substring(0, maxLength - 3);
                 const lastPeriod = truncated.lastIndexOf('.');
                 const lastExclamation = truncated.lastIndexOf('!');
@@ -257,7 +227,6 @@ ${cleanText}
                 }
             }
 
-            // 요약이 비어있거나 너무 짧으면 fallback 사용
             if (!summary || summary.trim().length < 10) {
                 logger.debug('요약이 너무 짧거나 비어있음, fallback 사용');
                 return this.fallbackSummary(content, maxLength);
@@ -281,14 +250,12 @@ ${cleanText}
         }
 
         try {
-            // 기술 명칭 보호와 함께 텍스트 정리 (클라이언트에서 전달받은 태그 사용)
             const { cleanText, protectedTerms } = await this.cleanMarkdownWithProtection(content, techTags);
             
             if (cleanText.length < 1) {
                 throw new Error('Content too short for keyword extraction');
             }
 
-            // 50자 이하는 API 호출 없이 바로 fallback 사용
             if (cleanText.length < 50) {
                 logger.debug('Content too short for Gemini API, using fallback method');
                 return this.fallbackKeywords(content, maxKeywords);
@@ -325,14 +292,12 @@ ${cleanText}
             logger.debug('Gemini API 키워드 원본 응답:', keywordsText);
             logger.debug('보호된 기술 명칭들:', protectedTerms);
 
-            // 플레이스홀더를 실제 기술 명칭으로 복원
             Object.entries(protectedTerms).forEach(([placeholder, originalTerm]) => {
                 keywordsText = keywordsText.replace(new RegExp(placeholder, 'g'), originalTerm);
             });
 
             logger.debug('기술 명칭 복원 후 키워드:', keywordsText);
 
-            // 키워드 파싱 및 정리
             const keywords = this.parseAndCleanKeywords(keywordsText, maxKeywords);
             
             logger.debug('최종 파싱된 키워드:', keywords);
@@ -344,7 +309,6 @@ ${cleanText}
         }
     }
 
-    // 나머지 메서드들은 원본 그대로 유지
     fallbackSummary(content, maxLength = 160) {
         logger.debug('fallbackSummary 호출됨, content 길이:', content.length);
         
@@ -373,7 +337,6 @@ ${cleanText}
         return this.summarizeMultipleSentences(sentences, maxLength);
     }
 
-    // ... 나머지 모든 fallback 메서드들 ...
     handleShortContent(text, maxLength) {
         let summary = text.trim();
         

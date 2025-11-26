@@ -7,7 +7,6 @@ async function runInterestsMigration() {
     let connection;
     
     try {
-        // 데이터베이스 연결
         connection = await mysql.createConnection({
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
@@ -17,7 +16,6 @@ async function runInterestsMigration() {
 
         logger.debug('✅ 데이터베이스 연결 성공');
 
-        // 1. interests 테이블 생성 마이그레이션
         logger.debug('📖 interests 테이블 생성 마이그레이션 시작...');
         const interestsMigrationPath = path.join(__dirname, 'migrations', 'create-interests-table.sql');
         const interestsMigrationSQL = fs.readFileSync(interestsMigrationPath, 'utf8');
@@ -36,7 +34,6 @@ async function runInterestsMigration() {
 
         logger.debug('✅ interests 테이블 생성 완료!');
 
-        // 2. personal_info 테이블 수정 마이그레이션
         logger.debug('📖 personal_info 테이블 수정 마이그레이션 시작...');
         const personalInfoMigrationPath = path.join(__dirname, 'migrations', 'add-about-and-social-fields-to-personal-info.sql');
         const personalInfoMigrationSQL = fs.readFileSync(personalInfoMigrationPath, 'utf8');
@@ -55,14 +52,11 @@ async function runInterestsMigration() {
 
         logger.debug('✅ personal_info 테이블 수정 완료!');
 
-        // 3. 결과 확인
         logger.debug('🔍 마이그레이션 결과 확인...');
         
-        // interests 테이블 확인
         const [interestsRows] = await connection.execute('SELECT COUNT(*) as count FROM interests');
         logger.debug(`📊 interests 테이블: ${interestsRows[0].count}개 레코드`);
 
-        // personal_info 테이블 구조 확인
         const [personalInfoColumns] = await connection.execute('DESCRIBE personal_info');
         const newColumns = personalInfoColumns.filter(col => 
             ['about', 'github_url', 'linkedin_url', 'twitter_url', 'instagram_url'].includes(col.Field)
@@ -82,5 +76,4 @@ async function runInterestsMigration() {
     }
 }
 
-// 마이그레이션 실행
 runInterestsMigration();

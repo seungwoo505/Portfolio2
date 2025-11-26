@@ -7,7 +7,6 @@ async function runProjectMigration() {
     let connection;
     
     try {
-        // 데이터베이스 연결
         connection = await mysql.createConnection({
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
@@ -17,7 +16,6 @@ async function runProjectMigration() {
 
         logger.debug('✅ 데이터베이스 연결 성공');
 
-        // 마이그레이션 SQL 직접 실행
         const migrationSQL = `
             ALTER TABLE projects 
             ADD COLUMN is_published BOOLEAN DEFAULT FALSE AFTER is_featured;
@@ -25,14 +23,12 @@ async function runProjectMigration() {
 
         logger.debug('📖 마이그레이션 SQL 준비 완료');
 
-        // SQL 실행
         logger.debug('🚀 is_published 필드 추가 중...');
         await connection.execute(migrationSQL);
 
         logger.debug('✅ 마이그레이션 완료!');
         logger.debug('🎯 이제 is_published 필드가 projects 테이블에 추가되었습니다.');
 
-        // 테이블 구조 확인
         logger.debug('🔍 테이블 구조 확인 중...');
         const [columns] = await connection.execute('DESCRIBE projects');
         const isPublishedColumn = columns.find(col => col.Field === 'is_published');
@@ -46,7 +42,6 @@ async function runProjectMigration() {
     } catch (error) {
         logger.error('❌ 마이그레이션 실패:', error);
         
-        // 이미 컬럼이 존재하는 경우 처리
         if (error.code === 'ER_DUP_FIELDNAME') {
             logger.debug('ℹ️ is_published 컬럼이 이미 존재합니다.');
             logger.debug('✅ 마이그레이션이 이미 완료되었습니다.');
@@ -61,5 +56,4 @@ async function runProjectMigration() {
     }
 }
 
-// 마이그레이션 실행
 runProjectMigration();

@@ -7,7 +7,6 @@ async function testInterestsAPI() {
     let connection;
     
     try {
-        // 데이터베이스 연결
         connection = await mysql.createConnection({
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
@@ -17,7 +16,6 @@ async function testInterestsAPI() {
 
         logger.info('✅ 데이터베이스 연결 성공');
 
-        // 1. interests 테이블이 존재하는지 확인
         logger.info('🔍 interests 테이블 존재 여부 확인...');
         try {
             const [tables] = await connection.execute("SHOW TABLES LIKE 'interests'");
@@ -31,7 +29,6 @@ async function testInterestsAPI() {
             return;
         }
 
-        // 2. interests 테이블 구조 확인
         logger.info('🔍 interests 테이블 구조 확인...');
         const [columns] = await connection.execute('DESCRIBE interests');
         logger.info('📊 interests 테이블 컬럼:');
@@ -39,7 +36,6 @@ async function testInterestsAPI() {
             logger.info(`  - ${col.Field}: ${col.Type} ${col.Null === 'NO' ? '(NOT NULL)' : ''}`);
         });
 
-        // 3. interests 데이터 확인
         logger.info('🔍 interests 데이터 확인...');
         const [interests] = await connection.execute('SELECT * FROM interests ORDER BY category, display_order');
         logger.info(`📊 총 ${interests.length}개의 관심사 데이터:`);
@@ -47,7 +43,6 @@ async function testInterestsAPI() {
             logger.info(`  - [${interest.category}] ${interest.title} (${interest.icon})`);
         });
 
-        // 4. personal_info 테이블에 새 컬럼들이 있는지 확인
         logger.info('🔍 personal_info 테이블 새 컬럼 확인...');
         const [personalInfoColumns] = await connection.execute('DESCRIBE personal_info');
         const newColumns = personalInfoColumns.filter(col => 
@@ -63,10 +58,8 @@ async function testInterestsAPI() {
             logger.info('❌ personal_info 테이블에 새 컬럼들이 없습니다. 마이그레이션을 실행해주세요.');
         }
 
-        // 5. API 응답 시뮬레이션
         logger.info('🔍 API 응답 시뮬레이션...');
         
-        // 모든 관심사 조회
         const allInterests = await connection.execute('SELECT * FROM interests ORDER BY category, display_order');
         logger.info('📡 GET /interests 응답:');
         logger.info(JSON.stringify({
@@ -74,7 +67,6 @@ async function testInterestsAPI() {
             data: allInterests[0]
         }, null, 2));
 
-        // 기술적 관심사만 조회
         const technicalInterests = await connection.execute('SELECT * FROM interests WHERE category = "technical" ORDER BY display_order');
         logger.info('📡 GET /interests?category=technical 응답:');
         logger.info(JSON.stringify({
@@ -82,7 +74,6 @@ async function testInterestsAPI() {
             data: technicalInterests[0]
         }, null, 2));
 
-        // 개인적 관심사만 조회
         const personalInterests = await connection.execute('SELECT * FROM interests WHERE category = "personal" ORDER BY display_order');
         logger.info('📡 GET /interests?category=personal 응답:');
         logger.info(JSON.stringify({
@@ -102,5 +93,4 @@ async function testInterestsAPI() {
     }
 }
 
-// API 테스트 실행
 testInterestsAPI();

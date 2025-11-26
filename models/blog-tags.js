@@ -1,6 +1,5 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
-// 과거 호환성 유지를 위한 래퍼: 통합 tags 테이블을 사용
 const BlogTags = {
     async getAll() {
         return await executeQuery(`
@@ -59,13 +58,11 @@ const BlogTags = {
     },
 
     async delete(id) {
-        // 연관된 사용 연결도 함께 삭제
         await executeQuery('DELETE FROM tag_usage WHERE tag_id = ?', [id]);
         await executeQuery('DELETE FROM tags WHERE id = ?', [id]);
     },
 
     async updatePostCount() {
-        // 통합 usage_count 갱신
         await executeQuery(`
             UPDATE tags t
             LEFT JOIN (

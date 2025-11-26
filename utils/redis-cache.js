@@ -1,7 +1,6 @@
 const redis = require('redis');
 const logger = require('../log');
 
-// 🔴 Redis 캐시 유틸리티 (선택적 사용)
 class RedisCache {
     constructor() {
         this.client = null;
@@ -11,7 +10,6 @@ class RedisCache {
 
     async init() {
         try {
-            // Redis 연결 설정 - Unix 소켓만 사용
             const redisConfig = {
                 socket: { path: process.env.REDIS_SOCKET || '/run/synocached.sock' },
                 retry_strategy: (options) => {
@@ -157,7 +155,6 @@ class RedisCache {
     }
 }
 
-// 싱글톤 인스턴스
 const redisCache = new RedisCache();
 
 module.exports = redisCache;

@@ -7,7 +7,6 @@ async function runMigration() {
     let connection;
     
     try {
-        // 데이터베이스 연결
         connection = await mysql.createConnection({
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
@@ -17,13 +16,11 @@ async function runMigration() {
 
         logger.debug('✅ 데이터베이스 연결 성공');
 
-        // 마이그레이션 파일 읽기
         const migrationPath = path.join(__dirname, 'migrations', 'add-meta-keywords.sql');
         const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
         logger.debug('📖 마이그레이션 SQL 파일 읽기 완료');
 
-        // SQL 실행
         const statements = migrationSQL
             .split(';')
             .map(stmt => stmt.trim())
@@ -50,5 +47,4 @@ async function runMigration() {
     }
 }
 
-// 마이그레이션 실행
 runMigration();

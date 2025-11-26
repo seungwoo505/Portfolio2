@@ -4,19 +4,15 @@ const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 const redisCache = require('../utils/redis-cache');
 
-// 📊 성능 모니터링 대시보드
 router.get('/dashboard', async (req, res) => {
     try {
         const memoryUsage = process.memoryUsage();
         const uptime = process.uptime();
         
-        // 메모리 캐시 통계
         const memoryCacheStats = CacheUtils.getStats();
         
-        // Redis 캐시 통계
         const redisStats = await redisCache.getStats();
         
-        // 시스템 정보
         const systemInfo = {
             nodeVersion: process.version,
             platform: process.platform,
@@ -52,7 +48,6 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
-// 🧹 캐시 관리
 router.post('/cache/clear', async (req, res) => {
     try {
         const { type } = req.body;
@@ -87,17 +82,14 @@ router.post('/cache/clear', async (req, res) => {
     }
 });
 
-// 📈 성능 메트릭
 router.get('/metrics', async (req, res) => {
     try {
         const startTime = Date.now();
         
-        // 데이터베이스 연결 테스트
         const db = require('../db');
         const [dbResult] = await db.execute('SELECT 1 as test');
         const dbResponseTime = Date.now() - startTime;
         
-        // Redis 연결 테스트
         const redisStartTime = Date.now();
         const redisTest = await redisCache.get('test');
         const redisResponseTime = Date.now() - redisStartTime;

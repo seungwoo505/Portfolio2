@@ -2,7 +2,6 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 const CacheUtils = require('../utils/cache');
 
 const Projects = {
-    // 슬러그 생성 함수
     generateSlug(title) {
         return title
             .toLowerCase()
@@ -47,7 +46,6 @@ const Projects = {
         })();
     },
 
-    // 🔍 고급 검색, 정렬, 필터링을 지원하는 프로젝트 조회
     async getWithFilters(filters = {}) {
         const {
             limit = 10,
@@ -62,11 +60,9 @@ const Projects = {
             published_only = true
         } = filters;
 
-        // WHERE 조건 구성
         let whereConditions = [];
         let queryParams = [];
 
-        // 상태 필터
         if (status === 'published') {
             whereConditions.push('p.is_published = 1');
         } else if (status === 'draft') {
@@ -75,13 +71,11 @@ const Projects = {
             whereConditions.push('p.is_published = 1');
         }
 
-        // featured 필터
         if (featured !== null) {
             whereConditions.push('p.is_featured = ?');
             queryParams.push(featured ? 1 : 0);
         }
 
-        // 태그 필터
         if (tags && tags.length > 0) {
             const tagPlaceholders = tags.map(() => '?').join(',');
             whereConditions.push(`
@@ -96,7 +90,6 @@ const Projects = {
             queryParams.push(...tags);
         }
 
-        // 스킬 필터
         if (skills && skills.length > 0) {
             const skillPlaceholders = skills.map(() => '?').join(',');
             whereConditions.push(`
@@ -110,7 +103,6 @@ const Projects = {
             queryParams.push(...skills);
         }
 
-        // 검색 조건
         if (search && search.trim()) {
             const searchTerm = `%${search.trim()}%`;
             whereConditions.push(`(
@@ -125,7 +117,6 @@ const Projects = {
 
         const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-        // 정렬 조건
         let orderClause = '';
         const validSortFields = ['created_at', 'title', 'view_count', 'display_order'];
         const validOrders = ['asc', 'desc'];
@@ -133,7 +124,6 @@ const Projects = {
         const sortField = validSortFields.includes(sort) ? sort : 'created_at';
         const sortOrder = validOrders.includes(order.toLowerCase()) ? order.toUpperCase() : 'DESC';
         
-        // 기본 정렬: featured 우선, 그 다음 지정된 정렬
         if (sortField === 'display_order') {
             orderClause = `ORDER BY p.is_featured DESC, p.display_order ASC, p.created_at DESC`;
         } else {
@@ -170,7 +160,6 @@ const Projects = {
         }));
     },
 
-    // 🔍 필터 조건에 따른 총 개수 조회
     async getCountWithFilters(filters = {}) {
         const {
             search = '',
@@ -181,11 +170,9 @@ const Projects = {
             published_only = true
         } = filters;
 
-        // WHERE 조건 구성
         let whereConditions = [];
         let queryParams = [];
 
-        // 상태 필터
         if (status === 'published') {
             whereConditions.push('p.is_published = 1');
         } else if (status === 'draft') {
@@ -194,13 +181,11 @@ const Projects = {
             whereConditions.push('p.is_published = 1');
         }
 
-        // featured 필터
         if (featured !== null) {
             whereConditions.push('p.is_featured = ?');
             queryParams.push(featured ? 1 : 0);
         }
 
-        // 태그 필터
         if (tags && tags.length > 0) {
             const tagPlaceholders = tags.map(() => '?').join(',');
             whereConditions.push(`
@@ -215,7 +200,6 @@ const Projects = {
             queryParams.push(...tags);
         }
 
-        // 스킬 필터
         if (skills && skills.length > 0) {
             const skillPlaceholders = skills.map(() => '?').join(',');
             whereConditions.push(`
@@ -229,7 +213,6 @@ const Projects = {
             queryParams.push(...skills);
         }
 
-        // 검색 조건
         if (search && search.trim()) {
             const searchTerm = `%${search.trim()}%`;
             whereConditions.push(`(
@@ -265,7 +248,6 @@ const Projects = {
         
         if (!project) return null;
 
-        // 프로젝트 스킬들 조회
         const skills = await executeQuery(`
             SELECT s.* FROM skills s
             INNER JOIN project_skills ps ON s.id = ps.skill_id
@@ -273,14 +255,12 @@ const Projects = {
             ORDER BY s.name ASC
         `, [id]);
 
-        // 프로젝트 이미지들 조회
         const images = await executeQuery(`
             SELECT * FROM project_images 
             WHERE project_id = ?
             ORDER BY display_order ASC
         `, [id]);
 
-        // 프로젝트 태그 조회
         const tags = await executeQuery(`
             SELECT t.* FROM tags t
             INNER JOIN tag_usage tu ON t.id = tu.tag_id
@@ -304,7 +284,6 @@ const Projects = {
         
         if (!project) return null;
 
-        // 프로젝트 스킬들 조회
         const skills = await executeQuery(`
             SELECT s.* FROM skills s
             INNER JOIN project_skills ps ON s.id = ps.skill_id
@@ -312,14 +291,12 @@ const Projects = {
             ORDER BY s.name ASC
         `, [project.id]);
 
-        // 프로젝트 이미지들 조회
         const images = await executeQuery(`
             SELECT * FROM project_images 
             WHERE project_id = ?
             ORDER BY display_order ASC
         `, [project.id]);
 
-        // 프로젝트 태그 조회
         const tags = await executeQuery(`
             SELECT t.* FROM tags t
             INNER JOIN tag_usage tu ON t.id = tu.tag_id
@@ -374,13 +351,10 @@ const Projects = {
     async create(data) {
         const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
-        // project_url을 demo_url로 매핑 (프론트엔드 호환성)
         const finalDemoUrl = demo_url || project_url;
         
-        // 슬러그 생성 (제목 기반)
         const slug = this.generateSlug(title);
         
-        // undefined 값을 null로 변환
         const sanitizedData = [
             title || null,
             slug || null,
@@ -418,13 +392,10 @@ const Projects = {
     async update(id, data) {
         const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
-        // project_url을 demo_url로 매핑 (프론트엔드 호환성)
         const finalDemoUrl = demo_url || project_url;
         
-        // 슬러그 생성 (제목이 있을 때만)
         const slug = title ? this.generateSlug(title) : null;
         
-        // undefined 값을 null로 변환
         const sanitizedData = [
             title || null,
             slug || null,
@@ -448,7 +419,6 @@ const Projects = {
             id
         ];
         
-        // 부분 업데이트를 위한 동적 쿼리 생성
         const updateFields = [];
         const updateValues = [];
         
@@ -474,18 +444,15 @@ const Projects = {
         if (is_ongoing !== undefined) updateFields.push('is_ongoing = ?'), updateValues.push(is_ongoing);
         if (status !== undefined) updateFields.push('status = ?'), updateValues.push(status);
         if (is_featured !== undefined) {
-            // is_featured 업데이트 로그 제거됨 (성능 최적화)
             updateFields.push('is_featured = ?'), updateValues.push(is_featured);
         }
         if (is_published !== undefined) updateFields.push('is_published = ?'), updateValues.push(is_published);
         if (display_order !== undefined) updateFields.push('display_order = ?'), updateValues.push(display_order);
         if (meta_keywords !== undefined) updateFields.push('meta_keywords = ?'), updateValues.push(meta_keywords);
         
-        // updated_at은 항상 업데이트
         updateFields.push('updated_at = NOW()');
         
         if (updateFields.length === 0) {
-            // 업데이트할 필드가 없으면 그냥 반환
             return await this.getById(id);
         }
         
@@ -500,7 +467,6 @@ const Projects = {
     },
 
     async delete(id) {
-        // 연관된 데이터들도 함께 삭제 (CASCADE)
         await executeQuery('DELETE FROM project_skills WHERE project_id = ?', [id]);
         await executeQuery('DELETE FROM project_images WHERE project_id = ?', [id]);
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [id]);
@@ -541,7 +507,6 @@ const Projects = {
     },
 
     async updateTags(projectId, tagNames) {
-        // 기존 연결 제거
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [projectId]);
         
         for (const tagName of tagNames) {
@@ -555,7 +520,6 @@ const Projects = {
             }
             await executeQuery("INSERT IGNORE INTO tag_usage (tag_id, content_type, content_id) VALUES (?, 'project', ?)", [tag.id, projectId]);
         }
-        // 사용량 업데이트
         await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     }
 };

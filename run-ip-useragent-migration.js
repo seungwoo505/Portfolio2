@@ -7,7 +7,6 @@ async function runIpUserAgentMigration() {
     let connection;
     
     try {
-        // 데이터베이스 연결
         connection = await mysql.createConnection({
             host: process.env.DB_HOST || 'localhost',
             user: process.env.DB_USER || 'root',
@@ -17,12 +16,10 @@ async function runIpUserAgentMigration() {
 
         logger.info('✅ 데이터베이스 연결 성공');
 
-        // 마이그레이션 SQL 파일 읽기
         const migrationSQL = fs.readFileSync(path.join(__dirname, 'add-ip-useragent.sql'), 'utf8');
 
         logger.info('📖 마이그레이션 SQL 준비 완료');
 
-        // SQL 문장들을 분리하여 실행
         const statements = migrationSQL
             .split(';')
             .map(stmt => stmt.trim())
@@ -42,7 +39,6 @@ async function runIpUserAgentMigration() {
         logger.info('✅ 마이그레이션 완료!');
         logger.info('🎯 contact_messages 테이블에 ip_address, user_agent 컬럼이 추가되었습니다.');
 
-        // 테이블 구조 확인
         logger.info('🔍 테이블 구조 확인 중...');
         const [columns] = await connection.execute('DESCRIBE contact_messages');
         
@@ -61,7 +57,6 @@ async function runIpUserAgentMigration() {
             logger.error('❌ user_agent 컬럼을 찾을 수 없습니다.');
         }
 
-        // 인덱스 확인
         logger.info('🔍 인덱스 확인 중...');
         const [indexes] = await connection.execute('SHOW INDEX FROM contact_messages');
         const ipIndex = indexes.find(idx => idx.Key_name === 'idx_contact_messages_ip_address');
@@ -92,7 +87,6 @@ async function runIpUserAgentMigration() {
     }
 }
 
-// 스크립트가 직접 실행된 경우에만 마이그레이션 실행
 if (require.main === module) {
     runIpUserAgentMigration()
         .then(() => {

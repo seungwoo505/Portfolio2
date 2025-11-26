@@ -5,7 +5,6 @@ const crypto = require('crypto');
 const logger = require('../log');
 
 const AdminUsers = {
-    // 관리자 로그인
     async login(username, password, ipAddress, userAgent) {
         logger.auth('로그인 시도', null, { username, ipAddress, userAgent });
 
@@ -19,7 +18,6 @@ const AdminUsers = {
             throw new Error('사용자를 찾을 수 없습니다.');
         }
 
-        // 계정 잠금 확인
         if (user.locked_until && new Date(user.locked_until) > new Date()) {
             logger.security('로그인 실패 - 계정 잠금', {
                 username: user.username,
@@ -29,7 +27,6 @@ const AdminUsers = {
             throw new Error('계정이 일시적으로 잠겨있습니다.');
         }
 
-        // 패스워드 확인
         const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
         if (!isValidPassword) {
@@ -38,19 +35,15 @@ const AdminUsers = {
                 failedAttempts: user.failed_login_attempts + 1,
                 ipAddress
             });
-            // 실패 횟수 증가
             await this.incrementFailedAttempts(user.id);
             throw new Error('비밀번호가 올바르지 않습니다.');
         }
 
-        // 로그인 성공 처리
         await this.handleSuccessfulLogin(user.id, ipAddress);
 
-        // JWT 토큰 생성 (IP 주소 포함)
         const token = this.generateToken(user, ipAddress);
         const refreshToken = this.generateRefreshToken(user, ipAddress);
 
-        // Stateless 방식: 세션 저장 제거 (활동 로그만 기록)
         logger.auth('로그인 성공', this.sanitizeUser(user), { ipAddress });
 
         return {
@@ -60,7 +53,6 @@ const AdminUsers = {
         };
     },
 
-    // JWT 토큰 생성 (보안 강화: 30분 만료)
     generateToken(user, ipAddress) {
         return jwt.sign(
             {
@@ -75,7 +67,6 @@ const AdminUsers = {
         );
     },
 
-    // Refresh Token 생성 (12시간 만료)
     generateRefreshToken(user, ipAddress) {
         return jwt.sign(
             {
@@ -90,7 +81,6 @@ const AdminUsers = {
         );
     },
 
-    // Access Token 검증
     verifyToken(token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -103,7 +93,6 @@ const AdminUsers = {
         }
     },
 
-    // Refresh Token 검증
     verifyRefreshToken(token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
@@ -116,10 +105,8 @@ const AdminUsers = {
         }
     },
 
-    // Stateless 로그아웃 (활동 로그만 기록)
     async logout(token) {
         try {
-            // JWT 토큰에서 사용자 정보 추출
             const decoded = this.verifyToken(token);
             const user = await this.getById(decoded.id);
             
@@ -130,7 +117,6 @@ const AdminUsers = {
                 });
             }
         } catch (error) {
-            // 토큰이 유효하지 않아도 로그아웃은 성공으로 처리
             logger.auth('로그아웃 (토큰 무효)', null, {
                 error: error.message,
                 logoutTime: new Date().toISOString()
@@ -138,7 +124,6 @@ const AdminUsers = {
         }
     },
 
-    // 사용자 정보 조회
     async getById(id) {
         const user = await executeQuerySingle(`
             SELECT * FROM admin_users WHERE id = ?
@@ -155,7 +140,6 @@ const AdminUsers = {
         return user ? this.sanitizeUser(user) : null;
     },
 
-    // 모든 관리자 조회
     async getAll() {
         const users = await executeQuery(`
             SELECT * FROM admin_users ORDER BY created_at DESC
@@ -164,11 +148,9 @@ const AdminUsers = {
         return users.map(user => this.sanitizeUser(user));
     },
 
-    // 새 관리자 생성
     async create(data) {
         const { username, email, password, full_name, role = 'admin' } = data;
 
-        // 중복 확인
         const existing = await executeQuerySingle(`
             SELECT id FROM admin_users WHERE username = ? OR email = ?
         `, [username, email]);
@@ -177,7 +159,6 @@ const AdminUsers = {
             throw new Error('이미 존재하는 사용자명 또는 이메일입니다.');
         }
 
-        // 패스워드 해시화
         const password_hash = await bcrypt.hash(password, 10);
 
         const result = await executeQuery(`
@@ -188,11 +169,9 @@ const AdminUsers = {
         return result.insertId;
     },
 
-    // 관리자 정보 수정
     async update(id, data) {
         const { username, email, full_name, role, is_active } = data;
 
-        // undefined 값을 null로 변환
         const cleanParams = [
             username === undefined ? null : username,
             email === undefined ? null : email,
@@ -216,7 +195,6 @@ const AdminUsers = {
         return await this.getById(id);
     },
 
-    // 패스워드 변경
     async changePassword(id, oldPassword, newPassword) {
         const user = await executeQuerySingle(`
             SELECT password_hash FROM admin_users WHERE id = ?
@@ -226,13 +204,11 @@ const AdminUsers = {
             throw new Error('사용자를 찾을 수 없습니다.');
         }
 
-        // 기존 패스워드 확인
         const isValid = await bcrypt.compare(oldPassword, user.password_hash);
         if (!isValid) {
             throw new Error('기존 비밀번호가 올바르지 않습니다.');
         }
 
-        // 새 패스워드 해시화
         const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
         await executeQuery(`
@@ -241,15 +217,12 @@ const AdminUsers = {
             WHERE id = ?
         `, [newPasswordHash, id]);
 
-        // Stateless 방식: 세션 무효화 제거 (JWT 토큰은 만료 시간에 따라 자동 무효화)
     },
 
-    // 관리자 삭제
     async delete(id) {
         await executeQuery('DELETE FROM admin_users WHERE id = ?', [id]);
     },
 
-    // 실패 횟수 증가
     async incrementFailedAttempts(id) {
         await executeQuery(`
             UPDATE admin_users 
@@ -262,7 +235,6 @@ const AdminUsers = {
         `, [id]);
     },
 
-    // 로그인 성공 처리
     async handleSuccessfulLogin(id, ipAddress) {
         await executeQuery(`
             UPDATE admin_users 
@@ -274,15 +246,12 @@ const AdminUsers = {
         `, [ipAddress, id]);
     },
 
-    // 사용자 정보 정리 (패스워드 등 민감 정보 제거)
     sanitizeUser(user) {
         const { password_hash, ...sanitized } = user;
         return sanitized;
     },
 
-    // Stateless 방식: 세션 정리 불필요 (JWT는 자체 만료)
 
-    // 사용자 권한 조회
     async getUserPermissions(userId) {
         return await executeQuery(`
             SELECT p.name, p.resource, p.action, p.description
@@ -292,7 +261,6 @@ const AdminUsers = {
         `, [userId]);
     },
 
-    // 권한 확인
     async hasPermission(userId, permissionName) {
         const permission = await executeQuerySingle(`
             SELECT 1

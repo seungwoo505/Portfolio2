@@ -1,7 +1,6 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const AdminActivityLogs = {
-    // 활동 로그 기록
     async log(adminId, action, resourceType = null, resourceId = null, details = null, ipAddress = null, userAgent = null) {
         const result = await executeQuery(`
             INSERT INTO admin_activity_logs (admin_id, action, resource_type, resource_id, details, ip_address, user_agent)
@@ -11,7 +10,6 @@ const AdminActivityLogs = {
         return result.insertId;
     },
 
-    // 모든 활동 로그 조회
     async getAll(limit = 50, offset = 0) {
         return await executeQuery(`
             SELECT 
@@ -29,7 +27,6 @@ const AdminActivityLogs = {
         `, [limit, offset]);
     },
 
-    // 특정 관리자의 활동 로그 조회
     async getByAdmin(adminId, limit = 50, offset = 0) {
         return await executeQuery(`
             SELECT 
@@ -48,7 +45,6 @@ const AdminActivityLogs = {
         `, [adminId, limit, offset]);
     },
 
-    // 특정 리소스의 활동 로그 조회
     async getByResource(resourceType, resourceId, limit = 20) {
         return await executeQuery(`
             SELECT 
@@ -67,7 +63,6 @@ const AdminActivityLogs = {
         `, [resourceType, resourceId, limit]);
     },
 
-    // 특정 액션의 로그 조회
     async getByAction(action, limit = 100) {
         return await executeQuery(`
             SELECT 
@@ -86,7 +81,6 @@ const AdminActivityLogs = {
         `, [action, limit]);
     },
 
-    // 날짜 범위로 로그 조회
     async getByDateRange(startDate, endDate, limit = 100) {
         return await executeQuery(`
             SELECT 
@@ -105,7 +99,6 @@ const AdminActivityLogs = {
         `, [startDate, endDate, limit]);
     },
 
-    // 통계 조회
     async getStats(days = 30) {
         const stats = await executeQuerySingle(`
             SELECT 
@@ -124,7 +117,6 @@ const AdminActivityLogs = {
         return stats;
     },
 
-    // 활동별 통계
     async getActivityStats(days = 30) {
         return await executeQuery(`
             SELECT 
@@ -138,7 +130,6 @@ const AdminActivityLogs = {
         `, [days]);
     },
 
-    // 리소스별 통계
     async getResourceStats(days = 30) {
         return await executeQuery(`
             SELECT 
@@ -153,7 +144,6 @@ const AdminActivityLogs = {
         `, [days]);
     },
 
-    // 일별 활동 통계
     async getDailyStats(days = 30) {
         return await executeQuery(`
             SELECT 
@@ -167,7 +157,6 @@ const AdminActivityLogs = {
         `, [days]);
     },
 
-    // 로그 검색
     async search(searchTerm, limit = 50) {
         return await executeQuery(`
             SELECT 
@@ -190,7 +179,6 @@ const AdminActivityLogs = {
         `, [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, limit]);
     },
 
-    // 오래된 로그 정리 (데이터 보관 정책)
     async cleanup(daysToKeep = 365) {
         const result = await executeQuery(`
             DELETE FROM admin_activity_logs 
@@ -200,7 +188,6 @@ const AdminActivityLogs = {
         return result.affectedRows;
     },
 
-    // 특정 관리자의 최근 활동
     async getRecentActivity(adminId, limit = 10) {
         return await executeQuery(`
             SELECT 
