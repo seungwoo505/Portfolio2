@@ -14,44 +14,44 @@ async function runProjectMigration() {
             database: process.env.DB_SCHEMA || 'portfolio_db'
         });
 
-        logger.debug('✅ 데이터베이스 연결 성공');
+        logger.debug('데이터베이스 연결 성공');
 
         const migrationSQL = `
             ALTER TABLE projects 
             ADD COLUMN is_published BOOLEAN DEFAULT FALSE AFTER is_featured;
         `;
 
-        logger.debug('📖 마이그레이션 SQL 준비 완료');
+        logger.debug('마이그레이션 SQL 준비 완료');
 
-        logger.debug('🚀 is_published 필드 추가 중...');
+        logger.debug('is_published 필드 추가 중...');
         await connection.execute(migrationSQL);
 
-        logger.debug('✅ 마이그레이션 완료!');
-        logger.debug('🎯 이제 is_published 필드가 projects 테이블에 추가되었습니다.');
+        logger.debug('마이그레이션 완료!');
+        logger.debug('이제 is_published 필드가 projects 테이블에 추가되었습니다.');
 
-        logger.debug('🔍 테이블 구조 확인 중...');
+        logger.debug('테이블 구조 확인 중...');
         const [columns] = await connection.execute('DESCRIBE projects');
         const isPublishedColumn = columns.find(col => col.Field === 'is_published');
         
         if (isPublishedColumn) {
-            logger.debug('✅ is_published 컬럼 확인됨:', isPublishedColumn);
+            logger.debug('is_published 컬럼 확인됨:', isPublishedColumn);
         } else {
-            logger.debug('❌ is_published 컬럼을 찾을 수 없습니다.');
+            logger.debug('is_published 컬럼을 찾을 수 없습니다.');
         }
 
     } catch (error) {
-        logger.error('❌ 마이그레이션 실패:', error);
+        logger.error('마이그레이션 실패:', error);
         
         if (error.code === 'ER_DUP_FIELDNAME') {
-            logger.debug('ℹ️ is_published 컬럼이 이미 존재합니다.');
-            logger.debug('✅ 마이그레이션이 이미 완료되었습니다.');
+            logger.debug('is_published 컬럼이 이미 존재합니다.');
+            logger.debug('마이그레이션이 이미 완료되었습니다.');
         } else {
             process.exit(1);
         }
     } finally {
         if (connection) {
             await connection.end();
-            logger.debug('🔌 데이터베이스 연결 종료');
+            logger.debug('데이터베이스 연결 종료');
         }
     }
 }

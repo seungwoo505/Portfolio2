@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const Skills = {
     /**
-     * @description Retrieves Skills Model All With Categories.
+     * @description 스킬 모델의 전체 목록을 카테고리와 함께 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAllWithCategories() {
@@ -15,7 +15,7 @@ const Skills = {
     },
 
     /**
-     * @description Retrieves Skills Model Categories.
+     * @description 스킬 모델의 카테고리를 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getCategories() {
@@ -29,7 +29,7 @@ const Skills = {
     },
 
     /**
-     * @description Retrieves Skills Model Featured.
+     * @description 스킬 모델에서 추천 스킬을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getFeatured() {
@@ -43,7 +43,7 @@ const Skills = {
     },
 
     /**
-     * @description Creates Skills Model Skill.
+     * @description 스킬 모델에 기술을 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -58,7 +58,7 @@ const Skills = {
     },
 
     /**
-     * @description Creates Skills Model Category.
+     * @description 스킬 모델에 카테고리를 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -73,7 +73,7 @@ const Skills = {
     },
 
     /**
-     * @description Updates Skills Model Skill.
+     * @description 스킬 모델의 기술 정보를 갱신한다.
       * @param {*} id 입력값
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
@@ -91,7 +91,7 @@ const Skills = {
     },
 
     /**
-     * @description Retrieves Skills Model Skill By Id.
+     * @description 스킬 모델에서 ID로 기술을 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -105,7 +105,7 @@ const Skills = {
     },
 
     /**
-     * @description Deletes Skills Model Skill.
+     * @description 스킬 모델의 기술을 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -120,7 +120,7 @@ const Skills = {
     },
 
     /**
-     * @description Creates Skills Model Category.
+     * @description 스킬 모델에 카테고리를 생성한다.
       * @param {*} name 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -134,7 +134,7 @@ const Skills = {
     },
 
     /**
-     * @description Deletes Skills Model Category.
+     * @description 스킬 모델의 카테고리를 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -149,7 +149,7 @@ const Skills = {
     },
 
     /**
-     * @description Retrieves Skills Model By Display Order.
+     * @description 스킬 모델을 노출 순서로 조회한다.
       * @param {*} displayOrder 입력값
       * @param {*} excludeId 입력값
      * @returns {Promise<any>} 처리 결과

@@ -3,7 +3,7 @@ const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 
 /**
- * @description execute Query for Db Utils Model.
+ * @description DB 유틸 모델에서 쿼리를 실행한다.
   * @param {*} query 입력값
   * @param {*} params 입력값
   * @param {*} options 입력값
@@ -67,7 +67,7 @@ const executeQuery = async (query, params = [], options = {}) => {
 };
 
 /**
- * @description execute Query Single for Db Utils Model.
+ * @description DB 유틸 모델에서 단일 결과 쿼리를 실행한다.
   * @param {*} query 입력값
   * @param {*} params 입력값
   * @param {*} options 입력값
@@ -107,7 +107,7 @@ const executeBatch = async (queries) => {
 };
 
 /**
- * @description execute Transaction for Db Utils Model.
+ * @description DB 유틸 모델에서 트랜잭션을 실행한다.
   * @param {*} callback 입력값
  * @returns {Promise<any>} 처리 결과
  */

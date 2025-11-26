@@ -3,7 +3,7 @@ const logger = require('../log');
 
 class RedisCache {
     /**
-     * @description constructor for Redis Cache Util.
+     * @description Redis 캐시 유틸 인스턴스를 초기화한다.
      * @returns {any} 처리 결과
      */
     constructor() {
@@ -13,7 +13,7 @@ class RedisCache {
     }
 
     /**
-     * @description init for Redis Cache Util.
+     * @description Redis 캐시 유틸을 초기화한다.
      * @returns {Promise<any>} 처리 결과
      */
     async init() {
@@ -62,7 +62,7 @@ class RedisCache {
     }
 
     /**
-     * @description get for Redis Cache Util.
+     * @description Redis 캐시 유틸에서 값을 조회한다.
       * @param {*} key 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -81,7 +81,7 @@ class RedisCache {
     }
 
     /**
-     * @description set for Redis Cache Util.
+     * @description Redis 캐시 유틸에 값을 저장한다.
       * @param {*} key 입력값
       * @param {*} value 입력값
       * @param {*} ttl 입력값
@@ -103,7 +103,7 @@ class RedisCache {
     }
 
     /**
-     * @description del for Redis Cache Util.
+     * @description Redis 캐시 유틸에서 항목을 삭제한다.
       * @param {*} key 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -122,7 +122,7 @@ class RedisCache {
     }
 
     /**
-     * @description del Pattern for Redis Cache Util.
+     * @description Redis 캐시 유틸에서 패턴에 맞는 키를 삭제한다.
       * @param {*} pattern 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -144,7 +144,7 @@ class RedisCache {
     }
 
     /**
-     * @description flush for Redis Cache Util.
+     * @description Redis 캐시 유틸의 모든 항목을 삭제한다.
      * @returns {Promise<any>} 처리 결과
      */
     async flush() {
@@ -162,7 +162,7 @@ class RedisCache {
     }
 
     /**
-     * @description Retrieves Redis Cache Util Stats.
+     * @description Redis 캐시 유틸의 통계를 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getStats() {
@@ -186,7 +186,7 @@ class RedisCache {
     }
 
     /**
-     * @description disconnect for Redis Cache Util.
+     * @description Redis 캐시 유틸 연결을 종료한다.
      * @returns {Promise<any>} 처리 결과
      */
     async disconnect() {

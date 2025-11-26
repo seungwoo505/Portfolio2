@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const SocialLinks = {
     /**
-     * @description Retrieves Social Links Model All.
+     * @description 소셜 링크 모델의 전체 목록을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAll() {
@@ -14,7 +14,7 @@ const SocialLinks = {
     },
 
     /**
-     * @description create for Social Links Model.
+     * @description 소셜 링크 모델에 항목을 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -29,7 +29,7 @@ const SocialLinks = {
     },
 
     /**
-     * @description update for Social Links Model.
+     * @description 소셜 링크 모델의 정보를 수정한다.
       * @param {*} id 입력값
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
@@ -46,7 +46,7 @@ const SocialLinks = {
     },
 
     /**
-     * @description Retrieves Social Links Model By Id.
+     * @description 소셜 링크 모델에서 ID로 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */

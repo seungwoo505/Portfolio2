@@ -22,7 +22,7 @@ cache.on('flush', () => {
 
 const CacheUtils = {
     /**
-     * @description set for Cache Util.
+     * @description 캐시 유틸에 값을 저장한다.
       * @param {*} key 입력값
       * @param {*} value 입력값
       * @param {*} ttl 입력값
@@ -38,7 +38,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description get for Cache Util.
+     * @description 캐시 유틸에서 값을 조회한다.
       * @param {*} key 입력값
      * @returns {any} 처리 결과
      */
@@ -52,7 +52,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description del for Cache Util.
+     * @description 캐시 유틸에서 항목을 삭제한다.
       * @param {*} key 입력값
      * @returns {any} 처리 결과
      */
@@ -66,7 +66,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description has for Cache Util.
+     * @description 캐시 유틸에서 키 존재 여부를 확인한다.
       * @param {*} key 입력값
      * @returns {any} 처리 결과
      */
@@ -79,7 +79,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description flush for Cache Util.
+     * @description 캐시 유틸의 모든 항목을 삭제한다.
      * @returns {any} 처리 결과
      */
     flush() {
@@ -87,7 +87,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description del Pattern for Cache Util.
+     * @description 캐시 유틸에서 패턴에 맞는 키를 삭제한다.
       * @param {*} pattern 입력값
      * @returns {any} 처리 결과
      */
@@ -109,7 +109,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description Generates Cache Util Key.
+     * @description 캐시 유틸에서 사용할 키를 생성한다.
       * @param {*} prefix 입력값
       * @param {*} params 입력값
      * @returns {any} 처리 결과
@@ -135,7 +135,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description cache Batch for Cache Util.
+     * @description 캐시에 여러 키를 한 번에 저장한다.
       * @param {*} keys 입력값
       * @param {*} fetchFunction 입력값
       * @param {*} ttl 입력값
@@ -172,7 +172,7 @@ const CacheUtils = {
     },
 
     /**
-     * @description warmup Cache for Cache Util.
+     * @description 캐시 유틸을 미리 로딩한다.
       * @param {*} warmupFunctions 입력값
       * @param {*} ttl 입력값
      * @returns {Promise<any>} 처리 결과

@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const AdminActivityLogs = {
     /**
-     * @description log for Admin Activity Logs Model.
+     * @description 관리자 활동 로그 모델에 기록한다.
       * @param {*} adminId 입력값
       * @param {*} action 입력값
       * @param {*} resourceType 입력값
@@ -39,7 +39,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model By Admin.
+     * @description 관리자 활동 로그 모델에서 관리자별 로그를 조회한다.
       * @param {*} adminId 입력값
       * @param {*} limit 입력값
       * @param {*} offset 입력값
@@ -64,7 +64,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model By Resource.
+     * @description 관리자 활동 로그 모델에서 리소스별 로그를 조회한다.
       * @param {*} resourceType 입력값
       * @param {*} resourceId 입력값
       * @param {*} limit 입력값
@@ -89,7 +89,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model By Action.
+     * @description 관리자 활동 로그 모델에서 작업별 로그를 조회한다.
       * @param {*} action 입력값
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과
@@ -113,7 +113,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model By Date Range.
+     * @description 관리자 활동 로그 모델에서 기간별 로그를 조회한다.
       * @param {*} startDate 입력값
       * @param {*} endDate 입력값
       * @param {*} limit 입력값
@@ -138,7 +138,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model Stats.
+     * @description 관리자 활동 로그 모델의 통계를 조회한다.
       * @param {*} days 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -161,7 +161,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model Activity Stats.
+     * @description 관리자 활동 로그 모델의 활동 통계를 조회한다.
       * @param {*} days 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -179,7 +179,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model Resource Stats.
+     * @description 관리자 활동 로그 모델의 리소스별 통계를 조회한다.
       * @param {*} days 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -198,7 +198,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model Daily Stats.
+     * @description 관리자 활동 로그 모델의 일별 통계를 조회한다.
       * @param {*} days 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -216,7 +216,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description search for Admin Activity Logs Model.
+     * @description 관리자 활동 로그 모델에서 검색한다.
       * @param {*} searchTerm 입력값
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과
@@ -244,7 +244,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description cleanup for Admin Activity Logs Model.
+     * @description 관리자 활동 로그 모델의 오래된 데이터를 정리한다.
       * @param {*} daysToKeep 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -258,7 +258,7 @@ const AdminActivityLogs = {
     },
 
     /**
-     * @description Retrieves Admin Activity Logs Model Recent Activity.
+     * @description 관리자 활동 로그 모델에서 최근 활동을 조회한다.
       * @param {*} adminId 입력값
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과

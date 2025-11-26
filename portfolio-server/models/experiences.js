@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const Experiences = {
     /**
-     * @description Retrieves Experiences Model All.
+     * @description 경험 모델의 전체 목록을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAll() {
@@ -17,7 +17,7 @@ const Experiences = {
     },
 
     /**
-     * @description Retrieves Experiences Model By Type.
+     * @description 경험 모델에서 유형별로 조회한다.
       * @param {*} type 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -34,7 +34,7 @@ const Experiences = {
     },
 
     /**
-     * @description Retrieves Experiences Model By Id.
+     * @description 경험 모델에서 ID로 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -50,7 +50,7 @@ const Experiences = {
     },
 
     /**
-     * @description create for Experiences Model.
+     * @description 경험 모델에 항목을 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -73,7 +73,7 @@ const Experiences = {
     },
 
     /**
-     * @description update for Experiences Model.
+     * @description 경험 모델의 정보를 수정한다.
       * @param {*} id 입력값
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
@@ -107,7 +107,7 @@ const Experiences = {
     },
 
     /**
-     * @description delete for Experiences Model.
+     * @description 경험 모델에서 항목을 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -124,7 +124,7 @@ const Experiences = {
     },
 
     /**
-     * @description Retrieves Experiences Model Work.
+     * @description 경험 모델에서 업무 경력을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getWork() {
@@ -132,7 +132,7 @@ const Experiences = {
     },
 
     /**
-     * @description Retrieves Experiences Model Education.
+     * @description 경험 모델에서 교육 이력을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getEducation() {
@@ -140,7 +140,7 @@ const Experiences = {
     },
 
     /**
-     * @description Retrieves Experiences Model Volunteer.
+     * @description 경험 모델에서 봉사 활동을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getVolunteer() {
@@ -148,7 +148,7 @@ const Experiences = {
     },
 
     /**
-     * @description Retrieves Experiences Model Certifications.
+     * @description 경험 모델에서 자격증 목록을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getCertifications() {
@@ -156,7 +156,7 @@ const Experiences = {
     },
 
     /**
-     * @description Updates Experiences Model Display Order.
+     * @description 경험 모델의 노출 순서를 갱신한다.
       * @param {*} id 입력값
       * @param {*} displayOrder 입력값
      * @returns {Promise<any>} 처리 결과

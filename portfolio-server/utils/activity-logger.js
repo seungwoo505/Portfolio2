@@ -34,7 +34,7 @@ async function logActivity(req, action, resourceType, resourceId = null, resourc
         };
 
         await ActivityLogs.create(logData);
-        logger.info(`📝 활동 로그 기록: ${req.admin.username} - ${action} ${resourceType}`);
+        logger.info(` 활동 로그 기록: ${req.admin.username} - ${action} ${resourceType}`);
     } catch (error) {
         logger.error('활동 로그 기록 실패:', error);
     }

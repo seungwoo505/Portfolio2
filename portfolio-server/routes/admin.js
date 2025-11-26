@@ -87,6 +87,12 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../log');
+const isVerboseLogsEnabled = process.env.ENABLE_VERBOSE_LOGS === 'true';
+const verboseDebug = (...args) => {
+    if (isVerboseLogsEnabled) {
+        logger.debug(...args);
+    }
+};
 
 const AdminUsers = require('../models/admin-users');
 const AdminActivityLogs = require('../models/admin-activity-logs');
@@ -846,9 +852,9 @@ router.post('/projects',
                 }
             });
 
-            logger.debug('🔍 원본 데이터:', req.body);
-            logger.debug('🔍 정규화된 데이터:', sanitizedData);
-            logger.debug('🔍 undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
+            verboseDebug(원본 데이터:', req.body);
+            verboseDebug(정규화된 데이터:', sanitizedData);
+            verboseDebug(undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
 
             const id = await Projects.create(sanitizedData);
             const newProject = await Projects.getById(id);
@@ -875,19 +881,19 @@ router.put('/projects/slug/:slug',
     async (req, res) => {
         try {
             const projectSlug = req.params.slug;
-            logger.debug('🔄 projectSlug:', projectSlug);
+            verboseDebug(projectSlug:', projectSlug);
 
-            logger.debug('🔄 Projects.getBySlug 호출 시작');
+            verboseDebug(Projects.getBySlug 호출 시작');
             const existingProject = await Projects.getBySlug(projectSlug);
-            logger.debug('🔄 Projects.getById 결과:', existingProject);
+            verboseDebug(Projects.getById 결과:', existingProject);
             if (!existingProject) {
-                logger.debug('❌ 프로젝트를 찾을 수 없음');
+                verboseDebug(프로젝트를 찾을 수 없음');
                 return res.status(404).json({
                     success: false,
                     message: '프로젝트를 찾을 수 없습니다.'
                 });
             }
-            logger.debug('✅ 프로젝트 존재 확인 완료');
+            verboseDebug(프로젝트 존재 확인 완료');
 
             const sanitizedData = {};
             Object.keys(req.body).forEach(key => {
@@ -898,17 +904,17 @@ router.put('/projects/slug/:slug',
                 }
             });
 
-            logger.debug('🔍 프로젝트 수정 - 원본 데이터:', req.body);
-            logger.debug('🔍 프로젝트 수정 - 정규화된 데이터:', sanitizedData);
-            logger.debug('🔍 프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
+            verboseDebug(프로젝트 수정 - 원본 데이터:', req.body);
+            verboseDebug(프로젝트 수정 - 정규화된 데이터:', sanitizedData);
+            verboseDebug(프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
 
-            logger.debug('🚀 Projects.update 호출 시작');
-            logger.debug('🚀 projectSlug:', projectSlug);
-            logger.debug('🚀 sanitizedData:', sanitizedData);
+            verboseDebug(Projects.update 호출 시작');
+            verboseDebug(projectSlug:', projectSlug);
+            verboseDebug(sanitizedData:', sanitizedData);
 
             try {
                 const updatedProject = await Projects.update(existingProject.id, sanitizedData);
-                logger.debug('✅ Projects.update 성공:', updatedProject);
+                verboseDebug(Projects.update 성공:', updatedProject);
 
                 res.json({
                     success: true,
@@ -916,8 +922,8 @@ router.put('/projects/slug/:slug',
                     data: updatedProject
                 });
             } catch (updateError) {
-                logger.error('❌ Projects.update 실패:', updateError);
-                logger.error('❌ updateError.stack:', updateError.stack);
+                logger.error(Projects.update 실패:', updateError);
+                logger.error(updateError.stack:', updateError.stack);
                 throw updateError;
             }
         } catch (error) {
@@ -963,11 +969,11 @@ router.delete('/projects/slug/:slug',
 );
 
 const geminiService = require('../services/gemini-ai');
-logger.debug('🔍 geminiService 객체 로드됨:', typeof geminiService);
-logger.debug('🔍 geminiService.constructor.name:', geminiService.constructor.name);
-logger.debug('🔍 geminiService.generateSummary 존재 여부:', typeof geminiService.generateSummary);
-logger.debug('🔍 geminiService 객체의 모든 메서드:', Object.getOwnPropertyNames(geminiService));
-logger.debug('🔍 geminiService 객체의 프로토타입 체인:', Object.getPrototypeOf(geminiService));
+verboseDebug(geminiService 객체 로드됨:', typeof geminiService);
+verboseDebug(geminiService.constructor.name:', geminiService.constructor.name);
+verboseDebug(geminiService.generateSummary 존재 여부:', typeof geminiService.generateSummary);
+verboseDebug(geminiService 객체의 모든 메서드:', Object.getOwnPropertyNames(geminiService));
+verboseDebug(geminiService 객체의 프로토타입 체인:', Object.getPrototypeOf(geminiService));
 
 router.post('/ai/summarize',
     authenticateToken,
@@ -984,12 +990,12 @@ router.post('/ai/summarize',
             }
 
             const preprocessedContent = content.replace(/__([^_]+)__/g, (match, projectName) => {
-                logger.debug(`🔄 백엔드 전처리: ${match} → ${projectName} 프로젝트`);
+                verboseDebug(` 백엔드 전처리: ${match} → ${projectName} 프로젝트`);
                 return `${projectName} 프로젝트`;
             });
 
-            logger.debug('🔍 원본 콘텐츠:', content);
-            logger.debug('✅ 전처리된 콘텐츠:', preprocessedContent);
+            verboseDebug(원본 콘텐츠:', content);
+            verboseDebug(전처리된 콘텐츠:', preprocessedContent);
 
             let result;
 
@@ -1008,24 +1014,24 @@ router.post('/ai/summarize',
                     message: 'Gemini AI로 요약과 키워드가 생성되었습니다.'
                 });
             } else {
-                logger.debug('🔍 AI 요약 생성 시작 - content 길이:', content.length);
-                logger.debug('🔍 techTags:', techTags);
-                logger.debug('🔍 geminiService.generateSummary 호출 시작');
-                logger.debug('🔍 generateSummary 메서드 타입:', typeof geminiService.generateSummary);
-                logger.debug('🔍 generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
+                verboseDebug(AI 요약 생성 시작 - content 길이:', content.length);
+                verboseDebug(techTags:', techTags);
+                verboseDebug(geminiService.generateSummary 호출 시작');
+                verboseDebug(generateSummary 메서드 타입:', typeof geminiService.generateSummary);
+                verboseDebug(generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
 
                 let summary;
                 try {
                     summary = await geminiService.generateSummary(preprocessedContent, 160, techTags);
-                    logger.debug('✅ generateSummary 호출 성공');
+                    verboseDebug(generateSummary 호출 성공');
                 } catch (error) {
-                    logger.error('❌ generateSummary 호출 실패:', error);
-                    logger.error('❌ 에러 스택:', error.stack);
+                    logger.error(generateSummary 호출 실패:', error);
+                    logger.error(에러 스택:', error.stack);
                     throw error;
                 }
 
-                logger.debug('✅ AI 요약 생성 완료 - summary 길이:', summary.length);
-                logger.debug('✅ summary 내용:', summary.substring(0, 100) + '...');
+                verboseDebug(AI 요약 생성 완료 - summary 길이:', summary.length);
+                verboseDebug(summary 내용:', summary.substring(0, 100) + '...');
 
                 res.json({
                     success: true,
@@ -1039,8 +1045,8 @@ router.post('/ai/summarize',
             }
 
         } catch (error) {
-            logger.error('❌ Gemini AI 요약 생성 실패:', error);
-            logger.error('❌ 에러 스택:', error.stack);
+            logger.error(Gemini AI 요약 생성 실패:', error);
+            logger.error(에러 스택:', error.stack);
             res.status(500).json({
                 success: false,
                 message: 'AI 요약 생성에 실패했습니다.'
@@ -1064,7 +1070,7 @@ router.post('/ai/keywords',
             }
 
             const preprocessedContent = content.replace(/__([^_]+)__/g, (match, projectName) => {
-                logger.debug(`🔄 키워드 추출 전처리: ${match} → ${projectName} 프로젝트`);
+                verboseDebug(` 키워드 추출 전처리: ${match} → ${projectName} 프로젝트`);
                 return `${projectName} 프로젝트`;
             });
 
@@ -1375,7 +1381,7 @@ const storage = multer.diskStorage({
 });
 
 /**
- * @description file Filter for Admin Route.
+ * @description 관리자 라우트에서 허용할 파일 유형을 필터링한다.
   * @param {*} req 입력값
   * @param {*} file 입력값
   * @param {*} cb 입력값
@@ -1429,7 +1435,7 @@ router.post('/upload/image',
             const baseUrl = req.protocol + '://' + req.get('host');
             const imageUrl = `${baseUrl}/uploads/images/${req.file.filename}`;
 
-            logger.debug('이미지 업로드 성공:', fileInfo);
+            verboseDebug('이미지 업로드 성공:', fileInfo);
 
             res.json({
                 success: true,

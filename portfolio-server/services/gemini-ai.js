@@ -1,31 +1,37 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const logger = require('../log');
+const isVerboseLogsEnabled = process.env.ENABLE_VERBOSE_LOGS === 'true';
+const verboseDebug = (...args) => {
+    if (isVerboseLogsEnabled) {
+        logger.debug(...args);
+    }
+};
 
 class GeminiService {
     /**
-     * @description constructor for Gemini Ai Service.
+     * @description Gemini AI 서비스 인스턴스를 초기화한다.
      * @returns {any} 처리 결과
      */
     constructor() {
         this.apiKey = process.env.GEMINI_API_KEY || null;
         
         if (this.apiKey) {
-            logger.debug('🔑 GEMINI_API_KEY 발견:', this.apiKey.substring(0, 10) + '...');
+            verboseDebug('GEMINI_API_KEY 발견:', this.apiKey.substring(0, 10) + '...');
             this.genAI = new GoogleGenerativeAI(this.apiKey);
             this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-            logger.debug('✅ Gemini 2.0 Flash 연결됨 - 최신 AI로 초고속 요약/키워드 생성! 🚀');
-            logger.debug('📊 this.model 존재 여부:', !!this.model);
+            verboseDebug('Gemini 2.0 Flash 모델 초기화 완료');
+            verboseDebug('this.model 존재 여부:', !!this.model);
         } else {
-            logger.warn('\n⚠️  GEMINI_API_KEY not found. Using enhanced fallback methods.');
-            logger.debug('\n🤖 Gemini AI 무료 사용법:');
-            logger.debug('1. https://makersuite.google.com/app/apikey 방문');
-            logger.debug('2. Google 계정으로 로그인');
-            logger.debug('3. "Create API Key" 클릭');
-            logger.debug('4. 루트 디렉토리에 .env 파일 생성:');
-            logger.debug('   GEMINI_API_KEY=생성된_API_키');
-            logger.debug('5. 서버 재시작\n');
-            logger.debug('💡 Gemini API는 무료이며 월 15,000 요청까지 사용 가능합니다.\n');
-            logger.debug('📊 this.model 존재 여부:', !!this.model);
+            logger.warn('\nGEMINI_API_KEY not found. Using enhanced fallback methods.');
+            verboseDebug('\nGemini AI 무료 사용법:');
+            verboseDebug('1. https://makersuite.google.com/app/apikey 방문');
+            verboseDebug('2. Google 계정으로 로그인');
+            verboseDebug('3. "Create API Key" 클릭');
+            verboseDebug('4. 루트 디렉토리에 .env 파일 생성:');
+            verboseDebug('   GEMINI_API_KEY=생성된_API_키');
+            verboseDebug('5. 서버 재시작\n');
+            verboseDebug('Gemini API는 무료이며 월 15,000 요청까지 사용 가능합니다.\n');
+            verboseDebug('this.model 존재 여부:', !!this.model);
         }
     }
 
@@ -79,7 +85,7 @@ class GeminiService {
             if (techTags && techTags.length > 0) {
                 const tagNames = techTags.map(tag => tag.name || tag);
                 techTerms = [...new Set([...techTerms, ...tagNames])];
-                logger.debug('클라이언트 태그와 결합된 기술 명칭:', techTerms.length, '개');
+                verboseDebug('클라이언트 태그와 결합된 기술 명칭:', techTerms.length, '개');
             }
 
             try {
@@ -93,13 +99,13 @@ class GeminiService {
                 if (rows && rows.length > 0) {
                     const dbTechTerms = rows.map(row => row.name);
                     techTerms = [...new Set([...techTerms, ...dbTechTerms])];
-                    logger.debug('DB에서 추가된 기술 명칭:', dbTechTerms.length, '개');
+                    verboseDebug('DB에서 추가된 기술 명칭:', dbTechTerms.length, '개');
                 }
             } catch (error) {
-                logger.debug('DB에서 기술 명칭 가져오기 실패, 기본 기술 명칭만 사용:', error);
+                verboseDebug('DB에서 기술 명칭 가져오기 실패, 기본 기술 명칭만 사용:', error);
             }
         } catch (error) {
-            logger.debug('기본 기술 명칭 사용 (태그 시스템 연동 실패):', error);
+            verboseDebug('기본 기술 명칭 사용 (태그 시스템 연동 실패):', error);
         }
 
         const protectedTerms = {};
@@ -144,35 +150,35 @@ class GeminiService {
      * Gemini API를 사용한 텍스트 요약
      */
     async generateSummary(content, maxLength = 160, techTags = []) {
-        logger.debug('=== generateSummary 시작 ===');
-        logger.debug('content 길이:', content.length);
-        logger.debug('maxLength:', maxLength);
-        logger.debug('techTags:', techTags);
-        logger.debug('this.model 존재 여부:', !!this.model);
+        verboseDebug('=== generateSummary 시작 ===');
+        verboseDebug('content 길이:', content.length);
+        verboseDebug('maxLength:', maxLength);
+        verboseDebug('techTags:', techTags);
+        verboseDebug('this.model 존재 여부:', !!this.model);
         
         if (!this.model) {
-            logger.debug('Gemini 모델이 없음, fallback 사용');
+            verboseDebug('Gemini 모델이 없음, fallback 사용');
             return this.fallbackSummary(content, maxLength);
         }
         
-        logger.debug('Gemini 모델 사용하여 요약 생성 시작');
+        verboseDebug('Gemini 모델 사용하여 요약 생성 시작');
 
         try {
-            logger.debug('🔄 generateSummary try 블록 시작');
+            verboseDebug('generateSummary try 블록 시작');
             
             const { cleanText, protectedTerms } = await this.cleanMarkdownWithProtection(content, techTags);
             
-            logger.debug('원본 content 길이:', content.length);
-            logger.debug('정리된 cleanText 길이:', cleanText.length);
-            logger.debug('cleanText 내용:', cleanText.substring(0, 100) + '...');
-            logger.debug('protectedTerms:', protectedTerms);
+            verboseDebug('원본 content 길이:', content.length);
+            verboseDebug('정리된 cleanText 길이:', cleanText.length);
+            verboseDebug('cleanText 내용:', cleanText.substring(0, 100) + '...');
+            verboseDebug('protectedTerms:', protectedTerms);
             
             if (cleanText.length < 1) {
                 throw new Error('Content too short for AI summarization');
             }
 
             if (cleanText.length < 10) {
-                logger.debug('Content too short for Gemini API, using fallback method');
+                verboseDebug('Content too short for Gemini API, using fallback method');
                 return this.fallbackSummary(content, maxLength);
             }
 
@@ -193,28 +199,28 @@ ${cleanText}
 
 요약:`;
 
-            logger.debug('📝 Gemini API 프롬프트 생성 완료');
-            logger.debug('📝 프롬프트 길이:', prompt.length);
+            verboseDebug('Gemini API 프롬프트 생성 완료');
+            verboseDebug('프롬프트 길이:', prompt.length);
             
-            logger.debug('🚀 Gemini API 호출 시작');
+            verboseDebug('Gemini API 호출 시작');
             const result = await this.model.generateContent(prompt);
-            logger.debug('🚀 Gemini API 응답 받음');
+            verboseDebug('Gemini API 응답 완료');
             const response = await result.response;
             let summary = response.text().trim();
 
             if (!summary || summary.trim().length < 5) {
-                logger.debug('Gemini API 응답이 비어있거나 너무 짧음, fallback 사용');
+                verboseDebug('Gemini API 응답이 비어있거나 너무 짧음, fallback 사용');
                 return this.fallbackSummary(content, maxLength);
             }
 
-            logger.debug('Gemini API 원본 응답:', summary);
-            logger.debug('보호된 기술 명칭들:', protectedTerms);
+            verboseDebug('Gemini API 원본 응답:', summary);
+            verboseDebug('보호된 기술 명칭들:', protectedTerms);
 
             Object.entries(protectedTerms).forEach(([placeholder, originalTerm]) => {
                 summary = summary.replace(new RegExp(placeholder, 'g'), originalTerm);
             });
 
-            logger.debug('기술 명칭 복원 후 요약:', summary);
+            verboseDebug('기술 명칭 복원 후 요약:', summary);
 
             if (summary.length > maxLength) {
                 const truncated = summary.substring(0, maxLength - 3);
@@ -232,11 +238,11 @@ ${cleanText}
             }
 
             if (!summary || summary.trim().length < 10) {
-                logger.debug('요약이 너무 짧거나 비어있음, fallback 사용');
+                verboseDebug('요약이 너무 짧거나 비어있음, fallback 사용');
                 return this.fallbackSummary(content, maxLength);
             }
 
-            logger.debug('최종 요약:', summary);
+            verboseDebug('최종 요약:', summary);
             return summary;
 
         } catch (error) {
@@ -261,7 +267,7 @@ ${cleanText}
             }
 
             if (cleanText.length < 50) {
-                logger.debug('Content too short for Gemini API, using fallback method');
+                verboseDebug('Content too short for Gemini API, using fallback method');
                 return this.fallbackKeywords(content, maxKeywords);
             }
 
@@ -293,18 +299,18 @@ ${cleanText}
             const response = await result.response;
             let keywordsText = response.text().trim();
 
-            logger.debug('Gemini API 키워드 원본 응답:', keywordsText);
-            logger.debug('보호된 기술 명칭들:', protectedTerms);
+            verboseDebug('Gemini API 키워드 원본 응답:', keywordsText);
+            verboseDebug('보호된 기술 명칭들:', protectedTerms);
 
             Object.entries(protectedTerms).forEach(([placeholder, originalTerm]) => {
                 keywordsText = keywordsText.replace(new RegExp(placeholder, 'g'), originalTerm);
             });
 
-            logger.debug('기술 명칭 복원 후 키워드:', keywordsText);
+            verboseDebug('기술 명칭 복원 후 키워드:', keywordsText);
 
             const keywords = this.parseAndCleanKeywords(keywordsText, maxKeywords);
             
-            logger.debug('최종 파싱된 키워드:', keywords);
+            verboseDebug('최종 파싱된 키워드:', keywords);
             return keywords.length > 0 ? keywords : this.fallbackKeywords(content, maxKeywords);
 
         } catch (error) {
@@ -314,41 +320,41 @@ ${cleanText}
     }
 
     /**
-     * @description fallback Summary for Gemini Ai Service.
+     * @description Gemini AI 서비스용 기본 요약을 제공한다.
       * @param {*} content 입력값
       * @param {*} maxLength 입력값
      * @returns {any} 처리 결과
      */
     fallbackSummary(content, maxLength = 160) {
-        logger.debug('fallbackSummary 호출됨, content 길이:', content.length);
+        verboseDebug('fallbackSummary 호출됨, content 길이:', content.length);
         
         const cleanText = this.cleanMarkdown(content);
-        logger.debug('fallback cleanText 길이:', cleanText.length);
+        verboseDebug('fallback cleanText 길이:', cleanText.length);
         
         if (cleanText.length <= 30) {
-            logger.debug('handleShortContent 호출');
+            verboseDebug('handleShortContent 호출');
             return this.handleShortContent(cleanText, maxLength);
         }
         
         const sentences = this.extractCleanSentences(cleanText);
-        logger.debug('추출된 문장 수:', sentences.length);
+        verboseDebug('추출된 문장 수:', sentences.length);
         
         if (sentences.length === 0) {
-            logger.debug('handleNoSentences 호출');
+            verboseDebug('handleNoSentences 호출');
             return this.handleNoSentences(cleanText, maxLength);
         }
         
         if (sentences.length === 1) {
-            logger.debug('formatSingleSentence 호출');
+            verboseDebug('formatSingleSentence 호출');
             return this.formatSingleSentence(sentences[0], maxLength);
         }
         
-        logger.debug('summarizeMultipleSentences 호출');
+        verboseDebug('summarizeMultipleSentences 호출');
         return this.summarizeMultipleSentences(sentences, maxLength);
     }
 
     /**
-     * @description Handles Gemini Ai Service Short Content.
+     * @description Gemini AI 서비스에서 짧은 콘텐츠를 처리한다.
       * @param {*} text 입력값
       * @param {*} maxLength 입력값
      * @returns {any} 처리 결과
@@ -368,7 +374,7 @@ ${cleanText}
     }
 
     /**
-     * @description extract Clean Sentences for Gemini Ai Service.
+     * @description Gemini AI 서비스용 정제된 문장을 추출한다.
       * @param {*} text 입력값
      * @returns {any} 처리 결과
      */
@@ -384,7 +390,7 @@ ${cleanText}
     }
 
     /**
-     * @description is Connector Sentence for Gemini Ai Service.
+     * @description Gemini AI 서비스에서 연결 문장 여부를 판단한다.
       * @param {*} sentence 입력값
      * @returns {any} 처리 결과
      */
@@ -394,7 +400,7 @@ ${cleanText}
     }
 
     /**
-     * @description clean Sentence for Gemini Ai Service.
+     * @description Gemini AI 서비스용 문장을 정제한다.
       * @param {*} sentence 입력값
      * @returns {any} 처리 결과
      */
@@ -411,7 +417,7 @@ ${cleanText}
     }
 
     /**
-     * @description format Single Sentence for Gemini Ai Service.
+     * @description Gemini AI 서비스용 문장을 포맷한다.
       * @param {*} sentence 입력값
       * @param {*} maxLength 입력값
      * @returns {any} 처리 결과
@@ -431,7 +437,7 @@ ${cleanText}
     }
 
     /**
-     * @description Finds Gemini Ai Service atural Cut Point.
+     * @description Gemini AI 서비스 요약을 위한 자연스러운 분기점을 찾는다.
       * @param {*} text 입력값
       * @param {*} maxLength 입력값
      * @returns {any} 처리 결과
@@ -451,7 +457,7 @@ ${cleanText}
     }
 
     /**
-     * @description summarize Multiple Sentences for Gemini Ai Service.
+     * @description Gemini AI 서비스에서 여러 문장을 요약한다.
       * @param {*} sentences 입력값
       * @param {*} maxLength 입력값
      * @returns {any} 처리 결과
@@ -479,7 +485,7 @@ ${cleanText}
     }
 
     /**
-     * @description prioritize Sentences for Gemini Ai Service.
+     * @description Gemini AI 서비스에서 문장의 우선순위를 계산한다.
       * @param {*} sentences 입력값
      * @returns {any} 처리 결과
      */
@@ -503,7 +509,7 @@ ${cleanText}
     }
 
     /**
-     * @description calculate Sentence Score for Gemini Ai Service.
+     * @description Gemini AI 서비스에서 문장 점수를 계산한다.
       * @param {*} sentence 입력값
       * @param {*} importantKeywords 입력값
       * @param {*} isFirst 입력값
@@ -524,7 +530,7 @@ ${cleanText}
     }
 
     /**
-     * @description Creates Gemini Ai Service Keyword Based Summary.
+     * @description Gemini AI 서비스에서 키워드 기반 요약을 생성한다.
       * @param {*} text 입력값
       * @param {*} maxLength 입력값
      * @returns {any} 처리 결과
@@ -543,7 +549,7 @@ ${cleanText}
     }
 
     /**
-     * @description fallback Keywords for Gemini Ai Service.
+     * @description Gemini AI 서비스용 기본 키워드를 제공한다.
       * @param {*} content 입력값
       * @param {*} maxKeywords 입력값
      * @returns {any} 처리 결과
@@ -566,7 +572,7 @@ ${cleanText}
     }
 
     /**
-     * @description extract Tech Keywords for Gemini Ai Service.
+     * @description Gemini AI 서비스용 기술 키워드를 추출한다.
       * @param {*} text 입력값
       * @param {*} techKeywords 입력값
      * @returns {any} 처리 결과
@@ -581,7 +587,7 @@ ${cleanText}
     }
 
     /**
-     * @description extract Phrases for Gemini Ai Service.
+     * @description Gemini AI 서비스용 구문을 추출한다.
       * @param {*} text 입력값
       * @param {*} stopWords 입력값
      * @returns {any} 처리 결과
@@ -596,7 +602,7 @@ ${cleanText}
     }
 
     /**
-     * @description Retrieves Gemini Ai Service Default Keywords.
+     * @description Gemini AI 서비스의 기본 키워드를 조회한다.
       * @param {*} text 입력값
      * @returns {any} 처리 결과
      */
@@ -607,7 +613,7 @@ ${cleanText}
     }
 
     /**
-     * @description parse And Clean Keywords for Gemini Ai Service.
+     * @description Gemini AI 서비스용 키워드를 파싱하고 정제한다.
       * @param {*} keywordsText 입력값
       * @param {*} maxKeywords 입력값
      * @returns {any} 처리 결과
@@ -625,7 +631,7 @@ ${cleanText}
     }
 
     /**
-     * @description clean Single Keyword for Gemini Ai Service.
+     * @description Gemini AI 서비스용 키워드를 정제한다.
       * @param {*} keyword 입력값
      * @returns {any} 처리 결과
      */
@@ -639,7 +645,7 @@ ${cleanText}
     }
 
     /**
-     * @description Generates Gemini Ai Service Summary And Keywords.
+     * @description Gemini AI 서비스에서 요약과 키워드를 생성한다.
       * @param {*} content 입력값
       * @param {*} techTags 입력값
      * @returns {Promise<any>} 처리 결과
