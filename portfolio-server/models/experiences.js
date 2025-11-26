@@ -38,7 +38,6 @@ const Experiences = {
     async create(data) {
         const { type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order } = data;
         
-        // undefined 값을 null로 변환
         const params = [type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order]
             .map(value => {
                 if (value === undefined) return null;
@@ -57,7 +56,6 @@ const Experiences = {
     async update(id, data) {
         const { type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order } = data;
         
-        // undefined 값을 null로 변환
         const params = [type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order]
             .map(value => {
                 if (value === undefined) return null;

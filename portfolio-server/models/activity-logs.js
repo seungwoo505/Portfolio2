@@ -2,7 +2,6 @@ const { executeQuery } = require('../database/connection');
 const logger = require('../log');
 
 class ActivityLogs {
-  // 활동 로그 생성
   async create(data) {
     const {
       user_id,
@@ -44,7 +43,6 @@ class ActivityLogs {
     }
   }
 
-  // 활동 로그 조회 (필터링, 페이징, 검색)
   async findWithFilters(filters = {}) {
     const {
       search = '',
@@ -59,7 +57,6 @@ class ActivityLogs {
     let query = 'SELECT * FROM activity_logs WHERE 1=1';
     const values = [];
 
-    // 검색 필터
     if (search) {
       query += ` AND (
         username LIKE ? OR 
@@ -72,25 +69,21 @@ class ActivityLogs {
       values.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
-    // 사용자 필터
     if (user !== 'all') {
       query += ' AND username = ?';
       values.push(user);
     }
 
-    // 액션 필터
     if (action !== 'all') {
       query += ' AND action = ?';
       values.push(action);
     }
 
-    // 리소스 타입 필터
     if (resource_type !== 'all') {
       query += ' AND resource_type = ?';
       values.push(resource_type);
     }
 
-    // 날짜 필터
     if (date_filter !== 'all') {
       const now = new Date();
       let dateCondition = '';
@@ -115,7 +108,6 @@ class ActivityLogs {
       }
     }
 
-    // 정렬 및 페이징
     query += ' ORDER BY created_at DESC';
     query += ' LIMIT ? OFFSET ?';
     
@@ -131,7 +123,6 @@ class ActivityLogs {
     }
   }
 
-  // 전체 로그 수 조회 (필터링 적용)
   async countWithFilters(filters = {}) {
     const {
       search = '',
@@ -144,7 +135,6 @@ class ActivityLogs {
     let query = 'SELECT COUNT(*) as total FROM activity_logs WHERE 1=1';
     const values = [];
 
-    // 검색 필터
     if (search) {
       query += ` AND (
         username LIKE ? OR 
@@ -157,25 +147,21 @@ class ActivityLogs {
       values.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
-    // 사용자 필터
     if (user !== 'all') {
       query += ' AND username = ?';
       values.push(user);
     }
 
-    // 액션 필터
     if (action !== 'all') {
       query += ' AND action = ?';
       values.push(action);
     }
 
-    // 리소스 타입 필터
     if (resource_type !== 'all') {
       query += ' AND resource_type = ?';
       values.push(resource_type);
     }
 
-    // 날짜 필터
     if (date_filter !== 'all') {
       const now = new Date();
       let dateCondition = '';
@@ -209,22 +195,17 @@ class ActivityLogs {
     }
   }
 
-  // 통계 정보 조회
   async getStats() {
     try {
-      // 전체 활동 수
       const totalResult = await executeQuery('SELECT COUNT(*) as total FROM activity_logs');
       const total = totalResult[0].total;
 
-      // 오늘 활동 수
       const todayResult = await executeQuery('SELECT COUNT(*) as today FROM activity_logs WHERE DATE(created_at) = CURDATE()');
       const today = todayResult[0].today;
 
-      // 고유 사용자 수
       const usersResult = await executeQuery('SELECT COUNT(DISTINCT username) as unique_users FROM activity_logs');
       const uniqueUsers = usersResult[0].unique_users;
 
-      // 고유 리소스 타입 수
       const resourcesResult = await executeQuery('SELECT COUNT(DISTINCT resource_type) as unique_resources FROM activity_logs');
       const uniqueResources = resourcesResult[0].unique_resources;
 
@@ -240,7 +221,6 @@ class ActivityLogs {
     }
   }
 
-  // 특정 사용자의 활동 로그 조회
   async findByUser(userId, limit = 100) {
     const query = `
       SELECT * FROM activity_logs 
@@ -258,7 +238,6 @@ class ActivityLogs {
     }
   }
 
-  // 오래된 로그 정리 (선택사항)
   async cleanupOldLogs(daysToKeep = 90) {
     const query = `
       DELETE FROM activity_logs 

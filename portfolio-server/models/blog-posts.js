@@ -3,7 +3,6 @@ const { v4: uuidv4 } = require('uuid');
 const CacheUtils = require('../utils/cache');
 
 const BlogPosts = {
-    // 블로그 포스트 전체 조회 (캐싱 적용)
     async getAll(limit = 10, offset = 0, published_only = true) {
         const cacheKey = CacheUtils.generateKey('blog_posts', 'all', limit, offset, published_only);
         
@@ -31,7 +30,6 @@ const BlogPosts = {
         }, 300); // 5분 캐시
     },
 
-    // 🔍 고급 검색, 정렬, 필터링을 지원하는 블로그 포스트 조회
     async getWithFilters(filters = {}) {
         const {
             limit = 10,
@@ -45,11 +43,9 @@ const BlogPosts = {
             published_only = true
         } = filters;
 
-        // WHERE 조건 구성
         let whereConditions = [];
         let queryParams = [];
 
-        // 상태 필터
         if (status === 'published') {
             whereConditions.push('bp.is_published = TRUE');
         } else if (status === 'draft') {
@@ -58,13 +54,11 @@ const BlogPosts = {
             whereConditions.push('bp.is_published = TRUE');
         }
 
-        // featured 필터
         if (featured !== null) {
             whereConditions.push('bp.is_featured = ?');
             queryParams.push(featured ? 1 : 0);
         }
 
-        // 태그 필터
         if (tags && tags.length > 0) {
             const tagPlaceholders = tags.map(() => '?').join(',');
             whereConditions.push(`
@@ -79,7 +73,6 @@ const BlogPosts = {
             queryParams.push(...tags);
         }
 
-        // 검색 조건
         if (search && search.trim()) {
             const searchTerm = `%${search.trim()}%`;
             whereConditions.push(`(
@@ -93,7 +86,6 @@ const BlogPosts = {
 
         const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-        // 정렬 조건
         let orderClause = '';
         const validSortFields = ['published_at', 'created_at', 'title', 'view_count', 'reading_time'];
         const validOrders = ['asc', 'desc'];
@@ -101,7 +93,6 @@ const BlogPosts = {
         const sortField = validSortFields.includes(sort) ? sort : 'published_at';
         const sortOrder = validOrders.includes(order.toLowerCase()) ? order.toUpperCase() : 'DESC';
         
-        // 기본 정렬: featured 우선, 그 다음 지정된 정렬
         orderClause = `ORDER BY bp.is_featured DESC, bp.${sortField} ${sortOrder}`;
 
         const query = `
@@ -126,7 +117,6 @@ const BlogPosts = {
         }));
     },
 
-    // 🔍 필터 조건에 따른 총 개수 조회
     async getCountWithFilters(filters = {}) {
         const {
             search = '',
@@ -136,11 +126,9 @@ const BlogPosts = {
             published_only = true
         } = filters;
 
-        // WHERE 조건 구성
         let whereConditions = [];
         let queryParams = [];
 
-        // 상태 필터
         if (status === 'published') {
             whereConditions.push('bp.is_published = TRUE');
         } else if (status === 'draft') {
@@ -149,13 +137,11 @@ const BlogPosts = {
             whereConditions.push('bp.is_published = TRUE');
         }
 
-        // featured 필터
         if (featured !== null) {
             whereConditions.push('bp.is_featured = ?');
             queryParams.push(featured ? 1 : 0);
         }
 
-        // 태그 필터
         if (tags && tags.length > 0) {
             const tagPlaceholders = tags.map(() => '?').join(',');
             whereConditions.push(`
@@ -170,7 +156,6 @@ const BlogPosts = {
             queryParams.push(...tags);
         }
 
-        // 검색 조건
         if (search && search.trim()) {
             const searchTerm = `%${search.trim()}%`;
             whereConditions.push(`(
@@ -196,7 +181,6 @@ const BlogPosts = {
         return result.total || 0;
     },
 
-    // 슬러그 맞춤 조회 (캐싱 적용)
     async getBySlug(slug) {
         const cacheKey = CacheUtils.generateKey('blog_post', 'slug', slug);
         
@@ -207,7 +191,6 @@ const BlogPosts = {
             
             if (!post) return null;
 
-            // 태그들 조회
             const tags = await executeQuery(`
                 SELECT t.* FROM tags t
                 INNER JOIN tag_usage tu ON t.id = tu.tag_id
@@ -222,7 +205,6 @@ const BlogPosts = {
         }, 600); // 10분 캐시 (개별 포스트는 더 오래 캐시)
     },
 
-    // 슬러그 맞춤 조회 (관리자용 - 비공개 포함)
     async getBySlugAdmin(slug) {
         const cacheKey = CacheUtils.generateKey('blog_post_admin', 'slug', slug);
         
@@ -233,7 +215,6 @@ const BlogPosts = {
             
             if (!post) return null;
 
-            // 태그들 조회
             const tags = await executeQuery(`
                 SELECT t.* FROM tags t
                 INNER JOIN tag_usage tu ON t.id = tu.tag_id
@@ -248,13 +229,11 @@ const BlogPosts = {
         }, 600); // 10분 캐시 (개별 포스트는 더 오래 캐시)
     },
 
-    // 블로그 포스트 단건 조회
     async getById(id) {
         const post = await executeQuerySingle('SELECT * FROM blog_posts WHERE id = ?', [id]);
         
         if (!post) return null;
 
-        // 태그들 조회
         const tags = await executeQuery(`
             SELECT t.* FROM tags t
             INNER JOIN tag_usage tu ON t.id = tu.tag_id
@@ -276,10 +255,8 @@ const BlogPosts = {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         const uuid = uuidv4();
         
-        // 슬러그 자동 생성 (제공되지 않은 경우)
         const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
         
-        // 읽기 시간 계산 (대략 200단어/분)
         const reading_time = Math.ceil(content.split(' ').length / 200);
         
         const query = `
@@ -290,7 +267,6 @@ const BlogPosts = {
         const published_at = is_published ? new Date() : null;
         const result = await executeQuery(query, [uuid, title, finalSlug, excerpt, content, featured_image, is_published || false, is_featured || false, reading_time, meta_title, meta_description, meta_keywords, published_at]);
         
-        // 태그 연결
         if (tags && tags.length > 0) {
             await this.updateTags(result.insertId, tags);
         }
@@ -301,7 +277,6 @@ const BlogPosts = {
     async _update(id, data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         
-        // undefined 값을 null로 변환
         const cleanData = {
             title: title === undefined ? null : title,
             slug: slug === undefined ? null : slug,
@@ -315,7 +290,6 @@ const BlogPosts = {
             meta_keywords: meta_keywords === undefined ? null : meta_keywords
         };
         
-        // 읽기 시간 재계산
         const reading_time = cleanData.content ? Math.ceil(cleanData.content.split(' ').length / 200) : null;
         
         let query = `
@@ -334,7 +308,6 @@ const BlogPosts = {
                 updated_at = NOW()
         `;
         
-        // 발행 상태가 변경된 경우 published_at 업데이트
         if (is_published !== undefined) {
             query += `, published_at = ${is_published ? 'NOW()' : 'NULL'}`;
         }
@@ -343,7 +316,6 @@ const BlogPosts = {
         
         await executeQuery(query, [cleanData.title, cleanData.slug, cleanData.excerpt, cleanData.content, cleanData.featured_image, cleanData.is_published, cleanData.is_featured, cleanData.meta_title, cleanData.meta_description, cleanData.meta_keywords, reading_time, id]);
         
-        // 태그 업데이트
         if (tags) {
             await this.updateTags(id, tags);
         }
@@ -352,23 +324,18 @@ const BlogPosts = {
     },
 
     async _delete(id) {
-        // 연관된 태그 연결도 함께 삭제 (CASCADE)
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [id]);
         await executeQuery('DELETE FROM blog_posts WHERE id = ?', [id]);
         
-        // 태그별 사용량 업데이트
         await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
     async updateTags(postId, tagNames) {
-        // 기존 태그 연결 삭제
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [postId]);
         
-        // tagNames 처리: 배열이면 그대로 사용, 문자열이면 쉼표로 분할
         const tagArray = Array.isArray(tagNames) ? tagNames : (typeof tagNames === 'string' ? tagNames.split(',') : []);
         
         for (const tagName of tagArray) {
-            // 태그가 존재하지 않으면 생성
             let tag = await executeQuerySingle('SELECT id FROM tags WHERE name = ?', [tagName.trim()]);
             
             if (!tag) {
@@ -377,11 +344,9 @@ const BlogPosts = {
                 tag = { id: result.insertId };
             }
             
-            // 포스트-태그 연결
             await executeQuery("INSERT IGNORE INTO tag_usage (tag_id, content_type, content_id) VALUES (?, 'blog_post', ?)", [tag.id, postId]);
         }
         
-        // 태그별 사용량 업데이트
         await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
@@ -465,20 +430,16 @@ const BlogPosts = {
         }, 300); // 5분 캐시
     },
 
-    // 🚀 캐시 무효화 메서드들
     invalidateCache(postId = null) {
         if (postId) {
-            // 특정 포스트 관련 캐시만 무효화
             CacheUtils.delPattern(`blog_post:${postId}:*`);
         }
         
-        // 블로그 포스트 목록 캐시 무효화
         CacheUtils.delPattern('blog_posts:*');
         CacheUtils.delPattern('blog_post:slug:*');
         CacheUtils.delPattern('blog_posts:featured:*');
     },
 
-    // 포스트 생성/수정/삭제 시 캐시 무효화
     async create(data) {
         const result = await this._create(data);
         this.invalidateCache();

@@ -46,7 +46,6 @@ const Tags = {
         const { name, slug, description, color, type = 'general' } = data;
         const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
         
-        // undefined 값을 null로 변환 (color는 기본값 설정)
         const cleanParams = [
             name,
             finalSlug,
@@ -66,7 +65,6 @@ const Tags = {
     async update(id, data) {
         const { name, slug, description, color, type } = data;
         
-        // undefined 값을 null로 변환 (description만 null 허용)
         const cleanParams = [
             name,
             slug,

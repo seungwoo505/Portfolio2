@@ -6,10 +6,8 @@ const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 
 const logDir = path.join(__dirname, 'logs');
-// ensure log directory exists (async)
 fs.promises.mkdir(logDir, { recursive: true })
   .catch(err => {
-    // logger가 아직 초기화되지 않았으므로 console.error 사용
     console.error(`Failed to create log directory ${logDir}`, err);
   });
 
@@ -23,14 +21,13 @@ const transport = new DailyRotateFile({
 });
 
 const logger = winston.createLogger({
-    level : process.env.LOG_LEVEL || 'warn', // 기본 레벨을 warn으로 변경
+    level : process.env.LOG_LEVEL || 'warn',
     format : winston.format.combine(
         winston.format.timestamp({ format : 'YYYY-MM-DD HH:mm:ss'}),
         winston.format.errors({ stack: true }),
         winston.format.json(),
         winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
             let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-            // 메타데이터가 있을 때만 JSON 변환 (성능 최적화)
             if (Object.keys(meta).length > 0) {
                 log += ` | ${JSON.stringify(meta)}`;
             }
@@ -52,7 +49,6 @@ const logger = winston.createLogger({
     ]
 });
 
-// 로그 레벨별 헬퍼 함수들
 logger.request = (req, message = 'API 요청') => {
     logger.info(message, {
         method: req.method,
@@ -96,9 +92,7 @@ logger.admin = (message, admin = null, extra = {}) => {
     });
 };
 
-// 🎯 활동 추적 로깅 (사용자 행동 및 시스템 동작)
 logger.activity = (action, details = {}, user = null) => {
-    // 활동 유형 분류
     let category = '일반';
     if (action.includes('로그인')) category = '인증';
     else if (action.includes('로그아웃')) category = '인증';
@@ -117,9 +111,7 @@ logger.activity = (action, details = {}, user = null) => {
     });
 };
 
-// 📊 데이터베이스 작업 로깅
 logger.database = (operation, table, details = {}) => {
-    // 작업 유형 분류
     let category = 'SELECT';
     if (operation.includes('INSERT')) category = 'INSERT';
     else if (operation.includes('UPDATE')) category = 'UPDATE';
@@ -135,15 +127,12 @@ logger.database = (operation, table, details = {}) => {
     });
 };
 
-// 🔍 API 사용 통계 로깅
 logger.apiUsage = (endpoint, method, user = null, responseTime = null) => {
-    // API 유형 분류
     let category = 'PUBLIC';
     if (endpoint.includes('/admin')) category = 'ADMIN';
     else if (endpoint.includes('/login')) category = 'AUTH';
     else if (endpoint.includes('/logout')) category = 'AUTH';
     
-    // 성능 등급 분류
     let performance = 'NORMAL';
     if (responseTime > 2000) performance = 'SLOW';
     else if (responseTime > 1000) performance = 'MODERATE';
@@ -160,7 +149,6 @@ logger.apiUsage = (endpoint, method, user = null, responseTime = null) => {
     });
 };
 
-// 📈 로그 통계 및 집계 기능
 logger.stats = {
     counters: {
         totalRequests: 0,
@@ -173,21 +161,18 @@ logger.stats = {
         slowRequests: 0
     },
     
-    // 통계 업데이트
     updateStats(type, value = 1) {
         if (this.counters.hasOwnProperty(type)) {
             this.counters[type] += value;
         }
     },
     
-    // 통계 초기화
     resetStats() {
         Object.keys(this.counters).forEach(key => {
             this.counters[key] = 0;
         });
     },
     
-    // 통계 로깅
     logStats() {
         logger.info('📊 시스템 통계', {
             stats: this.counters,
@@ -196,15 +181,13 @@ logger.stats = {
     }
 };
 
-// 통계 업데이트를 위한 헬퍼 함수들
 logger.incrementCounter = (type, value = 1) => {
     logger.stats.updateStats(type, value);
 };
 
-// 시간 기반 통계 리셋 (1시간마다)
 setInterval(() => {
     logger.stats.logStats();
     logger.stats.resetStats();
-}, 60 * 60 * 1000); // 1시간
+}, 60 * 60 * 1000);
 
 module.exports = logger;

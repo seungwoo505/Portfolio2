@@ -144,7 +144,6 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../log');
 
-// 개별 모델들 import
 const PersonalInfo = require('../models/personal-info');
 const SocialLinks = require('../models/social-links');
 const Skills = require('../models/skills');
@@ -158,10 +157,8 @@ const Interests = require('../models/interests');
 const SiteSettings = require('../models/site-settings');
 const { executeQuery } = require('../models/db-utils');
 
-// 인증 미들웨어 import (일부 라우트에서 사용)
 const { authenticateToken, requirePermission, logActivity } = require('../middleware/auth');
 
-// 공개 설정 조회 (프론트엔드용)
 router.get('/settings', async (req, res) => {
     try {
         const settings = await SiteSettings.getPublicSettings();
@@ -410,7 +407,6 @@ router.get('/settings', async (req, res) => {
  *       200:
  *         description: 성공
  */
-// 🏠 개인 정보 라우트
 router.get('/personal-info', async (req, res) => {
     try {
         const info = await PersonalInfo.get();
@@ -429,7 +425,6 @@ router.get('/personal-info', async (req, res) => {
 
 router.put('/personal-info', async (req, res) => {
     try {
-        // undefined 값을 null로 변환
         const cleanedData = Object.fromEntries(
             Object.entries(req.body).map(([key, value]) => [
                 key, 
@@ -452,7 +447,6 @@ router.put('/personal-info', async (req, res) => {
     }
 });
 
-// 🔗 소셜 링크 라우트
 router.get('/social-links', async (req, res) => {
     try {
         const links = await SocialLinks.getAll();
@@ -497,13 +491,11 @@ router.post('/social-links', async (req, res) => {
     }
 });
 
-// 💪 스킬 라우트
 router.get('/skills', async (req, res) => {
     try {
         const skills = await Skills.getAllWithCategories();
         const categories = await Skills.getCategories();
         
-        // 카테고리별로 스킬 그룹화
         const skillsByCategory = categories.map(category => ({
             ...category,
             skills: skills.filter(skill => skill.category_id === category.id)
@@ -542,7 +534,6 @@ router.get('/skills/featured', async (req, res) => {
     }
 });
 
-// 스킬 추가 (관리자 전용)
 router.post('/skills', 
     authenticateToken, 
     requirePermission('skills.create'), 
@@ -693,7 +684,6 @@ router.get('/projects', async (req, res) => {
         const pageLimit = parseInt(limit) || 10;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
 
-        // 필터 조건 구성
         const filters = {
             limit: pageLimit,
             offset: offset,
@@ -710,12 +700,10 @@ router.get('/projects', async (req, res) => {
         let projects, totalCount;
         
         if (featured === 'true') {
-            // 메인 페이지용 - featured만 가져오기 (offset 무시)
             filters.offset = 0;
             projects = await Projects.getWithFilters(filters);
             totalCount = await Projects.getCountWithFilters({ ...filters, limit: 1000, offset: 0 });
         } else {
-            // 목록 페이지용 - 필터 적용하여 가져오기
             projects = await Projects.getWithFilters(filters);
             totalCount = await Projects.getCountWithFilters(filters);
         }
@@ -741,7 +729,6 @@ router.get('/projects', async (req, res) => {
     }
 });
 
-// 프로젝트 상세 조회 (슬러그 기반)
 router.get('/projects/slug/:slug', async (req, res) => {
     try {
         const project = await Projects.getBySlug(req.params.slug);
@@ -766,7 +753,6 @@ router.get('/projects/slug/:slug', async (req, res) => {
     }
 });
 
-// 태그로 프로젝트 조회
 router.get('/projects/tag/:tagSlug', async (req, res) => {
     try {
         const { limit, page } = req.query;
@@ -811,7 +797,6 @@ router.get('/projects/tag/:tagSlug', async (req, res) => {
     }
 });
 
-// 프로젝트 생성은 admin.js로 이동됨
 
 /**
  * @swagger
@@ -901,7 +886,6 @@ router.get('/blog/posts', async (req, res) => {
         const pageLimit = parseInt(limit) || 10;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
 
-        // 필터 조건 구성
         const filters = {
             limit: pageLimit,
             offset: offset,
@@ -917,12 +901,10 @@ router.get('/blog/posts', async (req, res) => {
         let posts, totalCount;
         
         if (featured === 'true') {
-            // 메인 페이지용 - featured만 가져오기 (offset 무시)
             filters.offset = 0;
             posts = await BlogPosts.getWithFilters(filters);
             totalCount = await BlogPosts.getCountWithFilters({ ...filters, limit: 1000, offset: 0 });
         } else {
-            // 목록 페이지용 - 필터 적용하여 가져오기
             posts = await BlogPosts.getWithFilters(filters);
             totalCount = await BlogPosts.getCountWithFilters(filters);
         }
@@ -1002,12 +984,10 @@ router.get('/blog/search', async (req, res) => {
     }
 });
 
-// 📊 블로그 포스트 조회수 증가 (슬러그 기반)
 router.post('/blog/posts/:slug/view', async (req, res) => {
     try {
         const postSlug = req.params.slug;
         
-        // 블로그 포스트 존재 여부 확인 (슬러그로)
         const post = await executeQuery('SELECT id FROM blog_posts WHERE slug = ? AND is_published = TRUE', [postSlug]);
         
         if (!post || post.length === 0) {
@@ -1017,7 +997,6 @@ router.post('/blog/posts/:slug/view', async (req, res) => {
             });
         }
 
-        // 조회수 증가
         await executeQuery('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?', [post[0].id]);
 
         res.json({
@@ -1033,7 +1012,6 @@ router.post('/blog/posts/:slug/view', async (req, res) => {
     }
 });
 
-// 블로그 포스트 생성 (관리자 전용)
 router.post('/blog/posts', 
     authenticateToken, 
     requirePermission('blog.create'), 
@@ -1157,7 +1135,6 @@ router.post('/contact', async (req, res) => {
             });
         }
 
-        // 이메일 형식 검증
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             logger.warn('연락처 폼 검증 실패 - 잘못된 이메일 형식', {
@@ -1248,11 +1225,9 @@ router.get('/settings', async (req, res) => {
     try {
         const settings = await SiteSettings.getAll(true); // 공개 설정만
         
-        // 객체 형태로 변환
         const settingsObj = settings.reduce((acc, setting) => {
             let value = setting.setting_value;
             
-            // 타입에 따라 값 변환
             if (setting.setting_type === 'boolean') {
                 value = value === 'true';
             } else if (setting.setting_type === 'number') {
@@ -1282,20 +1257,16 @@ router.get('/settings', async (req, res) => {
     }
 });
 
-// RSS 피드 생성
 router.get('/rss.xml', async (req, res) => {
   try {
-    // 사이트 설정 가져오기
     const [settings] = await SiteSettings.getPublicSettings(); // SiteSettings.getPublicSettings 사용
     const siteSettings = {};
     settings.forEach(setting => {
       siteSettings[setting.setting_key] = setting.setting_value;
     });
 
-    // 블로그 포스트 가져오기 (최근 20개)
     const [posts] = await BlogPosts.getAll(20, 0, true); // BlogPosts.getAll 사용
 
-    // RSS XML 생성
     const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -1326,7 +1297,6 @@ router.get('/rss.xml', async (req, res) => {
   }
 });
 
-// 🏷️ 통합 태그 라우트
 router.get('/tags', async (req, res) => {
     try {
         const { type, popular } = req.query; // type: blog|project|general
@@ -1343,7 +1313,6 @@ router.get('/tags', async (req, res) => {
     }
 });
 
-// 상위 10개 기술 스택 (사용 횟수 기준)
 router.get('/tags/top-skills', async (req, res) => {
     try {
         const topSkills = await Tags.getTopSkills(10, 'general');
@@ -1354,7 +1323,6 @@ router.get('/tags/top-skills', async (req, res) => {
     }
 });
 
-// 태그 단건 조회
 router.get('/tags/:slug', async (req, res) => {
     try {
         const tag = await Tags.getBySlug(req.params.slug);
@@ -1368,7 +1336,6 @@ router.get('/tags/:slug', async (req, res) => {
     }
 });
 
-// 과거 호환용 블로그 태그 라우트
 router.get('/blog/tags', async (req, res) => {
     try {
         const { popular } = req.query;
@@ -1421,7 +1388,6 @@ router.get('/blog/posts/tag/:tagSlug', async (req, res) => {
     }
 });
 
-// 💼 경력/경험 라우트
 router.get('/experiences', async (req, res) => {
     try {
         const { type } = req.query;
@@ -1473,7 +1439,6 @@ router.post('/experiences', async (req, res) => {
             });
         }
 
-        // 프론트엔드 필드명을 서버 필드명으로 매핑
         const mappedData = {
             ...req.body,
             company_or_institution: req.body.company || req.body.company_or_institution
@@ -1496,7 +1461,6 @@ router.post('/experiences', async (req, res) => {
     }
 });
 
-// 경험 수정
 router.put('/experiences/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1509,7 +1473,6 @@ router.put('/experiences/:id', async (req, res) => {
             });
         }
 
-        // 프론트엔드 필드명을 서버 필드명으로 매핑
         const mappedData = {
             ...req.body,
             company_or_institution: req.body.company || req.body.company_or_institution
@@ -1531,7 +1494,6 @@ router.put('/experiences/:id', async (req, res) => {
     }
 });
 
-// 경험 삭제
 router.delete('/experiences/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1550,7 +1512,6 @@ router.delete('/experiences/:id', async (req, res) => {
     }
 });
 
-// 🎯 관심사 라우트
 router.get('/interests', async (req, res) => {
     try {
         const { category } = req.query;
@@ -1575,7 +1536,6 @@ router.get('/interests', async (req, res) => {
     }
 });
 
-// 관심사 생성
 router.post('/interests', async (req, res) => {
     try {
         const interest = await Interests.create(req.body);
@@ -1593,7 +1553,6 @@ router.post('/interests', async (req, res) => {
     }
 });
 
-// 관심사 수정
 router.put('/interests/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1612,7 +1571,6 @@ router.put('/interests/:id', async (req, res) => {
     }
 });
 
-// 관심사 삭제
 router.delete('/interests/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1630,7 +1588,6 @@ router.delete('/interests/:id', async (req, res) => {
     }
 });
 
-// 📊 대시보드/통계 라우트
 router.get('/dashboard/stats', async (req, res) => {
     try {
         const [projectCount, blogCount, contactStats, skillCount] = await Promise.all([
@@ -1658,7 +1615,6 @@ router.get('/dashboard/stats', async (req, res) => {
     }
 });
 
-// 🔍 통합 검색 라우트
 router.get('/search', async (req, res) => {
     try {
         const { q, type } = req.query;
@@ -1722,10 +1678,8 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// 🏥 헬스 체크
 router.get('/health', async (req, res) => {
     try {
-        // 간단한 DB 연결 테스트
         await executeQuery('SELECT 1');
         
         res.json({
@@ -1744,12 +1698,10 @@ router.get('/health', async (req, res) => {
     }
 });
 
-// 📊 프로젝트 조회수 증가 (슬러그 기반)
 router.post('/projects/slug/:slug/view', async (req, res) => {
     try {
         const projectSlug = req.params.slug;
         
-        // 프로젝트 존재 여부 확인 (슬러그로)
         const project = await executeQuery('SELECT id FROM projects WHERE slug = ?', [projectSlug]);
         
         if (project.length === 0) {
@@ -1759,7 +1711,6 @@ router.post('/projects/slug/:slug/view', async (req, res) => {
             });
         }
         
-        // 조회수 증가
         await executeQuery('UPDATE projects SET view_count = view_count + 1 WHERE id = ?', [project[0].id]);
         
         res.json({
@@ -1775,7 +1726,6 @@ router.post('/projects/slug/:slug/view', async (req, res) => {
     }
 });
 
-// 👤 관리자용 개인정보 라우트
 router.get('/admin/personal-info', 
     authenticateToken, 
     requirePermission('personal_info.read'),
@@ -1802,7 +1752,6 @@ router.put('/admin/personal-info',
     logActivity('update_personal_info'),
     async (req, res) => {
         try {
-            // undefined 값을 null로 변환
             const cleanedData = Object.fromEntries(
                 Object.entries(req.body).map(([key, value]) => [
                     key, 
@@ -1812,11 +1761,9 @@ router.put('/admin/personal-info',
             
             const result = await PersonalInfo.update(cleanedData);
             
-            // 🔄 개인정보 → 설정 자동 동기화
             try {
                 const syncSettings = {};
                 
-                // 개인정보 필드를 설정 필드로 매핑
                 if (cleanedData.name) syncSettings.personal_name = cleanedData.name;
                 if (cleanedData.full_name) syncSettings.personal_name = cleanedData.full_name;
                 if (cleanedData.title) syncSettings.personal_title = cleanedData.title;
@@ -1832,17 +1779,14 @@ router.put('/admin/personal-info',
                 if (cleanedData.twitter_url) syncSettings.personal_twitter_url = cleanedData.twitter_url;
                 if (cleanedData.instagram_url) syncSettings.personal_instagram_url = cleanedData.instagram_url;
                 
-                // 설정이 변경된 경우에만 업데이트
                 if (Object.keys(syncSettings).length > 0) {
                     await SiteSettings.updateSettings(syncSettings);
                     logger.info('개인정보 → 설정 자동 동기화 완료', { syncedFields: Object.keys(syncSettings) });
                 }
             } catch (syncError) {
                 logger.warn('개인정보 → 설정 동기화 실패', { error: syncError.message });
-                // 동기화 실패해도 개인정보 업데이트는 성공으로 처리
             }
             
-            // PersonalInfo.update()는 업데이트된 데이터를 반환하므로 직접 사용
             res.json({
                 success: true,
                 message: '개인 정보가 저장되었습니다.',

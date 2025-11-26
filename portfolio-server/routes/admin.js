@@ -88,7 +88,6 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../log');
 
-// 모델 import
 const AdminUsers = require('../models/admin-users');
 const AdminActivityLogs = require('../models/admin-activity-logs');
 const BlogPosts = require('../models/blog-posts');
@@ -98,7 +97,6 @@ const SiteSettings = require('../models/site-settings');
 const Tags = require('../models/tags');
 const { executeQuery } = require('../models/db-utils');
 
-// 미들웨어 import
 const {
     authenticateToken,
     requirePermission,
@@ -108,7 +106,6 @@ const {
     superAdminOnly
 } = require('../middleware/auth');
 
-// 🔐 인증 관련 라우트
 
 /**
  * @swagger
@@ -161,7 +158,6 @@ router.post('/login', async (req, res) => {
             req.headers['user-agent']
         );
 
-        // 로그인 성공 로그
         await AdminActivityLogs.log(
             result.user.id,
             '회원',
@@ -172,7 +168,6 @@ router.post('/login', async (req, res) => {
             req.headers['user-agent']
         );
 
-        // 활동 로그 추가
         logger.activity('관리자 로그인 성공', {
             username,
             ip: req.ip,
@@ -180,7 +175,6 @@ router.post('/login', async (req, res) => {
             loginTime: new Date().toISOString()
         }, result.user);
         
-        // 통계 업데이트
         logger.incrementCounter('loginSuccess');
 
         res.json({
@@ -189,7 +183,6 @@ router.post('/login', async (req, res) => {
             data: result
         });
     } catch (error) {
-        // 로그인 실패 로그
         await AdminActivityLogs.log(
             null,
             '회원',
@@ -200,7 +193,6 @@ router.post('/login', async (req, res) => {
             req.headers['user-agent']
         );
 
-        // 활동 로그 추가 (보안 이벤트)
         logger.activity('관리자 로그인 실패', {
             username: req.body.username,
             ip: req.ip,
@@ -216,13 +208,11 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// 로그아웃
 router.post('/logout', authenticateToken, async (req, res) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         await AdminUsers.logout(token);
 
-        // 로그아웃 로그
         await AdminActivityLogs.log(
             req.admin.id,
             '회원',
@@ -233,7 +223,6 @@ router.post('/logout', authenticateToken, async (req, res) => {
             req.headers['user-agent']
         );
 
-        // 활동 로그 추가
         logger.activity('관리자 로그아웃', {
             username: req.admin.username,
             ip: req.ip,
@@ -253,7 +242,6 @@ router.post('/logout', authenticateToken, async (req, res) => {
     }
 });
 
-// 토큰 재발급 (Refresh Token 사용)
 router.post('/refresh', async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -265,10 +253,8 @@ router.post('/refresh', async (req, res) => {
             });
         }
 
-        // Refresh Token 검증
         const decoded = AdminUsers.verifyRefreshToken(refreshToken);
         
-        // IP 주소 검증
         const clientIP = req.ip || req.connection.remoteAddress;
         if (decoded.ip && decoded.ip !== clientIP) {
             return res.status(401).json({
@@ -277,7 +263,6 @@ router.post('/refresh', async (req, res) => {
             });
         }
 
-        // 사용자 정보 조회
         const user = await AdminUsers.getById(decoded.id);
         if (!user || !user.is_active) {
             return res.status(401).json({
@@ -286,7 +271,6 @@ router.post('/refresh', async (req, res) => {
             });
         }
 
-        // 새로운 Access Token 생성
         const newToken = AdminUsers.generateToken(user, clientIP);
 
         res.json({
@@ -304,7 +288,6 @@ router.post('/refresh', async (req, res) => {
     }
 });
 
-// 토큰 검증 및 사용자 정보 조회
 router.get('/me', authenticateToken, async (req, res) => {
     try {
         const user = await AdminUsers.getById(req.admin.id);
@@ -325,7 +308,6 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
-// 비밀번호 변경
 router.put('/password', authenticateToken, logActivity('change_password'), async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
@@ -358,9 +340,7 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
     }
 });
 
-// 👥 관리자 계정 관리 (super_admin만)
 
-// 모든 관리자 조회
 router.get('/users', ...superAdminOnly, async (req, res) => {
     try {
         const users = await AdminUsers.getAll();
@@ -376,7 +356,6 @@ router.get('/users', ...superAdminOnly, async (req, res) => {
     }
 });
 
-// 새 관리자 생성
 router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req, res) => {
     try {
         const { username, email, password, full_name, role } = req.body;
@@ -411,7 +390,6 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
     }
 });
 
-// 관리자 정보 수정
 router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req, res) => {
     try {
         const updatedUser = await AdminUsers.update(req.params.id, req.body);
@@ -435,12 +413,10 @@ router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (
     }
 });
 
-// 관리자 삭제
 router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), async (req, res) => {
     try {
         const userId = req.params.id;
 
-        // 자기 자신은 삭제할 수 없음
         if (userId === req.admin.id.toString()) {
             return res.status(400).json({
                 success: false,
@@ -448,7 +424,6 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
             });
         }
 
-        // 삭제할 사용자 정보 확인
         const userToDelete = await AdminUsers.getById(userId);
         if (!userToDelete) {
             return res.status(404).json({
@@ -457,7 +432,6 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
             });
         }
 
-        // 사용자 삭제
         await AdminUsers.delete(userId);
 
         res.json({
@@ -477,9 +451,7 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
     }
 });
 
-// 📁 프로젝트 관리
 
-// 모든 프로젝트 조회 (관리자용)
 router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
         const { limit, page, featured } = req.query;
@@ -510,7 +482,6 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
     }
 });
 
-// 프로젝트 생성
 router.post('/projects', authenticateToken, requirePermission('projects.create'), logActivity('create_project'), async (req, res) => {
     try {
         const id = await Projects.create(req.body);
@@ -530,7 +501,6 @@ router.post('/projects', authenticateToken, requirePermission('projects.create')
 });
 
 
-// 📊 대시보드 및 통계
 
 /**
  * @swagger
@@ -616,16 +586,13 @@ router.get('/dashboard', authenticateToken, requirePermission('dashboard.read'),
     }
 });
 
-// 📝 블로그 관리
 
-// 모든 블로그 포스트 조회 (비공개 포함)
 router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
         const { limit, page, status } = req.query;
         const pageLimit = parseInt(limit) || 20;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
 
-        // 관리자는 모든 포스트 조회 가능
         const posts = await BlogPosts.getAll(pageLimit, offset, false);
 
         res.json({
@@ -645,7 +612,6 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
     }
 });
 
-// 블로그 포스트 상세 조회 (슬러그 기반, 관리자용)
 router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
         const post = await BlogPosts.getBySlugAdmin(req.params.slug);
@@ -670,7 +636,6 @@ router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.
     }
 });
 
-// 블로그 포스트 수정 (슬러그 기반)
 router.put('/blog/posts/slug/:slug',
     authenticateToken,
     requirePermission('blog.update'),
@@ -679,7 +644,6 @@ router.put('/blog/posts/slug/:slug',
         try {
             const postSlug = req.params.slug;
 
-            // 포스트 존재 확인 (관리자용 - 비공개 포함)
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
             if (!existingPost) {
                 return res.status(404).json({
@@ -705,7 +669,6 @@ router.put('/blog/posts/slug/:slug',
     }
 );
 
-// 블로그 포스트 발행/발행취소 (슬러그 기반)
 router.put('/blog/posts/slug/:slug/publish',
     authenticateToken,
     requirePermission('blog.publish'),
@@ -715,7 +678,6 @@ router.put('/blog/posts/slug/:slug/publish',
             const { is_published } = req.body;
             const postSlug = req.params.slug;
 
-            // 포스트 존재 확인 (관리자용 - 비공개 포함)
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
             if (!existingPost) {
                 return res.status(404).json({
@@ -742,7 +704,6 @@ router.put('/blog/posts/slug/:slug/publish',
     }
 );
 
-// 블로그 포스트 추천/추천취소 (슬러그 기반)
 router.put('/blog/posts/slug/:slug/featured',
     authenticateToken,
     requirePermission('blog.edit'),
@@ -752,7 +713,6 @@ router.put('/blog/posts/slug/:slug/featured',
             const { is_featured } = req.body;
             const postSlug = req.params.slug;
 
-            // 포스트 존재 확인 (관리자용 - 비공개 포함)
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
             if (!existingPost) {
                 return res.status(404).json({
@@ -780,7 +740,6 @@ router.put('/blog/posts/slug/:slug/featured',
     }
 );
 
-// 블로그 포스트 삭제 (슬러그 기반)
 router.delete('/blog/posts/slug/:slug',
     authenticateToken,
     requirePermission('blog.delete'),
@@ -789,7 +748,6 @@ router.delete('/blog/posts/slug/:slug',
         try {
             const postSlug = req.params.slug;
 
-            // 포스트 존재 확인 (관리자용 - 비공개 포함)
             const post = await BlogPosts.getBySlugAdmin(postSlug);
             if (!post) {
                 return res.status(404).json({
@@ -798,7 +756,6 @@ router.delete('/blog/posts/slug/:slug',
                 });
             }
 
-            // 포스트 삭제
             await BlogPosts.delete(post.id);
 
             res.json({
@@ -815,16 +772,13 @@ router.delete('/blog/posts/slug/:slug',
     }
 );
 
-// 🚀 프로젝트 관리
 
-// 모든 프로젝트 조회 (비공개 포함)
 router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
         const { limit, page, status } = req.query;
         const pageLimit = parseInt(limit) || 20;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
 
-        // 관리자는 모든 프로젝트 조회 가능
         const projects = await Projects.getAll(pageLimit, offset);
 
         res.json({
@@ -844,7 +798,6 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
     }
 });
 
-// 프로젝트 상세 조회 (슬러그 기반, 관리자용)
 router.get('/projects/slug/:slug', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
         const project = await Projects.getBySlug(req.params.slug);
@@ -869,7 +822,6 @@ router.get('/projects/slug/:slug', authenticateToken, requirePermission('project
     }
 });
 
-// 프로젝트 생성
 router.post('/projects',
     authenticateToken,
     requirePermission('projects.create'),
@@ -885,7 +837,6 @@ router.post('/projects',
                 });
             }
 
-            // undefined 값을 null로 변환
             const sanitizedData = {};
             Object.keys(req.body).forEach(key => {
                 if (req.body[key] === undefined) {
@@ -917,7 +868,6 @@ router.post('/projects',
     }
 );
 
-// 프로젝트 수정 (슬러그 기반)
 router.put('/projects/slug/:slug',
     authenticateToken, 
     requirePermission('projects.update'), 
@@ -927,7 +877,6 @@ router.put('/projects/slug/:slug',
             const projectSlug = req.params.slug;
             logger.debug('🔄 projectSlug:', projectSlug);
 
-            // 프로젝트 존재 확인
             logger.debug('🔄 Projects.getBySlug 호출 시작');
             const existingProject = await Projects.getBySlug(projectSlug);
             logger.debug('🔄 Projects.getById 결과:', existingProject);
@@ -940,7 +889,6 @@ router.put('/projects/slug/:slug',
             }
             logger.debug('✅ 프로젝트 존재 확인 완료');
 
-            // undefined 값을 null로 변환
             const sanitizedData = {};
             Object.keys(req.body).forEach(key => {
                 if (req.body[key] === undefined) {
@@ -982,7 +930,6 @@ router.put('/projects/slug/:slug',
     }
 );
 
-// 프로젝트 삭제 (슬러그 기반)
 router.delete('/projects/slug/:slug',
     authenticateToken,
     requirePermission('projects.delete'),
@@ -991,7 +938,6 @@ router.delete('/projects/slug/:slug',
         try {
             const projectSlug = req.params.slug;
 
-            // 프로젝트 존재 확인
             const project = await Projects.getBySlug(projectSlug);
             if (!project) {
                 return res.status(404).json({
@@ -1000,7 +946,6 @@ router.delete('/projects/slug/:slug',
                 });
             }
 
-            // 프로젝트 삭제
             await Projects.delete(project.id);
 
             res.json({
@@ -1024,7 +969,6 @@ logger.debug('🔍 geminiService.generateSummary 존재 여부:', typeof geminiS
 logger.debug('🔍 geminiService 객체의 모든 메서드:', Object.getOwnPropertyNames(geminiService));
 logger.debug('🔍 geminiService 객체의 프로토타입 체인:', Object.getPrototypeOf(geminiService));
 
-// AI 기반 텍스트 요약
 router.post('/ai/summarize',
     authenticateToken,
     requirePermission('blog.create'),
@@ -1039,7 +983,6 @@ router.post('/ai/summarize',
                 });
             }
 
-            // __projectName__ 형식을 실제 프로젝트명으로 변환
             const preprocessedContent = content.replace(/__([^_]+)__/g, (match, projectName) => {
                 logger.debug(`🔄 백엔드 전처리: ${match} → ${projectName} 프로젝트`);
                 return `${projectName} 프로젝트`;
@@ -1051,7 +994,6 @@ router.post('/ai/summarize',
             let result;
 
             if (includeKeywords) {
-                // 요약과 키워드를 모두 생성 (사용자가 선택한 기술 태그 정보 포함)
                 result = await geminiService.generateSummaryAndKeywords(preprocessedContent, techTags);
 
                 res.json({
@@ -1066,7 +1008,6 @@ router.post('/ai/summarize',
                     message: 'Gemini AI로 요약과 키워드가 생성되었습니다.'
                 });
             } else {
-                // 요약만 생성 (기술 태그 정보 포함)
                 logger.debug('🔍 AI 요약 생성 시작 - content 길이:', content.length);
                 logger.debug('🔍 techTags:', techTags);
                 logger.debug('🔍 geminiService.generateSummary 호출 시작');
@@ -1108,7 +1049,6 @@ router.post('/ai/summarize',
     }
 );
 
-// AI 기반 키워드 추출
 router.post('/ai/keywords',
     authenticateToken,
     requirePermission('blog.create'),
@@ -1123,7 +1063,6 @@ router.post('/ai/keywords',
                 });
             }
 
-            // __projectName__ 형식을 실제 프로젝트명으로 변환
             const preprocessedContent = content.replace(/__([^_]+)__/g, (match, projectName) => {
                 logger.debug(`🔄 키워드 추출 전처리: ${match} → ${projectName} 프로젝트`);
                 return `${projectName} 프로젝트`;
@@ -1152,9 +1091,7 @@ router.post('/ai/keywords',
     }
 );
 
-// 📧 연락처 메시지 관리
 
-// 모든 연락처 메시지 조회
 router.get('/contacts', authenticateToken, requirePermission('contacts.read'), async (req, res) => {
     try {
         const { limit, page, unread } = req.query;
@@ -1185,7 +1122,6 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
     }
 });
 
-// 메시지 읽음 처리
 router.put('/contacts/:id/read',
     authenticateToken,
     requirePermission('contacts.update'),
@@ -1208,7 +1144,6 @@ router.put('/contacts/:id/read',
     }
 );
 
-// 메시지 삭제
 router.delete('/contacts/:id',
     authenticateToken,
     requirePermission('contacts.delete'),
@@ -1240,9 +1175,7 @@ router.delete('/contacts/:id',
     }
 );
 
-// ⚙️ 사이트 설정 관리
 
-// 모든 설정 조회 (관리자용)
 router.get('/settings', authenticateToken, requirePermission('settings.read'), async (req, res) => {
     try {
         const settings = await SiteSettings.getAllSettings();
@@ -1259,7 +1192,6 @@ router.get('/settings', authenticateToken, requirePermission('settings.read'), a
     }
 });
 
-// 설정 업데이트
 router.put('/settings',
     authenticateToken,
     requirePermission('settings.update'),
@@ -1291,9 +1223,7 @@ router.put('/settings',
     }
 );
 
-// 📈 활동 로그 조회
 
-// 활동 로그 조회
 router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
         const { limit, page, admin_id, action, resource } = req.query;
@@ -1326,7 +1256,6 @@ router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), as
     }
 });
 
-// 활동 통계
 router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
         const { days } = req.query;
@@ -1361,7 +1290,6 @@ router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin'
     }
 });
 
-// 🏷️ 태그 관리 (Admin 전용)
 router.get('/tags', authenticateToken, requirePermission('tags.read'), async (req, res) => {
     try {
         const { type, popular } = req.query;
@@ -1411,17 +1339,14 @@ router.delete('/tags/:id', authenticateToken, requirePermission('tags.delete'), 
 
 module.exports = router;
 
-// 🖼️ 이미지 업로드 라우트
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// multer 설정
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadPath = path.join(__dirname, '../uploads/images');
 
-        // 디렉토리가 없으면 생성
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
         }
@@ -1429,33 +1354,26 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-        // 타임스탬프
         const timestamp = Date.now();
 
-        // 파일 확장자
         const ext = path.extname(file.originalname).toLowerCase();
 
-        // 원본 파일명에서 확장자 제거하고 정리
         let baseName = path.basename(file.originalname, ext);
 
-        // 한글, 영문, 숫자만 남기고 나머지는 제거 후 길이 제한
         baseName = baseName
             .replace(/[^a-zA-Z0-9가-힣]/g, '')  // 특수문자 모두 제거
             .substring(0, 20);  // 최대 20자로 제한
 
-        // 만약 정리 후 파일명이 비어있으면 기본값 사용
         if (!baseName) {
             baseName = 'image';
         }
 
-        // 최종 파일명: timestamp-basename.ext
         const finalName = `${timestamp}-${baseName}${ext}`;
 
         cb(null, finalName);
     }
 });
 
-// 파일 필터링 (이미지만 허용)
 const fileFilter = (req, file, cb) => {
     const allowedMimes = [
         'image/jpeg',
@@ -1480,7 +1398,6 @@ const upload = multer({
     }
 });
 
-// 이미지 업로드 엔드포인트
 router.post('/upload/image',
     authenticateToken,
     upload.single('image'),
@@ -1494,7 +1411,6 @@ router.post('/upload/image',
                 });
             }
 
-            // 업로드된 파일 정보
             const fileInfo = {
                 originalName: req.file.originalname,
                 filename: req.file.filename,
@@ -1503,7 +1419,6 @@ router.post('/upload/image',
                 path: req.file.path
             };
 
-            // 웹에서 접근 가능한 URL 생성
             const baseUrl = req.protocol + '://' + req.get('host');
             const imageUrl = `${baseUrl}/uploads/images/${req.file.filename}`;
 
@@ -1530,7 +1445,6 @@ router.post('/upload/image',
     }
 );
 
-// 이미지 삭제 엔드포인트
 router.delete('/upload/image/:filename',
     authenticateToken,
     requirePermission('files.delete'),
@@ -1540,7 +1454,6 @@ router.delete('/upload/image/:filename',
             const filename = req.params.filename;
             const filePath = path.join(__dirname, '../uploads/images', filename);
 
-            // 파일 존재 확인
             if (!fs.existsSync(filePath)) {
                 return res.status(404).json({
                     success: false,
@@ -1548,7 +1461,6 @@ router.delete('/upload/image/:filename',
                 });
             }
 
-            // 파일 삭제
             fs.unlinkSync(filePath);
 
             res.json({
@@ -1566,9 +1478,7 @@ router.delete('/upload/image/:filename',
     }
 );
 
-// 📊 활동 로그 관련 라우트
 
-// 활동 로그 조회
 router.get('/logs',
     authenticateToken,
     requirePermission('logs.read'),
@@ -1619,7 +1529,6 @@ router.get('/logs',
     }
 );
 
-// 활동 로그 통계 조회
 router.get('/logs/stats',
     authenticateToken,
     requirePermission('logs.read'),
@@ -1643,7 +1552,6 @@ router.get('/logs/stats',
     }
 );
 
-// 활동 로그 내보내기 (CSV)
 router.get('/logs/export',
     authenticateToken,
     requirePermission('logs.read'),
@@ -1670,13 +1578,11 @@ router.get('/logs/export',
             const ActivityLogs = require('../models/activity-logs');
             const logs = await ActivityLogs.findWithFilters(filters);
 
-            // CSV 헤더
             const csvHeaders = [
                 'ID', '사용자 ID', '사용자명', '액션', '리소스 타입',
                 '리소스 ID', '리소스명', '상세정보', 'IP 주소', 'OS + 브라우저', '생성일'
             ];
 
-            // CSV 데이터
             const csvData = logs.map(log => [
                 log.id,
                 log.user_id,
@@ -1691,13 +1597,11 @@ router.get('/logs/export',
                 new Date(log.created_at).toLocaleString('ko-KR')
             ]);
 
-            // CSV 문자열 생성
             const csvContent = [
                 csvHeaders.join(','),
                 ...csvData.map(row => row.map(field => `"${field}"`).join(','))
             ].join('\n');
 
-            // 파일명 생성
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `activity-logs-${timestamp}.csv`;
 
@@ -1715,9 +1619,7 @@ router.get('/logs/export',
     }
 );
 
-// 🏷️ 기술 스택 카테고리 관리
 
-// 카테고리 추가
 router.post('/skills/categories',
     authenticateToken,
     requirePermission('skills.create'),
@@ -1733,7 +1635,6 @@ router.post('/skills/categories',
                 });
             }
 
-            // 중복 카테고리명 확인
             const Skills = require('../models/skills');
             const existingCategory = await Skills.getCategoryByName(name.trim());
             
@@ -1744,7 +1645,6 @@ router.post('/skills/categories',
                 });
             }
 
-            // 새 카테고리 생성
             const categoryId = await Skills.createCategory(name.trim());
 
             res.status(201).json({
@@ -1763,7 +1663,6 @@ router.post('/skills/categories',
     }
 );
 
-// 카테고리 삭제
 router.delete('/skills/categories/:id',
     authenticateToken,
     requirePermission('skills.delete'),
@@ -1781,7 +1680,6 @@ router.delete('/skills/categories/:id',
 
             const Skills = require('../models/skills');
             
-            // 해당 카테고리를 사용하는 기술 스택이 있는지 확인
             const skillsUsingCategory = await Skills.getSkillsByCategory(categoryId);
             
             if (skillsUsingCategory && skillsUsingCategory.length > 0) {
@@ -1796,7 +1694,6 @@ router.delete('/skills/categories/:id',
                 });
             }
 
-            // 카테고리 삭제
             await Skills.deleteCategory(categoryId);
 
             res.json({
@@ -1814,7 +1711,6 @@ router.delete('/skills/categories/:id',
     }
 );
 
-// 카테고리 목록 조회 (관리자용)
 router.get('/skills/categories',
     authenticateToken,
     requirePermission('skills.read'),
@@ -1838,9 +1734,7 @@ router.get('/skills/categories',
     }
 );
 
-// ===== 기술 스택 관리 라우트 =====
 
-// 기술 스택 목록 조회 (관리자용)
 router.get('/skills',
     authenticateToken,
     requirePermission('skills.read'),
@@ -1864,7 +1758,6 @@ router.get('/skills',
     }
 );
 
-// 기술 스택 생성
 router.post('/skills',
     authenticateToken,
     requirePermission('skills.create'),
@@ -1882,7 +1775,6 @@ router.post('/skills',
 
             const Skills = require('../models/skills');
             
-            // 추천 기술 스택일 때 표시 순서 중복 검증
             if (is_featured && display_order) {
                 const existingSkill = await Skills.getByDisplayOrder(display_order);
                 if (existingSkill) {
@@ -1893,7 +1785,6 @@ router.post('/skills',
                 }
             }
             
-            // undefined 값 방지
             const cleanData = {
                 name: name || '',
                 category_id: category_id || '',
@@ -1922,7 +1813,6 @@ router.post('/skills',
     }
 );
 
-// 기술 스택 수정
 router.put('/skills/:id',
     authenticateToken,
     requirePermission('skills.update'),
@@ -1942,7 +1832,6 @@ router.put('/skills/:id',
 
             const Skills = require('../models/skills');
             
-            // 추천 기술 스택일 때 표시 순서 중복 검증 (자기 자신 제외)
             if (is_featured && display_order) {
                 const existingSkill = await Skills.getByDisplayOrder(display_order, skillId);
                 if (existingSkill) {
@@ -1953,7 +1842,6 @@ router.put('/skills/:id',
                 }
             }
             
-            // undefined 값 방지
             const cleanData = {
                 name: name || '',
                 category_id: category_id || '',
@@ -1982,7 +1870,6 @@ router.put('/skills/:id',
     }
 );
 
-// 기술 스택 삭제
 router.delete('/skills/:id',
     authenticateToken,
     requirePermission('skills.delete'),
@@ -2016,7 +1903,6 @@ router.delete('/skills/:id',
     }
 );
 
-// 기술 스택 추천 상태 토글
 router.patch('/skills/:id/featured',
     authenticateToken,
     requirePermission('skills.update'),
@@ -2051,7 +1937,6 @@ router.patch('/skills/:id/featured',
     }
 );
 
-// 기술 스택 순서 변경
 router.patch('/skills/:id/order',
     authenticateToken,
     requirePermission('skills.update'),

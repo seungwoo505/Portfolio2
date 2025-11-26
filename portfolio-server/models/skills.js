@@ -75,7 +75,6 @@ const Skills = {
         await executeQuery('DELETE FROM skills WHERE id = ?', [id]);
     },
 
-    // 카테고리 관련 함수들
     async getCategoryByName(name) {
         return await executeQuerySingle(`
             SELECT * FROM skill_categories WHERE name = ?

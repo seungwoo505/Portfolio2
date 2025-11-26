@@ -2,7 +2,6 @@ const AdminUsers = require('../models/admin-users');
 const AdminActivityLogs = require('../models/admin-activity-logs');
 const logger = require('../log');
 
-// JWT 토큰 검증 미들웨어 (자동 재발급 포함)
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
@@ -17,10 +16,8 @@ const authenticateToken = async (req, res, next) => {
         }
 
         try {
-            // JWT 토큰 검증
         const decoded = AdminUsers.verifyToken(token);
         
-            // IP 주소 검증 (보안 강화)
             const clientIP = req.ip || req.connection.remoteAddress;
             if (decoded.ip && decoded.ip !== clientIP) {
                 return res.status(401).json({
@@ -29,7 +26,6 @@ const authenticateToken = async (req, res, next) => {
                 });
             }
             
-            // 사용자 활성 상태 확인
             const user = await AdminUsers.getById(decoded.id);
             if (!user || !user.is_active) {
             return res.status(401).json({
@@ -38,7 +34,6 @@ const authenticateToken = async (req, res, next) => {
             });
         }
 
-        // req 객체에 사용자 정보 추가
         req.admin = {
             id: decoded.id,
             username: decoded.username,
@@ -47,12 +42,10 @@ const authenticateToken = async (req, res, next) => {
 
         next();
         } catch (tokenError) {
-            // Access Token이 만료된 경우 Refresh Token으로 재발급 시도
             if (refreshToken) {
                 try {
                     const refreshDecoded = AdminUsers.verifyRefreshToken(refreshToken);
                     
-                    // IP 주소 검증
                     const clientIP = req.ip || req.connection.remoteAddress;
                     if (refreshDecoded.ip && refreshDecoded.ip !== clientIP) {
                         return res.status(401).json({
@@ -61,7 +54,6 @@ const authenticateToken = async (req, res, next) => {
                         });
                     }
 
-                    // 사용자 정보 조회
                     const user = await AdminUsers.getById(refreshDecoded.id);
                     if (!user || !user.is_active) {
                         return res.status(401).json({
@@ -70,17 +62,14 @@ const authenticateToken = async (req, res, next) => {
                         });
                     }
 
-                    // 새로운 Access Token 생성
                     const newToken = AdminUsers.generateToken(user, clientIP);
                     
-                    // req 객체에 사용자 정보 추가
                     req.admin = {
                         id: user.id,
                         username: user.username,
                         role: user.role
                     };
 
-                    // 응답 헤더에 새로운 토큰 추가
                     res.setHeader('X-New-Token', newToken);
                     
                     logger.info('토큰 자동 재발급 성공', { 
@@ -117,7 +106,6 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// 권한 확인 미들웨어
 const requirePermission = (permissionName) => {
     return async (req, res, next) => {
         try {
@@ -128,12 +116,10 @@ const requirePermission = (permissionName) => {
                 });
             }
 
-            // super_admin은 모든 권한 보유
             if (req.admin.role === 'super_admin') {
                 return next();
             }
 
-            // 권한 확인
             const hasPermission = await AdminUsers.hasPermission(req.admin.id, permissionName);
             
             if (!hasPermission) {
@@ -155,7 +141,6 @@ const requirePermission = (permissionName) => {
     };
 };
 
-// 역할 기반 접근 제어
 const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.admin) {
@@ -180,22 +165,16 @@ const requireRole = (roles) => {
     };
 };
 
-// 활동 로그 기록 미들웨어
 const logActivity = (action) => {
     return async (req, res, next) => {
-        // 원본 응답 메서드 저장
         const originalSend = res.send;
         
-        // 응답 메서드 오버라이드
         res.send = function(data) {
-            // 성공적인 응답인 경우에만 로그 기록
             if (res.statusCode < 400 && req.admin) {
-                // 비동기로 로그 기록 (응답 속도에 영향 없도록)
                 setImmediate(async () => {
                     try {
                         let resourceType = req.baseUrl.split('/').pop(); // URL에서 리소스 타입 추출
                         
-                        // 리소스 타입을 한글로 변환
                         const resourceTypeMap = {
                             'admin': '사용자',
                             'users': '사용자',
@@ -213,17 +192,14 @@ const logActivity = (action) => {
                         resourceType = resourceTypeMap[resourceType] || resourceType;
                         const resourceId = req.params.id || req.body.id;
                         
-                        // IP 주소 정리 (::ffff: 접두사 제거)
                         let cleanIp = req.ip || req.connection.remoteAddress;
                         if (cleanIp && cleanIp.startsWith('::ffff:')) {
                             cleanIp = cleanIp.substring(7);
                         }
                         
-                        // User Agent 간략하게 처리
                         let cleanUserAgent = req.headers['user-agent'] || '';
                         if (cleanUserAgent) {
                             try {
-                                // OS 정보 추출
                                 let os = 'Unknown';
                                 if (cleanUserAgent.includes('Windows')) {
                                     if (cleanUserAgent.includes('Windows NT 10.0')) os = 'Windows 10/11';
@@ -253,7 +229,6 @@ const logActivity = (action) => {
                                     os = iosVersion ? `iPadOS ${iosVersion[1]}` : 'iPadOS';
                                 }
                                 
-                                // 브라우저 정보 추출
                                 let browser = 'Unknown';
                                 if (cleanUserAgent.includes('Chrome')) {
                                     const chromeVersion = cleanUserAgent.match(/Chrome\/(\d+)/);
@@ -274,48 +249,40 @@ const logActivity = (action) => {
                                 
                                 cleanUserAgent = `${os} | ${browser}`;
                             } catch (error) {
-                                // 파싱 실패 시 원본 사용
                                 if (cleanUserAgent.length > 50) {
                                     cleanUserAgent = cleanUserAgent.substring(0, 50) + '...';
                                 }
                             }
                         }
                         
-                        // 액션명을 한글로 변환하는 함수
                         const getActionKoreanName = (actionName) => {
                             const actionMap = {
-                                // 인증 관련
                                 'admin_login': '로그인',
                                 'admin_login_failed': '로그인 실패',
                                 'admin_logout': '로그아웃',
                                 'change_password': '비밀번호 변경',
                                 'view_profile': '프로필 조회',
                                 
-                                // 대시보드
                                 'view_dashboard': '대시보드',
                                 'view_activity_logs': '로그 조회',
                                 
-                                // 블로그 관련
                                 'create_blog_post': '블로그 생성',
                                 'update_blog_post': '블로그 수정',
                                 'delete_blog_post': '블로그 삭제',
                                 'publish_blog_post': '블로그 발행',
                                 'view_blog_posts': '블로그 목록',
                                 
-                                // 프로젝트 관련
                                 'create_project': '프로젝트 생성',
                                 'update_project': '프로젝트 수정',
                                 'delete_project': '프로젝트 삭제',
                                 'view_projects': '프로젝트 목록',
                                 'view_project_detail': '프로젝트 상세',
                                 
-                                // 태그 관련
                                 'create_tag': '태그 생성',
                                 'update_tag': '태그 수정',
                                 'delete_tag': '태그 삭제',
                                 'view_tags': '태그 목록',
                                 
-                                // 사용자 관련
                                 'create_admin': '관리자 생성',
                                 'update_admin': '관리자 수정',
                                 'delete_admin': '관리자 삭제',
@@ -323,28 +290,22 @@ const logActivity = (action) => {
                                 'update_user': '사용자 수정',
                                 'delete_user': '사용자 삭제',
                                 
-                                // 연락처 관련
                                 'view_contacts': '연락처 조회',
                                 'mark_contact_read': '연락처 읽음',
                                 'mark_contact_unread': '연락처 읽지 않음',
                                 
-                                // 이미지 관련
                                 'upload_image': '이미지 업로드',
                                 'delete_image': '이미지 삭제',
                                 
-                                // 설정 관련
                                 'update_settings': '설정 수정'
                             };
                             
                             return actionMap[actionName] || actionName.replace(/_/g, ' ');
                         };
                         
-                        // 깔끔한 텍스트로 활동 로그 생성
                         let activityDetails = '';
                         
-                        // 액션과 리소스 타입에 따른 상세 정보 생성
                         if (action) {
-                            // 특정 액션이 지정된 경우
                             if (action === 'view_activity_logs') {
                                 activityDetails = '활동 로그 조회';
                             } else if (action === 'create_blog_post') {
@@ -353,32 +314,26 @@ const logActivity = (action) => {
                                 const postTitle = req.body.title || `#${resourceId}`;
                                 let changeDetails = [];
                                 
-                                // 제목 변경 확인
                                 if (req.body.title) {
                                     changeDetails.push('제목');
                                 }
                                 
-                                // 내용 변경 확인
                                 if (req.body.content) {
                                     changeDetails.push('내용');
                                 }
                                 
-                                // 발행 상태 변경 확인
                                 if (req.body.is_published !== undefined) {
                                     changeDetails.push(req.body.is_published ? '공개로 변경' : '비공개로 변경');
                                 }
                                 
-                                // 태그 변경 확인
                                 if (req.body.tags) {
                                     changeDetails.push('태그');
                                 }
                                 
-                                // 메타 정보 변경 확인
                                 if (req.body.meta_description || req.body.meta_keywords) {
                                     changeDetails.push('메타 정보');
                                 }
                                 
-                                // 변경된 내용이 있으면 상세하게 표시
                                 if (changeDetails.length > 0) {
                                     activityDetails = `블로그 포스트 수정: ${postTitle} (${changeDetails.join(', ')})`;
                                 } else {
@@ -410,32 +365,26 @@ const logActivity = (action) => {
                                 const projectTitle = req.body.title || `#${resourceId}`;
                                 let changeDetails = [];
                                 
-                                // 제목 변경 확인
                                 if (req.body.title) {
                                     changeDetails.push('제목');
                                 }
                                 
-                                // 설명 변경 확인
                                 if (req.body.description) {
                                     changeDetails.push('설명');
                                 }
                                 
-                                // 기술 스택 변경 확인
                                 if (req.body.tech_stack) {
                                     changeDetails.push('기술 스택');
                                 }
                                 
-                                // 링크 변경 확인
                                 if (req.body.github_url || req.body.live_url) {
                                     changeDetails.push('링크');
                                 }
                                 
-                                // 대표 프로젝트 설정 변경 확인
                                 if (req.body.is_featured !== undefined) {
                                     changeDetails.push(req.body.is_featured ? '대표 프로젝트로 설정' : '대표 프로젝트 해제');
                                 }
                                 
-                                // 변경된 내용이 있으면 상세하게 표시
                                 if (changeDetails.length > 0) {
                                     activityDetails = `프로젝트 수정: ${projectTitle} (${changeDetails.join(', ')})`;
                                 } else {
@@ -451,27 +400,22 @@ const logActivity = (action) => {
                                 const tagName = req.body.name || `#${resourceId}`;
                                 let changeDetails = [];
                                 
-                                // 태그 이름 변경 확인
                                 if (req.body.name) {
                                     changeDetails.push('이름');
                                 }
                                 
-                                // 설명 변경 확인
                                 if (req.body.description) {
                                     changeDetails.push('설명');
                                 }
                                 
-                                // 색상 변경 확인
                                 if (req.body.color) {
                                     changeDetails.push('색상');
                                 }
                                 
-                                // 타입 변경 확인
                                 if (req.body.type) {
                                     changeDetails.push(`타입: ${req.body.type}`);
                                 }
                                 
-                                // 변경된 내용이 있으면 상세하게 표시
                                 if (changeDetails.length > 0) {
                                     activityDetails = `태그 수정: ${tagName} (${changeDetails.join(', ')})`;
                                 } else {
@@ -487,27 +431,22 @@ const logActivity = (action) => {
                                 const username = req.body.username || `#${resourceId}`;
                                 let changeDetails = [];
                                 
-                                // 사용자명 변경 확인
                                 if (req.body.username) {
                                     changeDetails.push('사용자명');
                                 }
                                 
-                                // 이메일 변경 확인
                                 if (req.body.email) {
                                     changeDetails.push('이메일');
                                 }
                                 
-                                // 전체 이름 변경 확인
                                 if (req.body.full_name) {
                                     changeDetails.push('전체 이름');
                                 }
                                 
-                                // 역할 변경 확인
                                 if (req.body.role) {
                                     changeDetails.push(`역할: ${req.body.role}`);
                                 }
                                 
-                                // 변경된 내용이 있으면 상세하게 표시
                                 if (changeDetails.length > 0) {
                                     activityDetails = `사용자 정보 수정: ${username} (${changeDetails.join(', ')})`;
                                 } else {
@@ -521,11 +460,9 @@ const logActivity = (action) => {
                             } else if (action === 'mark_contact_unread') {
                                 activityDetails = `연락처 #${resourceId} 읽지 않음 처리`;
                             } else {
-                                // 기본 액션 처리
                                 activityDetails = `${action.replace(/_/g, ' ')}`;
                             }
                         } else {
-                            // 액션이 지정되지 않은 경우 HTTP 메서드와 리소스 타입으로 생성
                             const method = req.method.toLowerCase();
                             if (method === 'post') {
                                 activityDetails = `새 ${resourceType} 생성`;
@@ -540,7 +477,6 @@ const logActivity = (action) => {
                             }
                         }
 
-                        // 액션명을 한글로 변환
                         const koreanActionName = getActionKoreanName(action || `${req.method.toLowerCase()}_${resourceType}`);
 
                         await AdminActivityLogs.log(
@@ -558,7 +494,6 @@ const logActivity = (action) => {
                 });
             }
             
-            // 원본 응답 메서드 호출
             originalSend.call(this, data);
         };
 
@@ -566,7 +501,6 @@ const logActivity = (action) => {
     };
 };
 
-// IP 기반 접근 제한 (선택사항)
 const restrictToIPs = (allowedIPs) => {
     return (req, res, next) => {
         const clientIP = req.ip || req.connection.remoteAddress;
@@ -583,7 +517,6 @@ const restrictToIPs = (allowedIPs) => {
     };
 };
 
-// 관리자 전용 라우트를 위한 조합 미들웨어
 const adminOnly = [authenticateToken, requireRole(['super_admin', 'admin'])];
 const superAdminOnly = [authenticateToken, requireRole('super_admin')];
 

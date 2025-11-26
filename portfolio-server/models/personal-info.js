@@ -8,7 +8,6 @@ const PersonalInfo = {
         logger.debug('데이터베이스에서 가져온 결과:', result);
         
         if (result) {
-            // 서버 필드명을 프론트엔드 필드명으로 변환
             const transformedResult = {
                 ...result,
                 full_name: result.name,
@@ -25,13 +24,11 @@ const PersonalInfo = {
         try {
             logger.debug('PersonalInfo.update() 호출됨, 받은 데이터:', data);
             
-            // 프론트엔드 필드명을 서버 필드명으로 매핑
             const name = data.full_name || data.name;
             const profile_image = data.avatar_url || data.profile_image;
             
             const { title, bio, about, email, phone, location, resume_url, github_url, linkedin_url, twitter_url, instagram_url } = data;
             
-            // undefined 값을 null로, null 값을 빈 문자열로 변환 (NOT NULL 컬럼 처리)
             const params = [name, title, bio, about, email, phone, location, profile_image, resume_url, github_url, linkedin_url, twitter_url, instagram_url]
                 .map(value => {
                     if (value === undefined) return null;
@@ -41,13 +38,11 @@ const PersonalInfo = {
             
             logger.debug('변환된 파라미터:', params);
             
-            // 먼저 기존 데이터가 있는지 확인
             logger.debug('기존 데이터 확인 중...');
             const existingData = await executeQuerySingle('SELECT id FROM personal_info ORDER BY id DESC LIMIT 1');
             logger.debug('기존 데이터:', existingData);
             
             if (existingData) {
-                // 기존 데이터가 있으면 UPDATE
                 logger.debug('기존 데이터 UPDATE 실행');
                 const updateQuery = `
                     UPDATE personal_info 
@@ -58,7 +53,6 @@ const PersonalInfo = {
                 await executeQuery(updateQuery, [...params, existingData.id]);
                 logger.debug('UPDATE 완료');
             } else {
-                // 기존 데이터가 없으면 INSERT
                 logger.debug('새 데이터 INSERT 실행');
                 const insertQuery = `
                     INSERT INTO personal_info (name, title, bio, about, email, phone, location, 

@@ -2,13 +2,11 @@ const db = require('../db');
 const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 
-// 🚀 성능 최적화된 유틸리티 함수들
 const executeQuery = async (query, params = [], options = {}) => {
     const start = Date.now();
     const { useCache = false, cacheKey = null, cacheTTL = 300 } = options;
     
     try {
-        // 캐시 사용 시 캐시에서 먼저 확인
         if (useCache && cacheKey) {
             const cached = CacheUtils.get(cacheKey);
             if (cached !== undefined) {
@@ -24,11 +22,9 @@ const executeQuery = async (query, params = [], options = {}) => {
             useCache: useCache
         });
 
-        // 쿼리 실행
         const [results] = await db.execute(query, params);
         const duration = Date.now() - start;
         
-        // 성능 모니터링
         if (duration > 1000) { // 1초 이상 걸리는 쿼리 경고
             logger.warn('느린 쿼리 감지', {
                 duration: `${duration}ms`,
@@ -44,7 +40,6 @@ const executeQuery = async (query, params = [], options = {}) => {
             useCache: useCache
         });
 
-        // 캐시에 저장
         if (useCache && cacheKey && results) {
             CacheUtils.set(cacheKey, results, cacheTTL);
         }
@@ -69,7 +64,6 @@ const executeQuerySingle = async (query, params = [], options = {}) => {
     return results[0] || null;
 };
 
-// 🚀 배치 쿼리 실행 (여러 쿼리를 한 번에 실행)
 const executeBatch = async (queries) => {
     const start = Date.now();
     const results = [];
@@ -98,7 +92,6 @@ const executeBatch = async (queries) => {
     }
 };
 
-// 🚀 트랜잭션 실행
 const executeTransaction = async (callback) => {
     const connection = await db.getConnection();
     

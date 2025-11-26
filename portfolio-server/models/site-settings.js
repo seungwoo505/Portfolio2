@@ -14,7 +14,6 @@ const SiteSettings = {
         const setting = await this.get(key);
         if (!setting) return null;
         
-        // 타입에 따라 값 변환
         let value = setting.setting_value;
         if (setting.setting_type === 'boolean') {
             value = value === 'true';
@@ -32,7 +31,6 @@ const SiteSettings = {
     },
 
     async set(key, value, type = 'string', is_public = false, description = null) {
-        // 값을 문자열로 변환
         let stringValue = value;
         if (type === 'json') {
             stringValue = JSON.stringify(value);
@@ -88,11 +86,9 @@ const SiteSettings = {
     async getPublicSettings() {
         const settings = await this.getAll(true);
         
-        // 객체 형태로 변환
         return settings.reduce((acc, setting) => {
             let value = setting.setting_value;
             
-            // 타입에 따라 값 변환
             if (setting.setting_type === 'boolean') {
                 value = value === 'true';
             } else if (setting.setting_type === 'number') {
@@ -113,11 +109,9 @@ const SiteSettings = {
     async getAllSettings() {
         const settings = await this.getAll(false);
         
-        // 객체 형태로 변환
         return settings.reduce((acc, setting) => {
             let value = setting.setting_value;
             
-            // 타입에 따라 값 변환
             if (setting.setting_type === 'boolean') {
                 value = value === 'true';
             } else if (setting.setting_type === 'number') {
