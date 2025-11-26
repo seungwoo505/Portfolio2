@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const BlogTags = {
     /**
-     * @description Retrieves Blog Tags Model All.
+     * @description 블로그 태그 모델의 전체 목록을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAll() {
@@ -14,7 +14,7 @@ const BlogTags = {
     },
 
     /**
-     * @description Retrieves Blog Tags Model Popular.
+     * @description 블로그 태그 모델에서 인기 태그를 조회한다.
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -28,7 +28,7 @@ const BlogTags = {
     },
 
     /**
-     * @description Retrieves Blog Tags Model By Id.
+     * @description 블로그 태그 모델에서 ID로 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -41,7 +41,7 @@ const BlogTags = {
     },
 
     /**
-     * @description Retrieves Blog Tags Model By Name.
+     * @description 블로그 태그 모델에서 이름으로 조회한다.
       * @param {*} name 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -62,7 +62,7 @@ const BlogTags = {
     },
 
     /**
-     * @description update for Blog Tags Model.
+     * @description 블로그 태그 모델의 정보를 수정한다.
       * @param {*} id 입력값
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
@@ -83,7 +83,7 @@ const BlogTags = {
     },
 
     /**
-     * @description delete for Blog Tags Model.
+     * @description 블로그 태그 모델에서 항목을 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -93,7 +93,7 @@ const BlogTags = {
     },
 
     /**
-     * @description Updates Blog Tags Model Post Count.
+     * @description 블로그 태그 모델의 게시글 수를 갱신한다.
      * @returns {Promise<any>} 처리 결과
      */
     async updatePostCount() {
@@ -107,7 +107,7 @@ const BlogTags = {
     },
 
     /**
-     * @description search for Blog Tags Model.
+     * @description 블로그 태그 모델에서 검색한다.
       * @param {*} searchTerm 입력값
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과

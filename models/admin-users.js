@@ -6,7 +6,7 @@ const logger = require('../log');
 
 const AdminUsers = {
     /**
-     * @description login for Admin Users Model.
+     * @description 관리자 사용자 모델에서 로그인을 처리한다.
       * @param {*} username 입력값
       * @param {*} password 입력값
       * @param {*} ipAddress 입력값
@@ -62,7 +62,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description Generates Admin Users Model Token.
+     * @description 관리자 사용자 모델의 액세스 토큰을 생성한다.
       * @param {*} user 입력값
       * @param {*} ipAddress 입력값
      * @returns {any} 처리 결과
@@ -82,7 +82,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description Generates Admin Users Model Refresh Token.
+     * @description 관리자 사용자 모델의 리프레시 토큰을 생성한다.
       * @param {*} user 입력값
       * @param {*} ipAddress 입력값
      * @returns {any} 처리 결과
@@ -102,7 +102,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description verify Token for Admin Users Model.
+     * @description 관리자 사용자 모델에서 액세스 토큰을 검증한다.
       * @param {*} token 입력값
      * @returns {any} 처리 결과
      */
@@ -119,7 +119,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description verify Refresh Token for Admin Users Model.
+     * @description 관리자 사용자 모델에서 리프레시 토큰을 검증한다.
       * @param {*} token 입력값
      * @returns {any} 처리 결과
      */
@@ -136,7 +136,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description logout for Admin Users Model.
+     * @description 관리자 사용자 모델에서 로그아웃을 처리한다.
       * @param {*} token 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -160,7 +160,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description Retrieves Admin Users Model By Id.
+     * @description 관리자 사용자 모델에서 ID로 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -173,7 +173,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description Retrieves Admin Users Model By Username.
+     * @description 관리자 사용자 모델에서 사용자 이름으로 조회한다.
       * @param {*} username 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -186,7 +186,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description Retrieves Admin Users Model All.
+     * @description 관리자 사용자 모델의 전체 목록을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAll() {
@@ -198,7 +198,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description create for Admin Users Model.
+     * @description 관리자 사용자 모델에 계정을 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -224,7 +224,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description update for Admin Users Model.
+     * @description 관리자 사용자 모델의 정보를 수정한다.
       * @param {*} id 입력값
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
@@ -256,7 +256,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description change Password for Admin Users Model.
+     * @description 관리자 사용자 모델의 비밀번호를 변경한다.
       * @param {*} id 입력값
       * @param {*} oldPassword 입력값
       * @param {*} newPassword 입력값
@@ -287,7 +287,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description delete for Admin Users Model.
+     * @description 관리자 사용자 모델에서 계정을 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -308,7 +308,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description Handles Admin Users Model Successful Login.
+     * @description 관리자 사용자가 성공적으로 로그인했을 때 후처리를 수행한다.
       * @param {*} id 입력값
       * @param {*} ipAddress 입력값
      * @returns {Promise<any>} 처리 결과
@@ -325,7 +325,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description sanitize User for Admin Users Model.
+     * @description 관리자 사용자 모델의 사용자 정보를 정제한다.
       * @param {*} user 입력값
      * @returns {any} 처리 결과
      */
@@ -336,7 +336,7 @@ const AdminUsers = {
 
 
     /**
-     * @description Retrieves Admin Users Model User Permissions.
+     * @description 관리자 사용자 모델의 권한 목록을 조회한다.
       * @param {*} userId 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -350,7 +350,7 @@ const AdminUsers = {
     },
 
     /**
-     * @description has Permission for Admin Users Model.
+     * @description 관리자 사용자 모델에 권한이 있는지 확인한다.
       * @param {*} userId 입력값
       * @param {*} permissionName 입력값
      * @returns {Promise<any>} 처리 결과

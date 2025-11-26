@@ -3,7 +3,7 @@ const AdminActivityLogs = require('../models/admin-activity-logs');
 const logger = require('../log');
 
 /**
- * @description authenticate Token for Auth.
+ * @description 인증 토큰을 검증한다.
   * @param {*} req 입력값
   * @param {*} res 입력값
   * @param {*} next 입력값
@@ -114,7 +114,7 @@ const authenticateToken = async (req, res, next) => {
 };
 
 /**
- * @description require Permission for Auth.
+ * @description 특정 권한이 있는지 검사한다.
   * @param {*} permissionName 입력값
  * @returns {any} 처리 결과
  */
@@ -154,7 +154,7 @@ const requirePermission = (permissionName) => {
 };
 
 /**
- * @description require Role for Auth.
+ * @description 특정 역할이 있는지 검사한다.
   * @param {*} roles 입력값
  * @returns {any} 처리 결과
  */
@@ -183,7 +183,7 @@ const requireRole = (roles) => {
 };
 
 /**
- * @description log Activity for Auth.
+ * @description 인증 과정의 활동을 기록한다.
   * @param {*} action 입력값
  * @returns {any} 처리 결과
  */
@@ -278,7 +278,7 @@ const logActivity = (action) => {
                         }
                         
                         /**
-                         * @description Retrieves Auth Action Korean Name.
+                         * @description 인증 액션의 한국어명을 조회한다.
                           * @param {*} actionName 입력값
                          * @returns {any} 처리 결과
                          */
@@ -529,7 +529,7 @@ const logActivity = (action) => {
 };
 
 /**
- * @description restrict To IPs for Auth.
+ * @description 인증을 지정된 IP로 제한한다.
   * @param {*} allowedIPs 입력값
  * @returns {any} 처리 결과
  */

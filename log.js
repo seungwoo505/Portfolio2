@@ -49,7 +49,12 @@ const logger = winston.createLogger({
     ]
 });
 
+const isVerboseEnabled = process.env.ENABLE_VERBOSE_LOGS === 'true';
+
 logger.request = (req, message = 'API 요청') => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     logger.info(message, {
         method: req.method,
         url: req.originalUrl,
@@ -61,6 +66,9 @@ logger.request = (req, message = 'API 요청') => {
 };
 
 logger.response = (req, res, message = 'API 응답') => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     logger.info(message, {
         method: req.method,
         url: req.originalUrl,
@@ -71,6 +79,9 @@ logger.response = (req, res, message = 'API 응답') => {
 };
 
 logger.auth = (message, user = null, extra = {}) => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     logger.info(`[인증] ${message}`, {
         user: user ? { id: user.id, username: user.username, role: user.role } : null,
         ...extra
@@ -78,6 +89,9 @@ logger.auth = (message, user = null, extra = {}) => {
 };
 
 logger.database = (message, extra = {}) => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     logger.info(`[데이터베이스] ${message}`, extra);
 };
 
@@ -86,6 +100,9 @@ logger.security = (message, extra = {}) => {
 };
 
 logger.admin = (message, admin = null, extra = {}) => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     logger.info(`[관리자] ${message}`, {
         admin: admin ? { id: admin.id, username: admin.username, role: admin.role } : null,
         ...extra
@@ -93,6 +110,9 @@ logger.admin = (message, admin = null, extra = {}) => {
 };
 
 logger.activity = (action, details = {}, user = null) => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     let category = '일반';
     if (action.includes('로그인')) category = '인증';
     else if (action.includes('로그아웃')) category = '인증';
@@ -112,6 +132,9 @@ logger.activity = (action, details = {}, user = null) => {
 };
 
 logger.database = (operation, table, details = {}) => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     let category = 'SELECT';
     if (operation.includes('INSERT')) category = 'INSERT';
     else if (operation.includes('UPDATE')) category = 'UPDATE';
@@ -128,6 +151,9 @@ logger.database = (operation, table, details = {}) => {
 };
 
 logger.apiUsage = (endpoint, method, user = null, responseTime = null) => {
+    if (!isVerboseEnabled) {
+        return;
+    }
     let category = 'PUBLIC';
     if (endpoint.includes('/admin')) category = 'ADMIN';
     else if (endpoint.includes('/login')) category = 'AUTH';
@@ -162,7 +188,7 @@ logger.stats = {
     },
     
     /**
-     * @description Updates Log Stats.
+     * @description 로그 통계를 업데이트한다.
       * @param {*} type 입력값
       * @param {*} value 입력값
      * @returns {any} 처리 결과
@@ -174,7 +200,7 @@ logger.stats = {
     },
     
     /**
-     * @description reset Stats for Log.
+     * @description 로그 통계를 초기화한다.
      * @returns {any} 처리 결과
      */
     resetStats() {
@@ -184,11 +210,11 @@ logger.stats = {
     },
     
     /**
-     * @description log Stats for Log.
+     * @description 로그 통계를 기록한다.
      * @returns {any} 처리 결과
      */
     logStats() {
-        logger.info('📊 시스템 통계', {
+        logger.info('시스템 통계', {
             stats: this.counters,
             timestamp: new Date().toISOString()
         });
@@ -196,12 +222,16 @@ logger.stats = {
 };
 
 logger.incrementCounter = (type, value = 1) => {
-    logger.stats.updateStats(type, value);
+    if (isVerboseEnabled) {
+        logger.stats.updateStats(type, value);
+    }
 };
 
 setInterval(() => {
-    logger.stats.logStats();
-    logger.stats.resetStats();
+    if (isVerboseEnabled) {
+        logger.stats.logStats();
+        logger.stats.resetStats();
+    }
 }, 60 * 60 * 1000);
 
 module.exports = logger;

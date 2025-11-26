@@ -198,17 +198,17 @@ const swaggerSpec = swaggerJsdoc({
             title: 'Portfolio API',
             version: '2.1.0',
             description: `
-                🚀 **포트폴리오/블로그 및 관리자 API 문서**
+                 **포트폴리오/블로그 및 관리자 API 문서**
                 
                 ## 주요 기능
-                - 📝 블로그 포스트 관리 (CRUD, 검색, 필터링)
-                - 🎯 프로젝트 포트폴리오 (CRUD, 태그, 상태 관리)
-                - 👤 개인정보 및 소셜 링크 관리
-                - 🛠️ 기술 스택 관리 (카테고리, 숙련도)
-                - 📊 관리자 대시보드 (통계, 활동 로그)
-                - 🔐 JWT 기반 인증 및 권한 관리
-                - 📧 연락처 메시지 관리
-                - 🏷️ 태그 시스템
+                -  블로그 포스트 관리 (CRUD, 검색, 필터링)
+                -  프로젝트 포트폴리오 (CRUD, 태그, 상태 관리)
+                -  개인정보 및 소셜 링크 관리
+                -  기술 스택 관리 (카테고리, 숙련도)
+                -  관리자 대시보드 (통계, 활동 로그)
+                -  JWT 기반 인증 및 권한 관리
+                -  연락처 메시지 관리
+                -  태그 시스템
                 
                 ## 인증
                 - **공개 API**: 인증 불필요
@@ -496,8 +496,8 @@ app.use((req, res, next) => {
     
     next();
 });
-logger.info('🚀 포트폴리오 서버 시작 중...');
-logger.info('📋 환경 설정', {
+logger.info('포트폴리오 서버 시작 중...');
+logger.info('환경 설정', {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3001,
     dbHost: process.env.DB_HOST || 'localhost',
@@ -508,8 +508,8 @@ logger.info('📋 환경 설정', {
 });
 
 server.listen(process.env.PORT, () => {
-    logger.info(`🚀 포트폴리오 서버가 포트 ${process.env.PORT}에서 실행 중입니다`);
-    logger.info(`📁 데이터베이스: ${process.env.DB_HOST}의 ${process.env.DB_SCHEMA}`);
-    logger.info(`🌐 CORS 허용 도메인: ${[process.env.LOCALHOST, process.env.MY_HOST].join(', ')}`);
-    logger.info('✅ 서버 시작이 성공적으로 완료되었습니다');
+    logger.info(`포트폴리오 서버가 포트 ${process.env.PORT}에서 실행 중입니다`);
+    logger.info(`데이터베이스: ${process.env.DB_HOST}의 ${process.env.DB_SCHEMA}`);
+    logger.info(`CORS 허용 도메인: ${[process.env.LOCALHOST, process.env.MY_HOST].join(', ')}`);
+    logger.info('서버 시작이 성공적으로 완료되었습니다');
 });

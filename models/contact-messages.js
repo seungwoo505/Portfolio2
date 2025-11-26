@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const ContactMessages = {
     /**
-     * @description create for Contact Messages Model.
+     * @description 문의 메시지 모델에 데이터를 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -17,7 +17,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description Retrieves Contact Messages Model All.
+     * @description 문의 메시지 모델의 전체 목록을 조회한다.
       * @param {*} limit 입력값
       * @param {*} offset 입력값
      * @returns {Promise<any>} 처리 결과
@@ -31,7 +31,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description Retrieves Contact Messages Model By Id.
+     * @description 문의 메시지 모델에서 ID로 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -49,7 +49,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description mark As Read for Contact Messages Model.
+     * @description 문의 메시지 모델에서 메시지를 읽음 처리한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -59,7 +59,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description mark As Replied for Contact Messages Model.
+     * @description 문의 메시지 모델에서 답변 완료로 표시한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -69,7 +69,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description mark Multiple As Read for Contact Messages Model.
+     * @description 문의 메시지 모델에서 여러 메시지를 읽음 처리한다.
       * @param {*} ids 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -80,7 +80,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description delete for Contact Messages Model.
+     * @description 문의 메시지 모델에서 메시지를 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -95,7 +95,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description Retrieves Contact Messages Model Stats.
+     * @description 문의 메시지 모델의 통계를 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getStats() {
@@ -114,7 +114,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description Retrieves Contact Messages Model By Email.
+     * @description 문의 메시지 모델에서 이메일로 조회한다.
       * @param {*} email 입력값
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과
@@ -129,7 +129,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description search for Contact Messages Model.
+     * @description 문의 메시지 모델에서 검색한다.
       * @param {*} searchTerm 입력값
       * @param {*} limit 입력값
      * @returns {Promise<any>} 처리 결과
@@ -146,7 +146,7 @@ const ContactMessages = {
     },
 
     /**
-     * @description Retrieves Contact Messages Model Recent By Ip.
+     * @description 문의 메시지 모델에서 IP별 최근 메시지를 조회한다.
       * @param {*} ipAddress 입력값
       * @param {*} hours 입력값
      * @returns {Promise<any>} 처리 결과

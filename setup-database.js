@@ -9,10 +9,10 @@ require('dotenv').config();
 const { runMigration } = require('./migrations/init');
 const logger = require('./log');
 
-logger.info('🔧 포트폴리오 데이터베이스 설정을 시작합니다...');
-logger.info(`📁 데이터베이스: ${process.env.DB_SCHEMA}`);
-logger.info(`🖥️  호스트: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
-logger.info(`👤 사용자: ${process.env.DB_USER}`);
+logger.info('포트폴리오 데이터베이스 설정을 시작합니다...');
+logger.info(` 데이터베이스: ${process.env.DB_SCHEMA}`);
+logger.info(`  호스트: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+logger.info(` 사용자: ${process.env.DB_USER}`);
 logger.info('');
 
 runMigration().catch((error) => {

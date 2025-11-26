@@ -3,7 +3,7 @@ const logger = require('../log');
 
 const PersonalInfo = {
     /**
-     * @description get for Personal Info Model.
+     * @description 개인 정보 모델에서 데이터를 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async get() {
@@ -25,7 +25,7 @@ const PersonalInfo = {
     },
 
     /**
-     * @description update for Personal Info Model.
+     * @description 개인 정보 모델의 정보를 수정한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */

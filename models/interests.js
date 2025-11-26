@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const Interests = {
     /**
-     * @description Retrieves Interests Model All.
+     * @description 관심사 모델의 전체 목록을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAll() {
@@ -13,7 +13,7 @@ const Interests = {
     },
 
     /**
-     * @description Retrieves Interests Model By Category.
+     * @description 관심사 모델에서 카테고리별로 조회한다.
       * @param {*} category 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -26,7 +26,7 @@ const Interests = {
     },
 
     /**
-     * @description Retrieves Interests Model By Id.
+     * @description 관심사 모델에서 ID로 조회한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -38,7 +38,7 @@ const Interests = {
     },
 
     /**
-     * @description create for Interests Model.
+     * @description 관심사 모델에 항목을 생성한다.
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -53,7 +53,7 @@ const Interests = {
     },
 
     /**
-     * @description update for Interests Model.
+     * @description 관심사 모델의 정보를 수정한다.
       * @param {*} id 입력값
       * @param {*} data 입력값
      * @returns {Promise<any>} 처리 결과
@@ -70,7 +70,7 @@ const Interests = {
     },
 
     /**
-     * @description delete for Interests Model.
+     * @description 관심사 모델에서 항목을 삭제한다.
       * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -80,7 +80,7 @@ const Interests = {
     },
 
     /**
-     * @description Updates Interests Model Order.
+     * @description 관심사 모델의 노출 순서를 갱신한다.
       * @param {*} id 입력값
       * @param {*} display_order 입력값
      * @returns {Promise<any>} 처리 결과

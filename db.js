@@ -31,7 +31,7 @@ const db = mariaDB.createPool({
 });
 
 db.on('connection', (connection) => {
-    logger.info('🔗 새로운 데이터베이스 연결 생성', { threadId: connection.threadId });
+    logger.info('새로운 데이터베이스 연결 생성', { threadId: connection.threadId });
 });
 
 db.on('acquire', (connection) => {
@@ -41,7 +41,7 @@ db.on('release', (connection) => {
 });
 
 db.on('error', (err) => {
-    logger.error('❌ 데이터베이스 연결 오류', { error: err.message, stack: err.stack });
+    logger.error('데이터베이스 연결 오류', { error: err.message, stack: err.stack });
 });
 
 module.exports = db;

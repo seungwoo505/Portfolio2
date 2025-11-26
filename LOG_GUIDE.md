@@ -1,8 +1,8 @@
-# 📊 로깅 시스템 가이드
+#  로깅 시스템 가이드
 
 완전한 로깅 시스템이 구현되어 서버의 모든 활동을 추적할 수 있습니다.
 
-## 🔧 **로그 시스템 구조**
+##  **로그 시스템 구조**
 
 ### **Winston 기반 로깅**
 
@@ -17,7 +17,7 @@
 - `info` - 일반 정보 및 API 요청
 - `debug` - 상세 디버깅 정보 (SQL 쿼리 등)
 
-## 📁 **로그 파일 구조**
+##  **로그 파일 구조**
 
 ```
 logs/
@@ -26,7 +26,7 @@ logs/
 └── ...
 ```
 
-## 🎯 **로그 카테고리**
+##  **로그 카테고리**
 
 ### **1. HTTP 요청 로그**
 
@@ -130,7 +130,7 @@ SQL 쿼리 성능 및 오류 추적:
 }
 ```
 
-## ⚙️ **환경 변수 설정**
+##  **환경 변수 설정**
 
 ```env
 # .env 파일
@@ -145,7 +145,7 @@ NODE_ENV=production     # 환경 (development, production)
 - `info`: 정보 + 경고 + 에러 (기본값)
 - `debug`: 모든 로그 (SQL 쿼리 포함)
 
-## 🔍 **로그 분석 방법**
+##  **로그 분석 방법**
 
 ### **1. 실시간 로그 모니터링**
 
@@ -189,7 +189,7 @@ cat logs/2024-01-15.log | jq 'select(.responseTime and (.responseTime | tonumber
 cat logs/2024-01-15.log | jq -r '.ip' | sort | uniq -c | sort -nr
 ```
 
-## 📈 **로그 분석 스크립트**
+##  **로그 분석 스크립트**
 
 ### **일일 통계 스크립트**
 
@@ -203,24 +203,24 @@ echo "=== 일일 로그 통계 ==="
 echo "날짜: $(date +%Y-%m-%d)"
 echo ""
 
-echo "📊 요청 통계:"
+echo " 요청 통계:"
 echo "총 요청 수: $(grep -c "HTTP Request" $LOG_FILE)"
 echo "성공 요청: $(grep "HTTP Request" $LOG_FILE | grep -c '"statusCode":2')"
 echo "에러 요청: $(grep "HTTP Request" $LOG_FILE | grep -c '"statusCode":[45]')"
 echo ""
 
-echo "🔐 인증 통계:"
+echo " 인증 통계:"
 echo "로그인 시도: $(grep -c "Login attempt" $LOG_FILE)"
 echo "로그인 성공: $(grep -c "Login successful" $LOG_FILE)"
 echo "로그인 실패: $(grep -c "Login failed" $LOG_FILE)"
 echo ""
 
-echo "⚠️  보안 이벤트:"
+echo "  보안 이벤트:"
 echo "계정 잠금: $(grep -c "Account locked" $LOG_FILE)"
 echo "잘못된 비밀번호: $(grep -c "Invalid password" $LOG_FILE)"
 echo ""
 
-echo "📧 연락처 폼:"
+echo " 연락처 폼:"
 echo "메시지 수신: $(grep -c "Contact form submission" $LOG_FILE)"
 echo "전송 성공: $(grep -c "Contact message created successfully" $LOG_FILE)"
 ```
@@ -234,19 +234,19 @@ echo "전송 성공: $(grep -c "Contact message created successfully" $LOG_FILE)
 echo "=== 최근 에러 분석 ==="
 echo ""
 
-echo "🚨 최근 에러 (최신 10개):"
+echo " 최근 에러 (최신 10개):"
 grep '"level":"error"' logs/*.log | tail -10 | jq -r '.timestamp + " - " + .message'
 echo ""
 
-echo "📊 에러 유형별 통계:"
+echo " 에러 유형별 통계:"
 grep '"level":"error"' logs/*.log | jq -r '.message' | sort | uniq -c | sort -nr
 echo ""
 
-echo "🌐 에러가 많은 IP:"
+echo " 에러가 많은 IP:"
 grep '"level":"error"' logs/*.log | jq -r '.ip' | grep -v null | sort | uniq -c | sort -nr | head -5
 ```
 
-## 🔧 **로그 관리**
+##  **로그 관리**
 
 ### **로그 로테이션**
 
@@ -267,7 +267,7 @@ find logs/ -name "*.log" -mtime +30 -delete
 gzip logs/$(date -d "yesterday" +%Y-%m-%d).log
 ```
 
-## 🛠 **사용자 정의 로그**
+##  **사용자 정의 로그**
 
 코드에서 직접 로그를 남기는 방법:
 
@@ -292,7 +292,7 @@ logger.security("Suspicious activity detected", { ip, attempts: 5 });
 logger.database("Slow query detected", { query, duration: "2.5s" });
 ```
 
-## 📊 **실시간 모니터링**
+##  **실시간 모니터링**
 
 ### **PM2 로그 모니터링**
 
@@ -316,7 +316,7 @@ failregex = .*"level":"warn".*"message":"\[SECURITY\] Login failed".*"ipAddress"
 ignoreregex =
 ```
 
-## 🔍 **트러블슈팅**
+##  **트러블슈팅**
 
 ### **자주 발생하는 문제들**
 
@@ -345,7 +345,7 @@ find logs/ -size +100M -ls
 pm2 restart portfolio-server
 ```
 
-## 📈 **성능 고려사항**
+##  **성능 고려사항**
 
 ### **로그 성능 최적화**
 
@@ -359,4 +359,4 @@ pm2 restart portfolio-server
 - 압축 옵션 활용 가능
 - 오래된 로그 자동 삭제
 
-이 로깅 시스템으로 서버의 모든 활동을 추적하고 문제를 빠르게 진단할 수 있습니다! 🚀
+이 로깅 시스템으로 서버의 모든 활동을 추적하고 문제를 빠르게 진단할 수 있습니다! 

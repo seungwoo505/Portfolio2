@@ -2,7 +2,7 @@ const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const SiteSettings = {
     /**
-     * @description Retrieves Site Settings Model All.
+     * @description 사이트 설정 모델의 전체 목록을 조회한다.
       * @param {*} public_only 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -12,7 +12,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description get for Site Settings Model.
+     * @description 사이트 설정 모델에서 값을 조회한다.
       * @param {*} key 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -41,7 +41,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description set for Site Settings Model.
+     * @description 사이트 설정 모델에 값을 저장한다.
       * @param {*} key 입력값
       * @param {*} value 입력값
       * @param {*} type 입력값
@@ -74,7 +74,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description update for Site Settings Model.
+     * @description 사이트 설정 모델의 정보를 수정한다.
       * @param {*} key 입력값
       * @param {*} updates 입력값
      * @returns {Promise<any>} 처리 결과
@@ -105,7 +105,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description delete for Site Settings Model.
+     * @description 사이트 설정 모델에서 항목을 삭제한다.
       * @param {*} key 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -137,7 +137,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description Retrieves Site Settings Model All Settings.
+     * @description 사이트 설정 모델의 모든 설정을 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
     async getAllSettings() {
@@ -170,7 +170,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description set Bulk for Site Settings Model.
+     * @description 사이트 설정 모델에 여러 항목을 한 번에 저장한다.
       * @param {*} settings 입력값
      * @returns {Promise<any>} 처리 결과
      */
@@ -181,7 +181,7 @@ const SiteSettings = {
     },
 
     /**
-     * @description Retrieves Site Settings Model By Pattern.
+     * @description 사이트 설정 모델에서 패턴으로 조회한다.
       * @param {*} pattern 입력값
      * @returns {Promise<any>} 처리 결과
      */
