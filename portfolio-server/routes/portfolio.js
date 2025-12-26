@@ -2,6 +2,233 @@
  * @swagger
  * components:
  *   schemas:
+ *     PersonalInfo:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: "승우"
+ *         full_name:
+ *           type: string
+ *           example: "홍 승우"
+ *         title:
+ *           type: string
+ *           example: "Full-stack Developer"
+ *         bio:
+ *           type: string
+ *           example: "웹과 모바일을 모두 아우르는 개발자입니다."
+ *         about:
+ *           type: string
+ *           example: "10년차 개발자로..."
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "me@example.com"
+ *         phone:
+ *           type: string
+ *           example: "+82-10-1234-5678"
+ *         location:
+ *           type: string
+ *           example: "Seoul, South Korea"
+ *         avatar_url:
+ *           type: string
+ *           format: uri
+ *           example: "https://example.com/avatar.jpg"
+ *         resume_url:
+ *           type: string
+ *           format: uri
+ *           example: "https://example.com/resume.pdf"
+ *         github_url:
+ *           type: string
+ *           format: uri
+ *           example: "https://github.com/username"
+ *         linkedin_url:
+ *           type: string
+ *           format: uri
+ *           example: "https://www.linkedin.com/in/username/"
+ *         twitter_url:
+ *           type: string
+ *           format: uri
+ *           example: "https://twitter.com/username"
+ *         instagram_url:
+ *           type: string
+ *           format: uri
+ *           example: "https://instagram.com/username"
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-15T10:30:00Z"
+ *     SocialLink:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         platform:
+ *           type: string
+ *           example: "GitHub"
+ *         url:
+ *           type: string
+ *           format: uri
+ *           example: "https://github.com/username"
+ *         icon:
+ *           type: string
+ *           example: "github"
+ *         display_order:
+ *           type: integer
+ *           example: 1
+ *         is_active:
+ *           type: boolean
+ *           example: true
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-15T10:30:00Z"
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-16T10:30:00Z"
+ *     Skill:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         name:
+ *           type: string
+ *           example: "TypeScript"
+ *         category_id:
+ *           type: integer
+ *           example: 2
+ *         category_name:
+ *           type: string
+ *           example: "Frontend"
+ *         proficiency_level:
+ *           type: integer
+ *           minimum: 0
+ *           maximum: 100
+ *           example: 90
+ *         years_of_experience:
+ *           type: number
+ *           example: 5
+ *         icon:
+ *           type: string
+ *           example: "logos:typescript-icon"
+ *         color:
+ *           type: string
+ *           example: "#3178C6"
+ *         display_order:
+ *           type: integer
+ *           example: 1
+ *         is_featured:
+ *           type: boolean
+ *           example: true
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-15T10:30:00Z"
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-16T10:30:00Z"
+ *     SkillCategory:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         name:
+ *           type: string
+ *           example: "Frontend"
+ *         display_order:
+ *           type: integer
+ *           example: 1
+ *     Tag:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         name:
+ *           type: string
+ *           example: "Next.js"
+ *         slug:
+ *           type: string
+ *           example: "nextjs"
+ *         description:
+ *           type: string
+ *           example: "Next.js 관련 콘텐츠"
+ *         color:
+ *           type: string
+ *           example: "#000000"
+ *         type:
+ *           type: string
+ *           example: "blog"
+ *         usage_count:
+ *           type: integer
+ *           example: 12
+ *     Experience:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         type:
+ *           type: string
+ *           example: "work"
+ *         title:
+ *           type: string
+ *           example: "Senior Developer"
+ *         company:
+ *           type: string
+ *           example: "Awesome Corp"
+ *         location:
+ *           type: string
+ *           example: "Seoul"
+ *         description:
+ *           type: string
+ *           example: "프로젝트 리드 및 아키텍처 설계"
+ *         start_date:
+ *           type: string
+ *           format: date
+ *           example: "2022-01-01"
+ *         end_date:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *           example: "2024-06-30"
+ *         is_current:
+ *           type: boolean
+ *           example: false
+ *         display_order:
+ *           type: integer
+ *           example: 1
+ *     Interest:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         title:
+ *           type: string
+ *           example: "Machine Learning"
+ *         description:
+ *           type: string
+ *           example: "ML 연구와 모델 구축"
+ *         category:
+ *           type: string
+ *           example: "study"
+ *         display_order:
+ *           type: integer
+ *           example: 1
+ *     PublicSettings:
+ *       type: object
+ *       description: "공개 가능한 사이트 설정"
+ *       example:
+ *         site_title: "승우의 포트폴리오"
+ *         site_description: "웹 개발자 승우의 포트폴리오"
+ *         contact_email: "contact@example.com"
+ *         show_blog: true
  *     BlogPost:
  *       type: object
  *       properties:
@@ -42,15 +269,10 @@
  *           example: "2024-01-15T10:30:00Z"
  *         tags:
  *           type: array
+ *           description: "태그 이름 배열"
  *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: integer
- *                 example: 1
- *               name:
- *                 type: string
- *                 example: "Next.js"
+ *             type: string
+ *             example: "Next.js"
  *     Project:
  *       type: object
  *       properties:
@@ -83,7 +305,7 @@
  *           example: true
  *         status:
  *           type: string
- *           enum: [completed, in_progress, planning]
+ *           description: "프로젝트 상태 (예: completed, draft)"
  *           example: "completed"
  *         start_date:
  *           type: string
@@ -102,15 +324,22 @@
  *           example: "2024-01-15T10:30:00Z"
  *         tags:
  *           type: array
+ *           description: "태그 이름 배열"
  *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: integer
- *                 example: 1
- *               name:
- *                 type: string
- *                 example: "React"
+ *             type: string
+ *             example: "React"
+ *         skills:
+ *           type: array
+ *           description: "관련 기술 이름 배열"
+ *           items:
+ *             type: string
+ *             example: "TypeScript"
+ *         images:
+ *           type: array
+ *           description: "프로젝트 이미지 URL 배열"
+ *           items:
+ *             type: string
+ *             format: uri
  *     ContactMessage:
  *       type: object
  *       properties:
@@ -180,232 +409,140 @@ router.get('/settings', async (req, res) => {
 });
 
 /**
- * @openapi
- * paths:
- *   /personal-info:
- *     get:
- *       summary: 개인 정보 조회
- *       tags: [Profile]
- *       responses:
- *         200:
- *           description: 성공
- *     put:
- *       summary: 개인 정보 수정
- *       tags: [Profile]
- *       responses:
- *         200:
- *           description: 성공
- *   /social-links:
- *     get:
- *       summary: 소셜 링크 목록
- *       tags: [Social]
- *       responses:
- *         200:
- *           description: 성공
- *     post:
- *       summary: 소셜 링크 생성
- *       tags: [Social]
- *       responses:
- *         201:
- *           description: 생성됨
- *   /skills:
- *     get:
- *       summary: 스킬 및 카테고리 조회
- *       tags: [Skills]
- *       responses:
- *         200:
- *           description: 성공
- *     post:
- *       summary: 스킬 추가 (관리자)
- *       security: [{ bearerAuth: [] }]
- *       tags: [Skills]
- *       responses:
- *         201:
- *           description: 생성됨
- *   /skills/featured:
- *     get:
- *       summary: 주요 스킬 조회
- *       tags: [Skills]
- *       responses:
- *         200:
- *           description: 성공
- *   /projects:
- *     get:
- *       summary: 프로젝트 목록
- *       tags: [Projects]
- *       responses:
- *         200:
- *           description: 성공
- *     post:
- *       summary: 프로젝트 생성 (관리자)
- *       security: [{ bearerAuth: [] }]
- *       tags: [Projects]
- *       responses:
- *         201:
- *           description: 생성됨
- *   /projects/{id}:
- *     get:
- *       summary: 프로젝트 상세
- *       tags: [Projects]
- *       parameters:
- *         - in: path
- *           name: id
- *           required: true
- *           schema: { type: integer }
- *       responses:
- *         200:
- *           description: 성공
- *   /projects/tag/{tagSlug}:
- *     get:
- *       summary: 태그별 프로젝트 목록
- *       tags: [Projects, Tags]
- *       parameters:
- *         - in: path
- *           name: tagSlug
- *           required: true
- *           schema: { type: string }
- *       responses:
- *         200:
- *           description: 성공
- *   /blog/posts:
- *     get:
- *       summary: 블로그 포스트 목록
- *       tags: [Blog]
- *       responses:
- *         200:
- *           description: 성공
- *     post:
- *       summary: 블로그 포스트 생성 (관리자)
- *       security: [{ bearerAuth: [] }]
- *       tags: [Blog]
- *       responses:
- *         201:
- *           description: 생성됨
- *   /blog/posts/{slug}:
- *     get:
- *       summary: 블로그 포스트 상세 (슬러그)
- *       tags: [Blog]
- *       parameters:
- *         - in: path
- *           name: slug
- *           required: true
- *           schema: { type: string }
- *       responses:
- *         200:
- *           description: 성공
- *   /blog/search:
- *     get:
- *       summary: 블로그 검색
- *       tags: [Blog]
- *       parameters:
- *         - in: query
- *           name: q
- *           schema: { type: string }
- *       responses:
- *         200:
- *           description: 성공
- *   /tags:
- *     get:
- *       summary: 통합 태그 목록
- *       tags: [Tags]
- *       parameters:
- *         - in: query
- *           name: type
- *           schema: { type: string, enum: [blog, project, general] }
- *       responses:
- *         200:
- *           description: 성공
- *   /tags/{slug}:
- *     get:
- *       summary: 태그 단건 조회
- *       tags: [Tags]
- *       parameters:
- *         - in: path
- *           name: slug
- *           required: true
- *           schema: { type: string }
- *       responses:
- *         200:
- *           description: 성공
- *   /experiences:
- *     get:
- *       summary: 경력/경험 목록
- *       tags: [Experiences]
- *       responses:
- *         200:
- *           description: 성공
- *     post:
- *       summary: 경력 추가 (관리자)
- *       security: [{ bearerAuth: [] }]
- *       tags: [Experiences]
- *       responses:
- *         201:
- *           description: 생성됨
- *   /experiences/timeline:
- *     get:
- *       summary: 경력 타임라인
- *       tags: [Experiences]
- *       responses:
- *         200:
- *           description: 성공
- *   /settings:
- *     get:
- *       summary: 공개 사이트 설정 조회
- *       tags: [Settings]
- *       responses:
- *         200:
- *           description: 성공
- *   /contact:
- *     post:
- *       summary: 연락처 메시지 전송
- *       tags: [Contact]
- *       responses:
- *         201:
- *           description: 생성됨
- *   /dashboard/stats:
- *     get:
- *       summary: 대시보드 통계 (공개 요약)
- *       tags: [Dashboard]
- *       responses:
- *         200:
- *           description: 성공
- *   /search:
- *     get:
- *       summary: 통합 검색
- *       tags: [Search]
- *       parameters:
- *         - in: query
- *           name: q
- *           schema: { type: string }
- *       responses:
- *         200:
- *           description: 성공
- *   /health:
- *     get:
- *       summary: 헬스 체크
- *       tags: [Health]
- *       responses:
- *         200:
- *           description: 성공
- */
-/**
- * @openapi
- * /blog/posts:
+ * @swagger
+ * /api/personal-info:
  *   get:
- *     summary: 블로그 포스트 목록 조회
- *     tags: [Blog]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
+ *     summary: 개인 정보 조회
+ *     tags: [Profile]
  *     responses:
  *       200:
- *         description: 성공
+ *         description: 개인 정보 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/PersonalInfo'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   put:
+ *     summary: 개인 정보 수정
+ *     tags: [Profile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PersonalInfo'
+ *     responses:
+ *       200:
+ *         description: 개인 정보 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "개인 정보가 업데이트되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/PersonalInfo'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/social-links:
+ *   get:
+ *     summary: 소셜 링크 목록 조회
+ *     tags: [Social]
+ *     responses:
+ *       200:
+ *         description: 소셜 링크 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SocialLink'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: 소셜 링크 추가
+ *     tags: [Social]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - platform
+ *               - url
+ *             properties:
+ *               platform:
+ *                 type: string
+ *                 example: "GitHub"
+ *               url:
+ *                 type: string
+ *                 format: uri
+ *                 example: "https://github.com/username"
+ *               icon:
+ *                 type: string
+ *                 example: "github"
+ *               display_order:
+ *                 type: integer
+ *                 example: 1
+ *     responses:
+ *       201:
+ *         description: 소셜 링크 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "소셜 링크가 추가되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/SocialLink'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/personal-info', async (req, res) => {
     try {
@@ -491,6 +628,147 @@ router.post('/social-links', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/skills:
+ *   get:
+ *     summary: 기술 및 카테고리 조회
+ *     tags: [Skills]
+ *     responses:
+ *       200:
+ *         description: 기술 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     skills:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Skill'
+ *                     categories:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/SkillCategory'
+ *                     skillsByCategory:
+ *                       type: array
+ *                       items:
+ *                         allOf:
+ *                           - $ref: '#/components/schemas/SkillCategory'
+ *                           - type: object
+ *                             properties:
+ *                               skills:
+ *                                 type: array
+ *                                 items:
+ *                                   $ref: '#/components/schemas/Skill'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: 기술 추가
+ *     tags: [Skills]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               category_id:
+ *                 type: integer
+ *                 example: 1
+ *               name:
+ *                 type: string
+ *                 example: "TypeScript"
+ *               proficiency_level:
+ *                 type: integer
+ *                 example: 90
+ *               years_of_experience:
+ *                 type: number
+ *                 example: 5
+ *               icon:
+ *                 type: string
+ *                 example: "logos:typescript-icon"
+ *               color:
+ *                 type: string
+ *                 example: "#3178C6"
+ *               display_order:
+ *                 type: integer
+ *                 example: 1
+ *               is_featured:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: 기술 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "스킬이 추가되었습니다."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 12
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/skills/featured:
+ *   get:
+ *     summary: 주요 기술 조회
+ *     tags: [Skills]
+ *     responses:
+ *       200:
+ *         description: 주요 기술 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Skill'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/skills', async (req, res) => {
     try {
         const skills = await Skills.getAllWithCategories();
@@ -609,18 +887,24 @@ router.post('/skills',
  *         name: tags
  *         schema:
  *           type: string
- *         description: 태그 필터 (쉼표로 구분)
+ *         description: 태그 슬러그 필터 (쉼표로 구분)
+ *       - in: query
+ *         name: skills
+ *         schema:
+ *           type: string
+ *         description: 기술 이름 필터 (쉼표로 구분)
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
- *           enum: [completed, in_progress, planning]
- *         description: 프로젝트 상태 필터
+ *           enum: [published, draft]
+ *           default: published
+ *         description: 게시 상태 필터
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
- *           enum: [created_at, title, start_date, end_date]
+ *           enum: [created_at, title, view_count, display_order]
  *           default: created_at
  *         description: 정렬 기준
  *       - in: query
@@ -729,6 +1013,44 @@ router.get('/projects', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/projects/slug/{slug}:
+ *   get:
+ *     summary: 프로젝트 상세 조회
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 프로젝트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Project'
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/projects/slug/:slug', async (req, res) => {
     try {
         const project = await Projects.getBySlug(req.params.slug);
@@ -753,6 +1075,62 @@ router.get('/projects/slug/:slug', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/projects/tag/{tagSlug}:
+ *   get:
+ *     summary: 태그별 프로젝트 목록 조회
+ *     tags: [Projects, Tags]
+ *     parameters:
+ *       - in: path
+ *         name: tagSlug
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *     responses:
+ *       200:
+ *         description: 태그별 프로젝트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Project'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total:
+ *                       type: integer
+ *                       example: 3
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/projects/tag/:tagSlug', async (req, res) => {
     try {
         const { limit, page } = req.query;
@@ -813,26 +1191,47 @@ router.get('/projects/tag/:tagSlug', async (req, res) => {
  *           default: 10
  *         description: 페이지당 포스트 수
  *       - in: query
- *         name: offset
+ *         name: page
  *         schema:
  *           type: integer
- *           default: 0
- *         description: 건너뛸 포스트 수
+ *           default: 1
+ *         description: 페이지 번호
+ *       - in: query
+ *         name: featured
+ *         schema:
+ *           type: boolean
+ *         description: 추천 포스트만 조회
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *         description: 검색 키워드
  *       - in: query
- *         name: tag
+ *         name: tags
  *         schema:
  *           type: string
- *         description: 태그 필터
+ *         description: 태그 슬러그 필터 (쉼표 구분)
  *       - in: query
- *         name: featured
+ *         name: status
  *         schema:
- *           type: boolean
- *         description: 추천 포스트만 조회
+ *           type: string
+ *           enum: [published, draft]
+ *           default: published
+ *         description: 게시 상태 지정
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [published_at, created_at, title, view_count, reading_time]
+ *           default: published_at
+ *         description: 정렬 컬럼
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           example: "desc"
+ *         description: 정렬 순서
  *     responses:
  *       200:
  *         description: 블로그 포스트 목록 조회 성공
@@ -851,18 +1250,182 @@ router.get('/projects/tag/:tagSlug', async (req, res) => {
  *                 pagination:
  *                   type: object
  *                   properties:
- *                     total:
+ *                     page:
  *                       type: integer
- *                       example: 25
+ *                       example: 1
  *                     limit:
  *                       type: integer
  *                       example: 10
- *                     offset:
+ *                     total:
  *                       type: integer
- *                       example: 0
- *                     hasMore:
- *                       type: boolean
- *                       example: true
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 3
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: 블로그 포스트 생성
+ *     tags: [Blog]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "새로운 Next.js 기능"
+ *               content:
+ *                 type: string
+ *                 example: "# Next.js 15 살펴보기"
+ *               excerpt:
+ *                 type: string
+ *                 example: "주요 기능 요약"
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               is_published:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: 블로그 포스트 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "블로그 포스트가 생성되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/BlogPost'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/blog/posts/{slug}:
+ *   get:
+ *     summary: 블로그 포스트 상세 조회
+ *     tags: [Blog]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 포스트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/BlogPost'
+ *       404:
+ *         description: 포스트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/blog/search:
+ *   get:
+ *     summary: 블로그 포스트 검색
+ *     tags: [Blog]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 검색어
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: 검색 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/BlogPost'
+ *                 query:
+ *                   type: string
+ *                   example: "Next.js"
+ *       400:
+ *         description: 검색어 누락
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/blog/posts/{slug}/view:
+ *   post:
+ *     summary: 블로그 포스트 조회수 증가
+ *     tags: [Blog]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 조회수 증가 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "조회수가 증가되었습니다."
+ *       404:
+ *         description: 포스트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 서버 오류
  *         content:
@@ -1083,7 +1646,7 @@ router.post('/blog/posts',
  *                 example: "안녕하세요. 문의드릴 내용이 있습니다."
  *                 description: "메시지 내용"
  *     responses:
- *       200:
+ *       201:
  *         description: 메시지 전송 성공
  *         content:
  *           application/json:
@@ -1190,7 +1753,7 @@ router.post('/contact', async (req, res) => {
  *   get:
  *     summary: 공개 설정 조회
  *     description: 웹사이트의 공개 설정 정보를 조회합니다.
- *     tags: [Public]
+ *     tags: [Settings]
  *     responses:
  *       200:
  *         description: 설정 조회 성공
@@ -1203,17 +1766,7 @@ router.post('/contact', async (req, res) => {
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   type: object
- *                   properties:
- *                     site_title:
- *                       type: string
- *                       example: "승우의 포트폴리오"
- *                     site_description:
- *                       type: string
- *                       example: "웹 개발자 승우의 포트폴리오"
- *                     contact_email:
- *                       type: string
- *                       example: "contact@example.com"
+ *                   $ref: '#/components/schemas/PublicSettings'
  *       500:
  *         description: 서버 오류
  *         content:
@@ -1257,6 +1810,24 @@ router.get('/settings', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/rss.xml:
+ *   get:
+ *     summary: 블로그 RSS 피드
+ *     tags: [Blog]
+ *     produces:
+ *       - application/xml
+ *     responses:
+ *       200:
+ *         description: 최신 블로그 포스트 RSS 피드
+ *         content:
+ *           application/xml:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/rss.xml', async (req, res) => {
   try {
     const [settings] = await SiteSettings.getPublicSettings(); // SiteSettings.getPublicSettings 사용
@@ -1297,6 +1868,186 @@ router.get('/rss.xml', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/tags:
+ *   get:
+ *     summary: 태그 목록 조회
+ *     tags: [Tags]
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [blog, project, general]
+ *         description: 태그 분류 필터
+ *       - in: query
+ *         name: popular
+ *         schema:
+ *           type: boolean
+ *         description: 인기 태그만 조회
+ *     responses:
+ *       200:
+ *         description: 태그 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Tag'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/tags/top-skills:
+ *   get:
+ *     summary: 상위 기술 태그 조회
+ *     tags: [Tags]
+ *     responses:
+ *       200:
+ *         description: 상위 기술 태그 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Tag'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/tags/{slug}:
+ *   get:
+ *     summary: 태그 상세 조회
+ *     tags: [Tags]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 태그 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Tag'
+ *       404:
+ *         description: 태그 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/blog/tags:
+ *   get:
+ *     summary: 블로그 태그 조회
+ *     tags: [Tags]
+ *     parameters:
+ *       - in: query
+ *         name: popular
+ *         schema:
+ *           type: boolean
+ *         description: 인기 태그만 조회
+ *     responses:
+ *       200:
+ *         description: 블로그 태그 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Tag'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/blog/posts/tag/{tagSlug}:
+ *   get:
+ *     summary: 태그별 블로그 포스트 조회
+ *     tags: [Blog, Tags]
+ *     parameters:
+ *       - in: path
+ *         name: tagSlug
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *     responses:
+ *       200:
+ *         description: 태그별 포스트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/BlogPost'
+ *                 tag:
+ *                   $ref: '#/components/schemas/Tag'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total:
+ *                       type: integer
+ *                       example: 10
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/tags', async (req, res) => {
     try {
         const { type, popular } = req.query; // type: blog|project|general
@@ -1388,6 +2139,214 @@ router.get('/blog/posts/tag/:tagSlug', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/experiences:
+ *   get:
+ *     summary: 경력/경험 목록 조회
+ *     tags: [Experiences]
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           example: "work"
+ *         description: 경력 유형 필터 (work, education 등)
+ *     responses:
+ *       200:
+ *         description: 경력 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Experience'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: 경력 추가
+ *     tags: [Experiences]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - title
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 example: "work"
+ *               title:
+ *                 type: string
+ *                 example: "Senior Developer"
+ *               company:
+ *                 type: string
+ *                 example: "Awesome Corp"
+ *               description:
+ *                 type: string
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *               is_current:
+ *                 type: boolean
+ *                 example: false
+ *     responses:
+ *       201:
+ *         description: 경력 추가 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "경력이 추가되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/Experience'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/experiences/timeline:
+ *   get:
+ *     summary: 경력 타임라인 조회
+ *     tags: [Experiences]
+ *     responses:
+ *       200:
+ *         description: 타임라인 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Experience'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/experiences/{id}:
+ *   put:
+ *     summary: 경력 수정
+ *     tags: [Experiences]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - title
+ *             properties:
+ *               type:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 경력 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "경력이 수정되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/Experience'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 경력 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: 경력 삭제
+ *     tags: [Experiences]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 경력 삭제 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "경력이 삭제되었습니다."
+ *       404:
+ *         description: 경력 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/experiences', async (req, res) => {
     try {
         const { type } = req.query;
@@ -1512,6 +2471,139 @@ router.delete('/experiences/:id', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/interests:
+ *   get:
+ *     summary: 관심사 목록 조회
+ *     tags: [Profile]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           example: "hobby"
+ *         description: 관심사 카테고리 필터
+ *     responses:
+ *       200:
+ *         description: 관심사 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Interest'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: 관심사 생성
+ *     tags: [Profile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Interest'
+ *     responses:
+ *       201:
+ *         description: 관심사 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "관심사가 생성되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/Interest'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/interests/{id}:
+ *   put:
+ *     summary: 관심사 수정
+ *     tags: [Profile]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Interest'
+ *     responses:
+ *       200:
+ *         description: 관심사 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "관심사가 수정되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/Interest'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: 관심사 삭제
+ *     tags: [Profile]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 관심사 삭제 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "관심사가 삭제되었습니다."
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/interests', async (req, res) => {
     try {
         const { category } = req.query;
@@ -1588,6 +2680,63 @@ router.delete('/interests/:id', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/dashboard/stats:
+ *   get:
+ *     summary: 공개 대시보드 통계 조회
+ *     tags: [Dashboard]
+ *     responses:
+ *       200:
+ *         description: 통계 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     projects:
+ *                       type: integer
+ *                       example: 12
+ *                     blogPosts:
+ *                       type: integer
+ *                       example: 34
+ *                     skills:
+ *                       type: integer
+ *                       example: 18
+ *                     contacts:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                           example: 45
+ *                         unread:
+ *                           type: integer
+ *                           example: 2
+ *                         unreplied:
+ *                           type: integer
+ *                           example: 1
+ *                         today:
+ *                           type: integer
+ *                           example: 3
+ *                         this_week:
+ *                           type: integer
+ *                           example: 8
+ *                         this_month:
+ *                           type: integer
+ *                           example: 15
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/dashboard/stats', async (req, res) => {
     try {
         const [projectCount, blogCount, contactStats, skillCount] = await Promise.all([
@@ -1615,6 +2764,68 @@ router.get('/dashboard/stats', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/search:
+ *   get:
+ *     summary: 통합 검색
+ *     tags: [Search]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 검색어
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [all, blog, projects, skills]
+ *           default: all
+ *         description: 검색 대상 범위
+ *     responses:
+ *       200:
+ *         description: 검색 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     blogPosts:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/BlogPost'
+ *                     projects:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Project'
+ *                     skills:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Skill'
+ *                 query:
+ *                   type: string
+ *                   example: "Next.js"
+ *       400:
+ *         description: 검색어 누락
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/search', async (req, res) => {
     try {
         const { q, type } = req.query;
@@ -1678,6 +2889,49 @@ router.get('/search', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: 서비스 상태 확인
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: 서비스 정상
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Portfolio API is healthy"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 database:
+ *                   type: string
+ *                   example: "connected"
+ *       500:
+ *         description: 서비스 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Health check failed"
+ *                 database:
+ *                   type: string
+ *                   example: "disconnected"
+ */
 router.get('/health', async (req, res) => {
     try {
         await executeQuery('SELECT 1');
@@ -1698,6 +2952,45 @@ router.get('/health', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/projects/slug/{slug}/view:
+ *   post:
+ *     summary: 프로젝트 조회수 증가
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 조회수 증가 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "조회수가 증가되었습니다."
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/projects/slug/:slug/view', async (req, res) => {
     try {
         const projectSlug = req.params.slug;
@@ -1726,6 +3019,79 @@ router.post('/projects/slug/:slug/view', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/personal-info:
+ *   get:
+ *     summary: 관리자용 개인 정보 조회
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 개인 정보 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/PersonalInfo'
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   put:
+ *     summary: 관리자용 개인 정보 수정
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PersonalInfo'
+ *     responses:
+ *       200:
+ *         description: 개인 정보 저장 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "개인 정보가 저장되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/PersonalInfo'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/admin/personal-info', 
     authenticateToken, 
     requirePermission('personal_info.read'),

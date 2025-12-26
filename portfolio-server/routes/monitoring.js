@@ -1,3 +1,143 @@
+/**
+ * @swagger
+ * /api/monitoring/dashboard:
+ *   get:
+ *     summary: 시스템 모니터링 대시보드
+ *     tags: [Monitoring]
+ *     responses:
+ *       200:
+ *         description: 모니터링 데이터 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     system:
+ *                       type: object
+ *                       properties:
+ *                         nodeVersion:
+ *                           type: string
+ *                           example: "v18.18.0"
+ *                         platform:
+ *                           type: string
+ *                           example: "darwin"
+ *                         uptime:
+ *                           type: string
+ *                           example: "3600s"
+ *                     cache:
+ *                       type: object
+ *                       properties:
+ *                         memory:
+ *                           type: object
+ *                         redis:
+ *                           type: object
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/monitoring/cache/clear:
+ *   post:
+ *     summary: 캐시 초기화
+ *     tags: [Monitoring]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [memory, redis, all]
+ *                 example: "all"
+ *     responses:
+ *       200:
+ *         description: 캐시 초기화 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "all 캐시가 성공적으로 초기화되었습니다."
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ * /api/monitoring/metrics:
+ *   get:
+ *     summary: 시스템 메트릭 조회
+ *     tags: [Monitoring]
+ *     responses:
+ *       200:
+ *         description: 메트릭 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     database:
+ *                       type: object
+ *                       properties:
+ *                         connected:
+ *                           type: boolean
+ *                           example: true
+ *                         responseTime:
+ *                           type: string
+ *                           example: "42ms"
+ *                     redis:
+ *                       type: object
+ *                       properties:
+ *                         connected:
+ *                           type: boolean
+ *                           example: true
+ *                         responseTime:
+ *                           type: string
+ *                           example: "15ms"
+ *                     uptime:
+ *                       type: number
+ *                       example: 1234.56
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 const express = require('express');
 const router = express.Router();
 const logger = require('../log');
