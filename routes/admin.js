@@ -214,6 +214,91 @@ router.post('/login', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/tags:
+ *   get:
+ *     summary: 태그 목록 조회 (관리자)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: popular
+ *         schema:
+ *           type: boolean
+ *           description: 인기 태그만 조회
+ *     responses:
+ *       200:
+ *         description: 태그 조회 성공
+ *   post:
+ *     summary: 태그 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               color:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: 태그 생성 성공
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/tags', authenticateToken, requirePermission('tags.read'), async (req, res) => {
+ * /api/admin/logout:
+ *   post:
+ *     summary: 관리자 로그아웃
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 로그아웃 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "로그아웃되었습니다."
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/logout', authenticateToken, async (req, res) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
@@ -248,6 +333,57 @@ router.post('/logout', authenticateToken, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/refresh:
+ *   post:
+ *     summary: 액세스 토큰 재발급
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: 토큰 재발급 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "토큰이 재발급되었습니다."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIs..."
+ *       400:
+ *         description: Refresh Token 누락
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/refresh', async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -294,6 +430,47 @@ router.post('/refresh', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/me:
+ *   get:
+ *     summary: 내 관리자 정보 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 사용자 정보 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                     permissions:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/me', authenticateToken, async (req, res) => {
     try {
         const user = await AdminUsers.getById(req.admin.id);
@@ -314,6 +491,57 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/password:
+ *   put:
+ *     summary: 관리자 비밀번호 변경
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: "oldPass123!"
+ *               newPassword:
+ *                 type: string
+ *                 example: "newPass456!"
+ *     responses:
+ *       200:
+ *         description: 비밀번호 변경 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "비밀번호가 변경되었습니다."
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.put('/password', authenticateToken, logActivity('change_password'), async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
@@ -347,6 +575,86 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
 });
 
 
+/**
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     summary: 관리자 계정 목록 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 관리자 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *   post:
+ *     summary: 관리자 계정 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "new-admin"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "admin@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "StrongPass!123"
+ *               full_name:
+ *                 type: string
+ *                 example: "관리자 홍길동"
+ *               role:
+ *                 type: string
+ *                 example: "admin"
+ *     responses:
+ *       201:
+ *         description: 관리자 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "관리자가 생성되었습니다."
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/users', ...superAdminOnly, async (req, res) => {
     try {
         const users = await AdminUsers.getAll();
@@ -396,6 +704,84 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   put:
+ *     summary: 관리자 계정 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: 관리자 정보 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: 관리자 계정 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 관리자 삭제 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 관리자 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req, res) => {
     try {
         const updatedUser = await AdminUsers.update(req.params.id, req.body);
@@ -458,6 +844,90 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
 });
 
 
+/**
+ * @swagger
+ * /api/admin/projects:
+ *   get:
+ *     summary: 관리자 프로젝트 목록 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: featured
+ *         schema:
+ *           type: boolean
+ *           description: 추천 프로젝트만 조회
+ *     responses:
+ *       200:
+ *         description: 프로젝트 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *       500:
+ *         description: 서버 오류
+ *   post:
+ *     summary: 프로젝트 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       201:
+ *         description: 프로젝트 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
         const { limit, page, featured } = req.query;
@@ -593,6 +1063,52 @@ router.get('/dashboard', authenticateToken, requirePermission('dashboard.read'),
 });
 
 
+/**
+ * @swagger
+ * /api/admin/blog/posts:
+ *   get:
+ *     summary: 관리자 블로그 포스트 목록 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *     responses:
+ *       200:
+ *         description: 포스트 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
         const { limit, page, status } = req.query;
@@ -618,6 +1134,69 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/blog/posts/slug/{slug}:
+ *   get:
+ *     summary: 블로그 포스트 상세 조회 (관리자)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 포스트 조회 성공
+ *       404:
+ *         description: 포스트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   put:
+ *     summary: 블로그 포스트 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: 포스트 수정 성공
+ *       404:
+ *         description: 포스트 없음
+ *   delete:
+ *     summary: 블로그 포스트 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 포스트 삭제 성공
+ *       404:
+ *         description: 포스트 없음
+ */
 router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
         const post = await BlogPosts.getBySlugAdmin(req.params.slug);
@@ -675,6 +1254,36 @@ router.put('/blog/posts/slug/:slug',
     }
 );
 
+/**
+ * @swagger
+ * /api/admin/blog/posts/slug/{slug}/publish:
+ *   put:
+ *     summary: 블로그 포스트 발행 상태 변경
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               is_published:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: 발행 상태 변경 성공
+ *       404:
+ *         description: 포스트 없음
+ */
 router.put('/blog/posts/slug/:slug/publish',
     authenticateToken,
     requirePermission('blog.publish'),
@@ -710,6 +1319,36 @@ router.put('/blog/posts/slug/:slug/publish',
     }
 );
 
+/**
+ * @swagger
+ * /api/admin/blog/posts/slug/{slug}/featured:
+ *   put:
+ *     summary: 블로그 포스트 추천 상태 변경
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               is_featured:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: 추천 상태 변경 성공
+ *       404:
+ *         description: 포스트 없음
+ */
 router.put('/blog/posts/slug/:slug/featured',
     authenticateToken,
     requirePermission('blog.edit'),
@@ -804,6 +1443,99 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/projects/slug/{slug}:
+ *   get:
+ *     summary: 프로젝트 상세 조회 (관리자)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 프로젝트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   put:
+ *     summary: 프로젝트 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: 프로젝트 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: 프로젝트 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 프로젝트 삭제 성공
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/projects/slug/:slug', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
         const project = await Projects.getBySlug(req.params.slug);
@@ -852,9 +1584,9 @@ router.post('/projects',
                 }
             });
 
-            verboseDebug(원본 데이터:', req.body);
-            verboseDebug(정규화된 데이터:', sanitizedData);
-            verboseDebug(undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
+            verboseDebug('원본 데이터:', req.body);
+            verboseDebug('정규화된 데이터:', sanitizedData);
+            verboseDebug('undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
 
             const id = await Projects.create(sanitizedData);
             const newProject = await Projects.getById(id);
@@ -881,19 +1613,19 @@ router.put('/projects/slug/:slug',
     async (req, res) => {
         try {
             const projectSlug = req.params.slug;
-            verboseDebug(projectSlug:', projectSlug);
+            verboseDebug('projectSlug:', projectSlug);
 
-            verboseDebug(Projects.getBySlug 호출 시작');
+            verboseDebug('Projects.getBySlug 호출 시작');
             const existingProject = await Projects.getBySlug(projectSlug);
-            verboseDebug(Projects.getById 결과:', existingProject);
+            verboseDebug('Projects.getById 결과:', existingProject);
             if (!existingProject) {
-                verboseDebug(프로젝트를 찾을 수 없음');
+                verboseDebug('프로젝트를 찾을 수 없음');
                 return res.status(404).json({
                     success: false,
                     message: '프로젝트를 찾을 수 없습니다.'
                 });
             }
-            verboseDebug(프로젝트 존재 확인 완료');
+            verboseDebug('프로젝트 존재 확인 완료');
 
             const sanitizedData = {};
             Object.keys(req.body).forEach(key => {
@@ -904,17 +1636,17 @@ router.put('/projects/slug/:slug',
                 }
             });
 
-            verboseDebug(프로젝트 수정 - 원본 데이터:', req.body);
-            verboseDebug(프로젝트 수정 - 정규화된 데이터:', sanitizedData);
-            verboseDebug(프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
+            verboseDebug('프로젝트 수정 - 원본 데이터:', req.body);
+            verboseDebug('프로젝트 수정 - 정규화된 데이터:', sanitizedData);
+            verboseDebug('프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
 
-            verboseDebug(Projects.update 호출 시작');
-            verboseDebug(projectSlug:', projectSlug);
-            verboseDebug(sanitizedData:', sanitizedData);
+            verboseDebug('Projects.update 호출 시작');
+            verboseDebug('projectSlug:', projectSlug);
+            verboseDebug('sanitizedData:', sanitizedData);
 
             try {
                 const updatedProject = await Projects.update(existingProject.id, sanitizedData);
-                verboseDebug(Projects.update 성공:', updatedProject);
+                verboseDebug('Projects.update 성공:', updatedProject);
 
                 res.json({
                     success: true,
@@ -922,8 +1654,8 @@ router.put('/projects/slug/:slug',
                     data: updatedProject
                 });
             } catch (updateError) {
-                logger.error(Projects.update 실패:', updateError);
-                logger.error(updateError.stack:', updateError.stack);
+                logger.error('Projects.update 실패:', updateError);
+                logger.error('updateError.stack:', updateError.stack);
                 throw updateError;
             }
         } catch (error) {
@@ -969,12 +1701,51 @@ router.delete('/projects/slug/:slug',
 );
 
 const geminiService = require('../services/gemini-ai');
-verboseDebug(geminiService 객체 로드됨:', typeof geminiService);
-verboseDebug(geminiService.constructor.name:', geminiService.constructor.name);
-verboseDebug(geminiService.generateSummary 존재 여부:', typeof geminiService.generateSummary);
-verboseDebug(geminiService 객체의 모든 메서드:', Object.getOwnPropertyNames(geminiService));
-verboseDebug(geminiService 객체의 프로토타입 체인:', Object.getPrototypeOf(geminiService));
+verboseDebug('geminiService 객체 로드됨:', typeof geminiService);
+verboseDebug('geminiService.constructor.name:', geminiService.constructor.name);
+verboseDebug('geminiService.generateSummary 존재 여부:', typeof geminiService.generateSummary);
+verboseDebug('geminiService 객체의 모든 메서드:', Object.getOwnPropertyNames(geminiService));
+verboseDebug('geminiService 객체의 프로토타입 체인:', Object.getPrototypeOf(geminiService));
 
+/**
+ * @swagger
+ * /api/admin/ai/summarize:
+ *   post:
+ *     summary: AI 기반 요약 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 example: "요약을 생성할 텍스트 본문"
+ *               includeKeywords:
+ *                 type: boolean
+ *                 example: true
+ *               techTags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: 요약 생성 성공
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ */
 router.post('/ai/summarize',
     authenticateToken,
     requirePermission('blog.create'),
@@ -994,8 +1765,8 @@ router.post('/ai/summarize',
                 return `${projectName} 프로젝트`;
             });
 
-            verboseDebug(원본 콘텐츠:', content);
-            verboseDebug(전처리된 콘텐츠:', preprocessedContent);
+            verboseDebug('원본 콘텐츠:', content);
+            verboseDebug('전처리된 콘텐츠:', preprocessedContent);
 
             let result;
 
@@ -1014,24 +1785,24 @@ router.post('/ai/summarize',
                     message: 'Gemini AI로 요약과 키워드가 생성되었습니다.'
                 });
             } else {
-                verboseDebug(AI 요약 생성 시작 - content 길이:', content.length);
-                verboseDebug(techTags:', techTags);
-                verboseDebug(geminiService.generateSummary 호출 시작');
-                verboseDebug(generateSummary 메서드 타입:', typeof geminiService.generateSummary);
-                verboseDebug(generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
+                verboseDebug('AI 요약 생성 시작 - content 길이:', content.length);
+                verboseDebug('techTags:', techTags);
+                verboseDebug('geminiService.generateSummary 호출 시작');
+                verboseDebug('generateSummary 메서드 타입:', typeof geminiService.generateSummary);
+                verboseDebug('generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
 
                 let summary;
                 try {
                     summary = await geminiService.generateSummary(preprocessedContent, 160, techTags);
-                    verboseDebug(generateSummary 호출 성공');
+                    verboseDebug('generateSummary 호출 성공');
                 } catch (error) {
-                    logger.error(generateSummary 호출 실패:', error);
-                    logger.error(에러 스택:', error.stack);
+                    logger.error('generateSummary 호출 실패:', error);
+                    logger.error('에러 스택:', error.stack);
                     throw error;
                 }
 
-                verboseDebug(AI 요약 생성 완료 - summary 길이:', summary.length);
-                verboseDebug(summary 내용:', summary.substring(0, 100) + '...');
+                verboseDebug('AI 요약 생성 완료 - summary 길이:', summary.length);
+                verboseDebug('summary 내용:', summary.substring(0, 100) + '...');
 
                 res.json({
                     success: true,
@@ -1045,8 +1816,8 @@ router.post('/ai/summarize',
             }
 
         } catch (error) {
-            logger.error(Gemini AI 요약 생성 실패:', error);
-            logger.error(에러 스택:', error.stack);
+            logger.error('Gemini AI 요약 생성 실패:', error);
+            logger.error('에러 스택:', error.stack);
             res.status(500).json({
                 success: false,
                 message: 'AI 요약 생성에 실패했습니다.'
@@ -1055,6 +1826,40 @@ router.post('/ai/summarize',
     }
 );
 
+/**
+ * @swagger
+ * /api/admin/ai/keywords:
+ *   post:
+ *     summary: AI 기반 키워드 추출
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *               maxKeywords:
+ *                 type: integer
+ *                 example: 10
+ *               techTags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: 키워드 추출 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.post('/ai/keywords',
     authenticateToken,
     requirePermission('blog.create'),
@@ -1098,6 +1903,36 @@ router.post('/ai/keywords',
 );
 
 
+/**
+ * @swagger
+ * /api/admin/contacts:
+ *   get:
+ *     summary: 문의 메시지 목록 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: unread
+ *         schema:
+ *           type: boolean
+ *           description: 읽지 않은 메시지만 조회
+ *     responses:
+ *       200:
+ *         description: 문의 목록 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/contacts', authenticateToken, requirePermission('contacts.read'), async (req, res) => {
     try {
         const { limit, page, unread } = req.query;
@@ -1128,6 +1963,45 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/contacts/{id}/read:
+ *   put:
+ *     summary: 문의 메시지 읽음 처리
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 읽음 처리 성공
+ *       500:
+ *         description: 서버 오류
+ * /api/admin/contacts/{id}:
+ *   delete:
+ *     summary: 문의 메시지 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 메시지 삭제 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.put('/contacts/:id/read',
     authenticateToken,
     requirePermission('contacts.update'),
@@ -1182,6 +2056,40 @@ router.delete('/contacts/:id',
 );
 
 
+/**
+ * @swagger
+ * /api/admin/settings:
+ *   get:
+ *     summary: 사이트 설정 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 설정 조회 성공
+ *       500:
+ *         description: 서버 오류
+ *   put:
+ *     summary: 사이트 설정 업데이트
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               settings:
+ *                 type: object
+ *                 additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: 설정 업데이트 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/settings', authenticateToken, requirePermission('settings.read'), async (req, res) => {
     try {
         const settings = await SiteSettings.getAllSettings();
@@ -1229,7 +2137,43 @@ router.put('/settings',
     }
 );
 
-
+/**
+ * @swagger
+ * /api/admin/logs:
+ *   get:
+ *     summary: 관리자 활동 로그 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: admin_id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: resource
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 로그 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
         const { limit, page, admin_id, action, resource } = req.query;
@@ -1262,6 +2206,26 @@ router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), as
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/logs/stats:
+ *   get:
+ *     summary: 활동 로그 통계 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *     responses:
+ *       200:
+ *         description: 통계 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
         const { days } = req.query;
@@ -1296,6 +2260,59 @@ router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin'
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/tags:
+ *   get:
+ *     summary: 태그 목록 조회 (관리자)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: popular
+ *         schema:
+ *           type: boolean
+ *           description: 인기 태그만 조회
+ *     responses:
+ *       200:
+ *         description: 태그 조회 성공
+ *   post:
+ *     summary: 태그 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               color:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: 태그 생성 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/tags', authenticateToken, requirePermission('tags.read'), async (req, res) => {
     try {
         const { type, popular } = req.query;
@@ -1325,6 +2342,49 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/tags/{id}:
+ *   put:
+ *     summary: 태그 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: 태그 수정 성공
+ *       500:
+ *         description: 서버 오류
+ *   delete:
+ *     summary: 태그 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 태그 삭제 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), logActivity('update_tag'), async (req, res) => {
     try {
         const updated = await Tags.update(req.params.id, req.body);
@@ -1411,6 +2471,51 @@ const upload = multer({
     }
 });
 
+/**
+ * @swagger
+ * /api/admin/upload/image:
+ *   post:
+ *     summary: 이미지 업로드
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: 업로드 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ * /api/admin/upload/image/{filename}:
+ *   delete:
+ *     summary: 업로드 이미지 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: filename
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 삭제 성공
+ *       404:
+ *         description: 파일 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.post('/upload/image',
     authenticateToken,
     upload.single('image'),
@@ -1565,6 +2670,45 @@ router.get('/logs/stats',
     }
 );
 
+/**
+ * @swagger
+ * /api/admin/logs/export:
+ *   get:
+ *     summary: 활동 로그 CSV 내보내기
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: resource_type
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: date_filter
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: CSV 파일 반환
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/logs/export',
     authenticateToken,
     requirePermission('logs.read'),
@@ -1632,7 +2776,62 @@ router.get('/logs/export',
     }
 );
 
-
+/**
+ * @swagger
+ * /api/admin/skills/categories:
+ *   post:
+ *     summary: 스킬 카테고리 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: 카테고리 생성 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ *   get:
+ *     summary: 스킬 카테고리 목록 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 조회 성공
+ *       500:
+ *         description: 서버 오류
+ * /api/admin/skills/categories/{id}:
+ *   delete:
+ *     summary: 스킬 카테고리 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 삭제 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.post('/skills/categories',
     authenticateToken,
     requirePermission('skills.create'),
@@ -1747,7 +2946,50 @@ router.get('/skills/categories',
     }
 );
 
-
+/**
+ * @swagger
+ * /api/admin/skills:
+ *   get:
+ *     summary: 기술 스택 목록 조회 (관리자)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 기술 목록 조회 성공
+ *   post:
+ *     summary: 기술 스택 생성
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - category_id
+ *             properties:
+ *               name:
+ *                 type: string
+ *               category_id:
+ *                 type: integer
+ *               proficiency_level:
+ *                 type: integer
+ *               display_order:
+ *                 type: integer
+ *               is_featured:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: 기술 생성 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/skills',
     authenticateToken,
     requirePermission('skills.read'),
@@ -1826,6 +3068,53 @@ router.post('/skills',
     }
 );
 
+/**
+ * @swagger
+ * /api/admin/skills/{id}:
+ *   put:
+ *     summary: 기술 스택 수정
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: 기술 수정 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ *   delete:
+ *     summary: 기술 스택 삭제
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 기술 삭제 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.put('/skills/:id',
     authenticateToken,
     requirePermission('skills.update'),
@@ -1916,6 +3205,66 @@ router.delete('/skills/:id',
     }
 );
 
+
+/**
+ * @swagger
+ * /api/admin/skills/{id}/featured:
+ *   patch:
+ *     summary: 기술 추천 상태 변경
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               is_featured:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: 상태 변경 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ * /api/admin/skills/{id}/order:
+ *   patch:
+ *     summary: 기술 표시 순서 변경
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               display_order:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: 순서 변경 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 router.patch('/skills/:id/featured',
     authenticateToken,
     requirePermission('skills.update'),
