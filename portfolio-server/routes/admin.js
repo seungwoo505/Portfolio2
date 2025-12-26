@@ -83,9 +83,7 @@
  *           type: integer
  *           example: 156
  */
-/**
- * @swagger
- * /api/admin/tags:
+
 const express = require('express');
 const router = express.Router();
 const logger = require('../log');
@@ -121,7 +119,7 @@ const {
  *   post:
  *     summary: 관리자 로그인
  *     description: 관리자 계정으로 로그인하여 JWT 토큰을 발급받습니다.
- *     tags: [Authentication]
+ *     tags: ['Admin - Auth']
  *     requestBody:
  *       required: true
  *       content:
@@ -196,7 +194,7 @@ router.post('/login', async (req, res) => {
             '회원',
             '인증',
             null,
-            req.body.username + ' 로그인 실패',
+            `${req.body.username} 로그인 실패`,
             req.ip,
             req.headers['user-agent']
         );
@@ -221,7 +219,7 @@ router.post('/login', async (req, res) => {
  * /api/admin/logout:
  *   post:
  *     summary: 관리자 로그아웃
- *     tags: [Authentication]
+ *     tags: ['Admin - Auth']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -285,12 +283,40 @@ router.post('/logout', authenticateToken, async (req, res) => {
     }
 });
 
+router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
+    try {
+        const { limit, page } = req.query;
+        const limitValue = Array.isArray(limit) ? limit[0] : limit;
+        const pageValue = Array.isArray(page) ? page[0] : page;
+        const pageLimit = limitValue ? parseInt(limitValue, 10) || 20 : 20;
+        const currentPage = pageValue ? parseInt(pageValue, 10) || 1 : 1;
+        const offset = (currentPage - 1) * pageLimit;
+
+        const posts = await BlogPosts.getAll(pageLimit, offset, false);
+
+        res.json({
+            success: true,
+            data: posts,
+            pagination: {
+                page: currentPage,
+                limit: pageLimit,
+                total: posts.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '블로그 포스트를 가져오는데 실패했습니다.'
+        });
+    }
+});
+
 /**
  * @swagger
  * /api/admin/refresh:
  *   post:
  *     summary: 액세스 토큰 재발급
- *     tags: [Authentication]
+ *     tags: ['Admin - Auth']
  *     requestBody:
  *       required: true
  *       content:
@@ -385,15 +411,9 @@ router.post('/refresh', async (req, res) => {
 /**
  * @swagger
  * /api/admin/me:
-/**
- * @swagger
- * /api/admin/tags:
-/**
- * @swagger
- * /api/admin/tags:
  *   get:
  *     summary: 내 관리자 정보 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Profile']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -454,7 +474,7 @@ router.get('/me', authenticateToken, async (req, res) => {
  * /api/admin/password:
  *   put:
  *     summary: 관리자 비밀번호 변경
- *     tags: [Authentication]
+ *     tags: ['Admin - Profile']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -538,7 +558,7 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
  * /api/admin/users:
  *   get:
  *     summary: 관리자 계정 목록 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Users']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -559,7 +579,7 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
  *                     additionalProperties: true
  *   post:
  *     summary: 관리자 계정 생성
- *     tags: [Admin]
+ *     tags: ['Admin - Users']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -667,7 +687,7 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
  * /api/admin/users/{id}:
  *   put:
  *     summary: 관리자 계정 수정
- *     tags: [Admin]
+ *     tags: ['Admin - Users']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -706,7 +726,7 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
  *               $ref: '#/components/schemas/ErrorResponse'
  *   delete:
  *     summary: 관리자 계정 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Users']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -807,7 +827,7 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
  * /api/admin/projects:
  *   get:
  *     summary: 관리자 프로젝트 목록 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Projects']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -854,7 +874,7 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
  *         description: 서버 오류
  *   post:
  *     summary: 프로젝트 생성
- *     tags: [Admin]
+ *     tags: ['Admin - Projects']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -942,7 +962,7 @@ router.post('/projects', authenticateToken, requirePermission('projects.create')
  *   get:
  *     summary: 관리자 대시보드 통계
  *     description: 블로그, 프로젝트, 연락처 메시지, 관리자 활동 등의 통계 정보를 조회합니다.
- *     tags: [Dashboard]
+ *     tags: ['Admin - Dashboard']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -1026,7 +1046,7 @@ router.get('/dashboard', authenticateToken, requirePermission('dashboard.read'),
  * /api/admin/blog/posts:
  *   get:
  *     summary: 관리자 블로그 포스트 목록 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Blog']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1067,40 +1087,12 @@ router.get('/dashboard', authenticateToken, requirePermission('dashboard.read'),
  *       500:
  *         description: 서버 오류
  */
-router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
-    try {
-        const { limit, page } = req.query;
-        const limitValue = Array.isArray(limit) ? limit[0] : limit;
-        const pageValue = Array.isArray(page) ? page[0] : page;
-        const pageLimit = limitValue ? parseInt(limitValue, 10) || 20 : 20;
-        const currentPage = pageValue ? parseInt(pageValue, 10) || 1 : 1;
-        const offset = (currentPage - 1) * pageLimit;
-
-        const posts = await BlogPosts.getAll(pageLimit, offset, false);
-
-        res.json({
-            success: true,
-            data: posts,
-            pagination: {
-                page: currentPage,
-                limit: pageLimit,
-                total: posts.length
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: '블로그 포스트를 가져오는데 실패했습니다.'
-        });
-    }
-});
-
 /**
  * @swagger
  * /api/admin/blog/posts/slug/{slug}:
  *   get:
  *     summary: 블로그 포스트 상세 조회 (관리자)
- *     tags: [Admin]
+ *     tags: ['Admin - Blog']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1120,7 +1112,7 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
  *               $ref: '#/components/schemas/ErrorResponse'
  *   put:
  *     summary: 블로그 포스트 수정
- *     tags: [Admin]
+ *     tags: ['Admin - Blog']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1143,7 +1135,7 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
  *         description: 포스트 없음
  *   delete:
  *     summary: 블로그 포스트 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Blog']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1220,7 +1212,7 @@ router.put('/blog/posts/slug/:slug',
  * /api/admin/blog/posts/slug/{slug}/publish:
  *   put:
  *     summary: 블로그 포스트 발행 상태 변경
- *     tags: [Admin]
+ *     tags: ['Admin - Blog']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1285,7 +1277,7 @@ router.put('/blog/posts/slug/:slug/publish',
  * /api/admin/blog/posts/slug/{slug}/featured:
  *   put:
  *     summary: 블로그 포스트 추천 상태 변경
- *     tags: [Admin]
+ *     tags: ['Admin - Blog']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1379,13 +1371,12 @@ router.delete('/blog/posts/slug/:slug',
 );
 
 
-
 /**
  * @swagger
  * /api/admin/projects/slug/{slug}:
  *   get:
  *     summary: 프로젝트 상세 조회 (관리자)
- *     tags: [Admin]
+ *     tags: ['Admin - Projects']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1415,7 +1406,7 @@ router.delete('/blog/posts/slug/:slug',
  *               $ref: '#/components/schemas/ErrorResponse'
  *   put:
  *     summary: 프로젝트 수정
- *     tags: [Admin]
+ *     tags: ['Admin - Projects']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1454,7 +1445,7 @@ router.delete('/blog/posts/slug/:slug',
  *               $ref: '#/components/schemas/ErrorResponse'
  *   delete:
  *     summary: 프로젝트 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Projects']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1649,7 +1640,7 @@ verboseDebug('geminiService 객체의 프로토타입 체인:', Object.getProtot
  * /api/admin/ai/summarize:
  *   post:
  *     summary: AI 기반 요약 생성
- *     tags: [Admin]
+ *     tags: ['Admin - AI']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -1768,7 +1759,7 @@ router.post('/ai/summarize',
  * /api/admin/ai/keywords:
  *   post:
  *     summary: AI 기반 키워드 추출
- *     tags: [Admin]
+ *     tags: ['Admin - AI']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -1845,7 +1836,7 @@ router.post('/ai/keywords',
  * /api/admin/contacts:
  *   get:
  *     summary: 문의 메시지 목록 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Contacts']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1905,7 +1896,7 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
  * /api/admin/contacts/{id}/read:
  *   put:
  *     summary: 문의 메시지 읽음 처리
- *     tags: [Admin]
+ *     tags: ['Admin - Contacts']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1922,7 +1913,7 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
  * /api/admin/contacts/{id}:
  *   delete:
  *     summary: 문의 메시지 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Contacts']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1998,7 +1989,7 @@ router.delete('/contacts/:id',
  * /api/admin/settings:
  *   get:
  *     summary: 사이트 설정 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Settings']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -2008,7 +1999,7 @@ router.delete('/contacts/:id',
  *         description: 서버 오류
  *   put:
  *     summary: 사이트 설정 업데이트
- *     tags: [Admin]
+ *     tags: ['Admin - Settings']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2076,10 +2067,133 @@ router.put('/settings',
 
 /**
  * @swagger
+ * /api/admin/logs:
+ *   get:
+ *     summary: 관리자 활동 로그 조회
+ *     tags: ['Admin - Logs']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: admin_id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: resource
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 로그 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
+    try {
+        const { limit, page, admin_id, action, resource } = req.query;
+        const pageLimit = parseInt(limit) || 50;
+        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
+
+        let logs;
+        if (admin_id) {
+            logs = await AdminActivityLogs.getByAdmin(admin_id, pageLimit, offset);
+        } else if (action) {
+            logs = await AdminActivityLogs.getByAction(action, pageLimit);
+        } else {
+            logs = await AdminActivityLogs.getAll(pageLimit, offset);
+        }
+
+        res.json({
+            success: true,
+            data: logs,
+            pagination: {
+                page: parseInt(page) || 1,
+                limit: pageLimit,
+                total: logs.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '활동 로그를 가져오는데 실패했습니다.'
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/admin/logs/stats:
+ *   get:
+ *     summary: 활동 로그 통계 조회
+ *     tags: ['Admin - Logs']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *     responses:
+ *       200:
+ *         description: 통계 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
+    try {
+        const { days } = req.query;
+        const period = parseInt(days) || 30;
+
+        const [
+            generalStats,
+            activityStats,
+            resourceStats,
+            dailyStats
+        ] = await Promise.all([
+            AdminActivityLogs.getStats(period),
+            AdminActivityLogs.getActivityStats(period),
+            AdminActivityLogs.getResourceStats(period),
+            AdminActivityLogs.getDailyStats(period)
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                general: generalStats,
+                activities: activityStats,
+                resources: resourceStats,
+                daily: dailyStats
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '활동 통계를 가져오는데 실패했습니다.'
+        });
+    }
+});
+
+/**
+ * @swagger
  * /api/admin/tags:
  *   get:
  *     summary: 태그 목록 조회 (관리자)
- *     tags: [Admin]
+ *     tags: ['Admin - Tags']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2097,7 +2211,7 @@ router.put('/settings',
  *         description: 태그 조회 성공
  *   post:
  *     summary: 태그 생성
- *     tags: [Admin]
+ *     tags: ['Admin - Tags']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2161,7 +2275,7 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
  * /api/admin/tags/{id}:
  *   put:
  *     summary: 태그 수정
- *     tags: [Admin]
+ *     tags: ['Admin - Tags']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2184,7 +2298,7 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
  *         description: 서버 오류
  *   delete:
  *     summary: 태그 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Tags']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2290,7 +2404,7 @@ const upload = multer({
  * /api/admin/upload/image:
  *   post:
  *     summary: 이미지 업로드
- *     tags: [Admin]
+ *     tags: ['Admin - Files']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2313,7 +2427,7 @@ const upload = multer({
  * /api/admin/upload/image/{filename}:
  *   delete:
  *     summary: 업로드 이미지 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Files']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2411,56 +2525,6 @@ router.delete('/upload/image/:filename',
 );
 
 
-/**
- * @swagger
- * /api/admin/logs:
- *   get:
- *     summary: 활동 로그 조회
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *       - in: query
- *         name: user
- *         schema:
- *           type: string
- *           default: all
- *       - in: query
- *         name: action
- *         schema:
- *           type: string
- *           default: all
- *       - in: query
- *         name: resource_type
- *         schema:
- *           type: string
- *           default: all
- *       - in: query
- *         name: date_filter
- *         schema:
- *           type: string
- *           enum: [all, today, yesterday, week, month]
- *           default: all
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *     responses:
- *       200:
- *         description: 활동 로그 목록
- *       500:
- *         description: 서버 오류
- */
 router.get('/logs',
     authenticateToken,
     requirePermission('logs.read'),
@@ -2511,20 +2575,6 @@ router.get('/logs',
     }
 );
 
-/**
- * @swagger
- * /api/admin/logs/stats:
- *   get:
- *     summary: 활동 로그 통계 조회
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 통계 조회 성공
- *       500:
- *         description: 서버 오류
- */
 router.get('/logs/stats',
     authenticateToken,
     requirePermission('logs.read'),
@@ -2553,7 +2603,7 @@ router.get('/logs/stats',
  * /api/admin/logs/export:
  *   get:
  *     summary: 활동 로그 CSV 내보내기
- *     tags: [Admin]
+ *     tags: ['Admin - Logs']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2659,7 +2709,7 @@ router.get('/logs/export',
  * /api/admin/skills/categories:
  *   post:
  *     summary: 스킬 카테고리 생성
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2682,7 +2732,7 @@ router.get('/logs/export',
  *         description: 서버 오류
  *   get:
  *     summary: 스킬 카테고리 목록 조회
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -2693,7 +2743,7 @@ router.get('/logs/export',
  * /api/admin/skills/categories/{id}:
  *   delete:
  *     summary: 스킬 카테고리 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2829,7 +2879,7 @@ router.get('/skills/categories',
  * /api/admin/skills:
  *   get:
  *     summary: 기술 스택 목록 조회 (관리자)
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -2837,7 +2887,7 @@ router.get('/skills/categories',
  *         description: 기술 목록 조회 성공
  *   post:
  *     summary: 기술 스택 생성
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -2951,7 +3001,7 @@ router.post('/skills',
  * /api/admin/skills/{id}:
  *   put:
  *     summary: 기술 스택 수정
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -2976,7 +3026,7 @@ router.post('/skills',
  *         description: 서버 오류
  *   delete:
  *     summary: 기술 스택 삭제
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -3089,7 +3139,7 @@ router.delete('/skills/:id',
  * /api/admin/skills/{id}/featured:
  *   patch:
  *     summary: 기술 추천 상태 변경
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -3117,7 +3167,7 @@ router.delete('/skills/:id',
  * /api/admin/skills/{id}/order:
  *   patch:
  *     summary: 기술 표시 순서 변경
- *     tags: [Admin]
+ *     tags: ['Admin - Skills']
  *     security:
  *       - bearerAuth: []
  *     parameters:
