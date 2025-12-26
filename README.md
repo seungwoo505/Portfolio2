@@ -1,10 +1,10 @@
-#  Portfolio Server (Backend API)
+# Portfolio Server (Backend API)
 
 **Express.js 기반의 고성능 포트폴리오/블로그 백엔드 API 서버**
 
 포트폴리오 프론트엔드와 연동되는 완전한 RESTful API 서버입니다. MySQL 데이터베이스 기반으로 구축되었으며, JWT 인증, 관리자 시스템, 파일 업로드, 캐싱 등 엔터프라이즈급 기능을 제공합니다.
 
-##  목차
+## 목차
 
 - [주요 기능](#-주요-기능)
 - [기술 스택](#-기술-스택)
@@ -18,49 +18,49 @@
 - [배포 가이드](#-배포-가이드)
 - [개발 가이드](#-개발-가이드)
 
-##  주요 기능
+## 주요 기능
 
-###  **포트폴리오 관리**
+### **포트폴리오 관리**
 
--  개인 정보 및 소셜 링크 관리
--  프로젝트 포트폴리오 CRUD (상세 설명, 이미지, 데모/깃허브 링크)
--  기술 스택 관리 (카테고리별, 숙련도 표시)
--  경력/경험 관리
--  관심사/취미 관리
--  태그 시스템 및 SEO 최적화
+- 개인 정보 및 소셜 링크 관리
+- 프로젝트 포트폴리오 CRUD (상세 설명, 이미지, 데모/깃허브 링크)
+- 기술 스택 관리 (카테고리별, 숙련도 표시)
+- 경력/경험 관리
+- 관심사/취미 관리
+- 태그 시스템 및 SEO 최적화
 
-###  **블로그 시스템**
+### **블로그 시스템**
 
--  블로그 포스트 CRUD (마크다운 지원)
--  포스트 발행/비발행 관리
--  태그 기반 분류 및 검색
--  조회수 추적 및 인기 포스트
--  이미지 업로드 및 관리
+- 블로그 포스트 CRUD (마크다운 지원)
+- 포스트 발행/비발행 관리
+- 태그 기반 분류 및 검색
+- 조회수 추적 및 인기 포스트
+- 이미지 업로드 및 관리
 
-###  **관리자 시스템**
+### **관리자 시스템**
 
--  JWT 기반 인증 및 권한 관리
--  역할 기반 접근 제어 (super_admin, admin, editor)
--  세분화된 권한 시스템
--  관리자 활동 로그 및 감사 추적
--  대시보드 및 통계
+- JWT 기반 인증 및 권한 관리
+- 역할 기반 접근 제어 (super_admin, admin, editor)
+- 세분화된 권한 시스템
+- 관리자 활동 로그 및 감사 추적
+- 대시보드 및 통계
 
-###  **연락처 관리**
+### **연락처 관리**
 
--  연락처 폼 메시지 수집
--  읽음/읽지 않음 상태 관리
--  이메일 알림 (선택사항)
+- 연락처 폼 메시지 수집
+- 읽음/읽지 않음 상태 관리
+- 이메일 알림 (선택사항)
 
-###  **보안 및 성능**
+### **보안 및 성능**
 
--  Rate Limiting (DDoS/브루트포스 방지)
--  HTTPS/SSL 지원
--  Helmet.js 보안 헤더
--  Redis 캐싱 (선택사항)
--  파일 업로드 보안
--  SQL 인젝션 방지
+- Rate Limiting (DDoS/브루트포스 방지)
+- HTTPS/SSL 지원
+- Helmet.js 보안 헤더
+- Redis 캐싱 (선택사항)
+- 파일 업로드 보안
+- SQL 인젝션 방지
 
-##  기술 스택
+## 기술 스택
 
 ### **Backend Framework**
 
@@ -103,7 +103,7 @@
 
 - **Google Gemini AI** - AI 기반 콘텐츠 생성
 
-##  프로젝트 구조
+## 프로젝트 구조
 
 ```
 portfolio-server/
@@ -149,7 +149,7 @@ portfolio-server/
 └──  *.md                         # 문서 파일들
 ```
 
-##  설치 및 실행
+## 설치 및 실행
 
 ### **1. 저장소 클론**
 
@@ -190,7 +190,7 @@ npm start
 
 서버는 기본적으로 `https://localhost:3001`에서 실행됩니다.
 
-##  환경 설정
+## 환경 설정
 
 ### **필수 환경 변수**
 
@@ -244,7 +244,7 @@ UPLOAD_PATH=./uploads
 ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,webp,pdf,doc,docx
 ```
 
-##  API 문서
+## API 문서
 
 ### **Swagger UI 접근**
 
@@ -271,8 +271,6 @@ GET /api/interests              # 관심사
 GET /api/blog/posts             # 발행된 블로그 포스트
 GET /api/blog/posts/:id         # 특정 포스트
 GET /api/blog/posts/tag/:tag    # 태그별 포스트
-GET /api/blog/search?q=검색어   # 포스트 검색
-
 # 기타
 GET /api/settings               # 사이트 설정
 POST /api/contact               # 연락처 메시지
@@ -291,6 +289,12 @@ PUT /api/admin/password         # 비밀번호 변경
 # 대시보드
 GET /api/admin/dashboard        # 대시보드 통계
 GET /api/admin/logs             # 활동 로그
+GET /api/admin/logs/stats       # 활동 로그 통계
+GET /api/admin/logs/export      # 활동 로그 CSV
+
+# AI 도구
+POST /api/admin/ai/summarize    # AI 요약 생성
+POST /api/admin/ai/keywords     # AI 키워드 추출
 
 # 블로그 관리
 GET /api/admin/blog/posts       # 모든 포스트 (비공개 포함)
@@ -314,7 +318,7 @@ GET /api/admin/settings         # 사이트 설정
 PUT /api/admin/settings         # 설정 업데이트
 ```
 
-##  데이터베이스 스키마
+## 데이터베이스 스키마
 
 ### **주요 테이블**
 
@@ -343,7 +347,7 @@ erDiagram
     admin_users ||--o{ admin_activity_logs : "performs"
 ```
 
-##  보안 기능
+## 보안 기능
 
 ### **인증 및 권한**
 
@@ -370,7 +374,7 @@ erDiagram
 - **파일 업로드 보안**: 파일 타입 및 크기 제한
 - **XSS 방지**: 입력 데이터 sanitization
 
-##  성능 최적화
+## 성능 최적화
 
 ### **캐싱 전략**
 
@@ -390,7 +394,7 @@ erDiagram
 - **이미지 최적화**: WebP 형식 지원
 - **번들 최적화**: 불필요한 모듈 제거
 
-##  배포 가이드
+## 배포 가이드
 
 ### **PM2를 사용한 배포 (권장)**
 
@@ -486,7 +490,7 @@ LOG_LEVEL=debug npm run dev
 DEBUG=portfolio:* npm run dev
 ```
 
-##  모니터링
+## 모니터링
 
 ### **헬스체크**
 
@@ -523,7 +527,7 @@ curl https://localhost:3001/health
 - **로그 레벨**: error, warn, info, debug
 - **구조화된 로깅**: JSON 형식으로 상세 정보 기록
 
-##  기여하기
+## 기여하기
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -531,11 +535,11 @@ curl https://localhost:3001/health
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-##  라이선스
+## 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참고하세요.
 
-##  지원
+## 지원
 
 - **이메일**: support@portfolio.com
 - **이슈 트래커**: GitHub Issues
@@ -547,14 +551,14 @@ curl https://localhost:3001/health
 
 ---
 
-##  추가 문서
+## 추가 문서
 
 - [ 관리자 시스템 가이드](./ADMIN_GUIDE.md) - 관리자 인증 및 권한 관리
 - [ 배포 가이드](./DEPLOYMENT_GUIDE.md) - 프로덕션 배포 방법
 - [ 로그 가이드](./LOG_GUIDE.md) - 로깅 시스템 사용법
 - [ 데이터베이스 문서](./README-DB.md) - DB 설정 및 관리
 
-##  버전 히스토리
+## 버전 히스토리
 
 - **v2.1.0** - AI 통합, 성능 최적화, 보안 강화
 - **v2.0.0** - 관리자 시스템, JWT 인증, 권한 관리
