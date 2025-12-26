@@ -83,7 +83,9 @@
  *           type: integer
  *           example: 156
  */
-
+/**
+ * @swagger
+ * /api/admin/tags:
 const express = require('express');
 const router = express.Router();
 const logger = require('../log');
@@ -194,7 +196,7 @@ router.post('/login', async (req, res) => {
             '회원',
             '인증',
             null,
-            `${req.body.username} 로그인 실패`,
+            req.body.username + ' 로그인 실패',
             req.ip,
             req.headers['user-agent']
         );
@@ -216,56 +218,6 @@ router.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /api/admin/tags:
- *   get:
- *     summary: 태그 목록 조회 (관리자)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *       - in: query
- *         name: popular
- *         schema:
- *           type: boolean
- *           description: 인기 태그만 조회
- *     responses:
- *       200:
- *         description: 태그 조회 성공
- *   post:
- *     summary: 태그 생성
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *               slug:
- *                 type: string
- *               description:
- *                 type: string
- *               color:
- *                 type: string
- *               type:
- *                 type: string
- *     responses:
- *       201:
- *         description: 태그 생성 성공
- *       500:
- *         description: 서버 오류
- */
-router.get('/tags', authenticateToken, requirePermission('tags.read'), async (req, res) => {
  * /api/admin/logout:
  *   post:
  *     summary: 관리자 로그아웃
@@ -433,6 +385,12 @@ router.post('/refresh', async (req, res) => {
 /**
  * @swagger
  * /api/admin/me:
+/**
+ * @swagger
+ * /api/admin/tags:
+/**
+ * @swagger
+ * /api/admin/tags:
  *   get:
  *     summary: 내 관리자 정보 조회
  *     tags: [Admin]
@@ -1111,9 +1069,12 @@ router.get('/dashboard', authenticateToken, requirePermission('dashboard.read'),
  */
 router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
-        const { limit, page, status } = req.query;
-        const pageLimit = parseInt(limit) || 20;
-        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
+        const { limit, page } = req.query;
+        const limitValue = Array.isArray(limit) ? limit[0] : limit;
+        const pageValue = Array.isArray(page) ? page[0] : page;
+        const pageLimit = limitValue ? parseInt(limitValue, 10) || 20 : 20;
+        const currentPage = pageValue ? parseInt(pageValue, 10) || 1 : 1;
+        const offset = (currentPage - 1) * pageLimit;
 
         const posts = await BlogPosts.getAll(pageLimit, offset, false);
 
@@ -1121,7 +1082,7 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
             success: true,
             data: posts,
             pagination: {
-                page: parseInt(page) || 1,
+                page: currentPage,
                 limit: pageLimit,
                 total: posts.length
             }
@@ -1418,30 +1379,6 @@ router.delete('/blog/posts/slug/:slug',
 );
 
 
-router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req, res) => {
-    try {
-        const { limit, page, status } = req.query;
-        const pageLimit = parseInt(limit) || 20;
-        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
-
-        const projects = await Projects.getAll(pageLimit, offset);
-
-        res.json({
-            success: true,
-            data: projects,
-            pagination: {
-                page: parseInt(page) || 1,
-                limit: pageLimit,
-                total: projects.length
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: '프로젝트를 가져오는데 실패했습니다.'
-        });
-    }
-});
 
 /**
  * @swagger
@@ -2139,129 +2076,6 @@ router.put('/settings',
 
 /**
  * @swagger
- * /api/admin/logs:
- *   get:
- *     summary: 관리자 활동 로그 조회
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: admin_id
- *         schema:
- *           type: integer
- *       - in: query
- *         name: action
- *         schema:
- *           type: string
- *       - in: query
- *         name: resource
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 로그 조회 성공
- *       500:
- *         description: 서버 오류
- */
-router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
-    try {
-        const { limit, page, admin_id, action, resource } = req.query;
-        const pageLimit = parseInt(limit) || 50;
-        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
-
-        let logs;
-        if (admin_id) {
-            logs = await AdminActivityLogs.getByAdmin(admin_id, pageLimit, offset);
-        } else if (action) {
-            logs = await AdminActivityLogs.getByAction(action, pageLimit);
-        } else {
-            logs = await AdminActivityLogs.getAll(pageLimit, offset);
-        }
-
-        res.json({
-            success: true,
-            data: logs,
-            pagination: {
-                page: parseInt(page) || 1,
-                limit: pageLimit,
-                total: logs.length
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: '활동 로그를 가져오는데 실패했습니다.'
-        });
-    }
-});
-
-/**
- * @swagger
- * /api/admin/logs/stats:
- *   get:
- *     summary: 활동 로그 통계 조회
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: days
- *         schema:
- *           type: integer
- *           default: 30
- *     responses:
- *       200:
- *         description: 통계 조회 성공
- *       500:
- *         description: 서버 오류
- */
-router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
-    try {
-        const { days } = req.query;
-        const period = parseInt(days) || 30;
-
-        const [
-            generalStats,
-            activityStats,
-            resourceStats,
-            dailyStats
-        ] = await Promise.all([
-            AdminActivityLogs.getStats(period),
-            AdminActivityLogs.getActivityStats(period),
-            AdminActivityLogs.getResourceStats(period),
-            AdminActivityLogs.getDailyStats(period)
-        ]);
-
-        res.json({
-            success: true,
-            data: {
-                general: generalStats,
-                activities: activityStats,
-                resources: resourceStats,
-                daily: dailyStats
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: '활동 통계를 가져오는데 실패했습니다.'
-        });
-    }
-});
-
-/**
- * @swagger
  * /api/admin/tags:
  *   get:
  *     summary: 태그 목록 조회 (관리자)
@@ -2597,6 +2411,56 @@ router.delete('/upload/image/:filename',
 );
 
 
+/**
+ * @swagger
+ * /api/admin/logs:
+ *   get:
+ *     summary: 활동 로그 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: string
+ *           default: all
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *           default: all
+ *       - in: query
+ *         name: resource_type
+ *         schema:
+ *           type: string
+ *           default: all
+ *       - in: query
+ *         name: date_filter
+ *         schema:
+ *           type: string
+ *           enum: [all, today, yesterday, week, month]
+ *           default: all
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *     responses:
+ *       200:
+ *         description: 활동 로그 목록
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/logs',
     authenticateToken,
     requirePermission('logs.read'),
@@ -2647,6 +2511,20 @@ router.get('/logs',
     }
 );
 
+/**
+ * @swagger
+ * /api/admin/logs/stats:
+ *   get:
+ *     summary: 활동 로그 통계 조회
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 통계 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
 router.get('/logs/stats',
     authenticateToken,
     requirePermission('logs.read'),

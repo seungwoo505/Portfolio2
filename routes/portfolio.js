@@ -388,26 +388,6 @@ const { executeQuery } = require('../models/db-utils');
 
 const { authenticateToken, requirePermission, logActivity } = require('../middleware/auth');
 
-router.get('/settings', async (req, res) => {
-    try {
-        const settings = await SiteSettings.getPublicSettings();
-        
-        res.json({
-            success: true,
-            data: settings
-        });
-    } catch (error) {
-        logger.database('SELECT 실패', 'site_settings', {
-            error: error.message,
-            operation: 'getPublicSettings'
-        });
-        res.status(500).json({
-            success: false,
-            message: '설정을 가져오는데 실패했습니다.'
-        });
-    }
-});
-
 /**
  * @swagger
  * /api/personal-info:
@@ -2737,6 +2717,131 @@ router.delete('/interests/:id', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+/**
+ * @swagger
+ * /api/dashboard:
+ *   get:
+ *     summary: 공개 대시보드 요약 통계
+ *     tags: [Dashboard]
+ *     responses:
+ *       200:
+ *         description: 통계 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     blog:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                           example: 12
+ *                         published:
+ *                           type: integer
+ *                           example: 10
+ *                     projects:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                           example: 8
+ *                         published:
+ *                           type: integer
+ *                           example: 6
+ *                         featured:
+ *                           type: integer
+ *                           example: 3
+ *                     contacts:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                           example: 20
+ *                         unread:
+ *                           type: integer
+ *                           example: 2
+ *                     skills:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                           example: 18
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/dashboard', async (req, res) => {
+    try {
+        const [
+            blogStatsRows,
+            projectStatsRows,
+            contactStats,
+            skillStatsRows
+        ] = await Promise.all([
+            executeQuery(`
+                SELECT 
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN is_published = 1 THEN 1 ELSE 0 END) AS published
+                FROM blog_posts
+            `),
+            executeQuery(`
+                SELECT 
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN is_published = 1 THEN 1 ELSE 0 END) AS published,
+                    SUM(CASE WHEN is_featured = 1 THEN 1 ELSE 0 END) AS featured
+                FROM projects
+            `),
+            ContactMessages.getStats(),
+            executeQuery(`
+                SELECT COUNT(*) AS total
+                FROM skills
+            `)
+        ]);
+
+        const blogStats = blogStatsRows?.[0] || { total: 0, published: 0 };
+        const projectStats = projectStatsRows?.[0] || { total: 0, published: 0, featured: 0 };
+        const skillStats = skillStatsRows?.[0] || { total: 0 };
+
+        res.json({
+            success: true,
+            data: {
+                blog: {
+                    total: blogStats.total || 0,
+                    published: blogStats.published || 0
+                },
+                projects: {
+                    total: projectStats.total || 0,
+                    published: projectStats.published || 0,
+                    featured: projectStats.featured || 0
+                },
+                contacts: {
+                    total: contactStats?.total || 0,
+                    unread: contactStats?.unread || 0
+                },
+                skills: {
+                    total: skillStats.total || 0
+                }
+            }
+        });
+    } catch (error) {
+        logger.error('Dashboard summary error:', error);
+        res.status(500).json({
+            success: false,
+            message: '대시보드 요약 정보를 가져오는데 실패했습니다.'
+        });
+    }
+});
+
 router.get('/dashboard/stats', async (req, res) => {
     try {
         const [projectCount, blogCount, contactStats, skillCount] = await Promise.all([
