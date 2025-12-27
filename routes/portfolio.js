@@ -385,6 +385,7 @@ const Experiences = require('../models/experiences');
 const Interests = require('../models/interests');
 const SiteSettings = require('../models/site-settings');
 const { executeQuery } = require('../models/db-utils');
+const CacheUtils = require('../utils/cache');
 
 const { authenticateToken, requirePermission, logActivity } = require('../middleware/auth');
 
@@ -1053,6 +1054,121 @@ router.get('/projects', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+/**
+ * @swagger
+ * /api/projects/slug/{slug}/view:
+ *   post:
+ *     summary: 프로젝트 조회수 증가
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 조회수 증가 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "조회수가 증가되었습니다."
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/projects/slug/:slug/view', async (req, res) => {
+    try {
+        const projectSlug = req.params.slug;
+
+        const updateResult = await executeQuery(
+            'UPDATE projects SET view_count = view_count + 1 WHERE slug = ? AND is_published = 1',
+            [projectSlug]
+        );
+
+        const affectedRows = updateResult?.affectedRows || 0;
+        
+        logger.info('프로젝트 조회', {
+            slug: projectSlug,
+            affectedRows: affectedRows
+        });
+
+        if (!updateResult || affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '프로젝트를 찾을 수 없습니다.'
+            });
+        }
+
+        CacheUtils.del(CacheUtils.generateKey('project', 'slug', projectSlug));
+
+        res.json({
+            success: true,
+            message: '조회수가 증가되었습니다.'
+        });
+    } catch (error) {
+        logger.error('프로젝트 조회 실패', buildErrorLog(error, req));
+        res.status(500).json({
+            success: false,
+            message: '조회수 증가에 실패했습니다.'
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/projects/slug/{slug}:
+ *   get:
+ *     summary: 프로젝트 상세 조회
+ *     tags: [Projects]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 프로젝트 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Project'
+ *       404:
+ *         description: 프로젝트 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/projects/slug/:slug', async (req, res) => {
     try {
         const project = await Projects.getBySlug(req.params.slug);
@@ -1491,23 +1607,33 @@ router.post('/blog/posts/:slug/view', async (req, res) => {
         const postSlug = req.params.slug;
 
         const updateResult = await executeQuery(
-            'UPDATE blog_posts SET view_count = view_count + 1 WHERE slug = ? AND is_published = TRUE',
+            'UPDATE blog_posts SET view_count = view_count + 1 WHERE slug = ? AND is_published = 1',
             [postSlug]
         );
 
-        if (!updateResult || updateResult.affectedRows === 0) {
+        const affectedRows = updateResult?.affectedRows || 0;
+        
+        logger.info('블로그 조회', {
+            slug: postSlug,
+            affectedRows: affectedRows
+        });
+
+        if (!updateResult || affectedRows === 0) {
             return res.status(404).json({
                 success: false,
                 message: '블로그 포스트를 찾을 수 없습니다.'
             });
         }
 
+        CacheUtils.del(CacheUtils.generateKey('blog_post', 'slug', postSlug));
+        CacheUtils.del(CacheUtils.generateKey('blog_post_admin', 'slug', postSlug));
+
         res.json({
             success: true,
             message: '조회수가 증가되었습니다.'
         });
     } catch (error) {
-        logger.error('블로그 조회수 증가 실패', buildErrorLog(error, req));
+        logger.error('블로그 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '조회수 증가에 실패했습니다.'

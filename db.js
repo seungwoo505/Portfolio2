@@ -31,7 +31,7 @@ const db = mariaDB.createPool({
 });
 
 db.on('connection', (connection) => {
-    logger.info('새로운 데이터베이스 연결 생성', { threadId: connection.threadId });
+    logger.debug('새로운 데이터베이스 연결 생성', { threadId: connection.threadId });
 });
 
 db.on('acquire', (connection) => {
