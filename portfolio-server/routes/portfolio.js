@@ -388,6 +388,14 @@ const { executeQuery } = require('../models/db-utils');
 
 const { authenticateToken, requirePermission, logActivity } = require('../middleware/auth');
 
+const buildErrorLog = (error, req, extra = {}) => ({
+    error: error?.message,
+    path: req?.originalUrl,
+    method: req?.method,
+    stack: error?.stack,
+    ...extra
+});
+
 /**
  * @swagger
  * /api/personal-info:
@@ -532,7 +540,7 @@ router.get('/personal-info', async (req, res) => {
             data: info
         });
     } catch (error) {
-        logger.error('Personal info fetch error:', error);
+        logger.error('개인 정보 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '개인 정보를 가져오는데 실패했습니다.'
@@ -556,7 +564,7 @@ router.put('/personal-info', async (req, res) => {
             data: updatedInfo
         });
     } catch (error) {
-        logger.error('Personal info update error:', error);
+        logger.error('개인 정보 업데이트 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '개인 정보 업데이트에 실패했습니다.'
@@ -572,7 +580,7 @@ router.get('/social-links', async (req, res) => {
             data: links
         });
     } catch (error) {
-        logger.error('Social links fetch error:', error);
+        logger.error('소셜 링크 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '소셜 링크를 가져오는데 실패했습니다.'
@@ -600,7 +608,7 @@ router.post('/social-links', async (req, res) => {
             data: newLink
         });
     } catch (error) {
-        logger.error('Social link creation error:', error);
+        logger.error('소셜 링크 생성 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '소셜 링크 추가에 실패했습니다.'
@@ -751,12 +759,22 @@ router.post('/social-links', async (req, res) => {
  */
 router.get('/skills', async (req, res) => {
     try {
-        const skills = await Skills.getAllWithCategories();
-        const categories = await Skills.getCategories();
-        
+        const [skills, categories] = await Promise.all([
+            Skills.getAllWithCategories(),
+            Skills.getCategories()
+        ]);
+
+        const skillsGroupedByCategory = skills.reduce((acc, skill) => {
+            if (!acc[skill.category_id]) {
+                acc[skill.category_id] = [];
+            }
+            acc[skill.category_id].push(skill);
+            return acc;
+        }, {});
+
         const skillsByCategory = categories.map(category => ({
             ...category,
-            skills: skills.filter(skill => skill.category_id === category.id)
+            skills: skillsGroupedByCategory[category.id] || []
         }));
 
         res.json({
@@ -768,7 +786,7 @@ router.get('/skills', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Skills fetch error:', error);
+        logger.error('스킬 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '스킬 정보를 가져오는데 실패했습니다.'
@@ -784,7 +802,7 @@ router.get('/skills/featured', async (req, res) => {
             data: featuredSkills
         });
     } catch (error) {
-        logger.error('Featured skills fetch error:', error);
+        logger.error('주요 스킬 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '주요 스킬 정보를 가져오는데 실패했습니다.'
@@ -824,7 +842,7 @@ router.post('/skills',
                 data: { id }
             });
         } catch (error) {
-            logger.error('Skill creation error:', error);
+            logger.error('스킬 생성 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '스킬 추가에 실패했습니다.'
@@ -948,7 +966,7 @@ router.get('/projects', async (req, res) => {
         const pageLimit = parseInt(limit) || 10;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
 
-        const filters = {
+        const baseFilters = {
             limit: pageLimit,
             offset: offset,
             search: search || '',
@@ -961,16 +979,20 @@ router.get('/projects', async (req, res) => {
             published_only: true
         };
 
-        let projects, totalCount;
-        
-        if (featured === 'true') {
-            filters.offset = 0;
-            projects = await Projects.getWithFilters(filters);
-            totalCount = await Projects.getCountWithFilters({ ...filters, limit: 1000, offset: 0 });
-        } else {
-            projects = await Projects.getWithFilters(filters);
-            totalCount = await Projects.getCountWithFilters(filters);
+        const listFilters = { ...baseFilters };
+        const countFilters = { ...baseFilters };
+        const isFeaturedOnly = featured === 'true';
+
+        if (isFeaturedOnly) {
+            listFilters.offset = 0;
+            countFilters.offset = 0;
+            countFilters.limit = 1000;
         }
+
+        const [projects, totalCount] = await Promise.all([
+            Projects.getWithFilters(listFilters),
+            Projects.getCountWithFilters(countFilters)
+        ]);
 
         const totalPages = Math.ceil(totalCount / pageLimit);
 
@@ -985,7 +1007,7 @@ router.get('/projects', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Projects fetch error:', error);
+        logger.error('프로젝트 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '프로젝트 정보를 가져오는데 실패했습니다.'
@@ -1047,7 +1069,7 @@ router.get('/projects/slug/:slug', async (req, res) => {
             data: project
         });
     } catch (error) {
-        logger.error('Project fetch error:', error);
+        logger.error('프로젝트 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '프로젝트 정보를 가져오는데 실패했습니다.'
@@ -1150,7 +1172,7 @@ router.get('/projects/tag/:tagSlug', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Projects by tag fetch error:', error);
+        logger.error('태그별 프로젝트 조회 실패', buildErrorLog(error, req));
         res.status(500).json({ success: false, message: '태그별 프로젝트를 가져오는데 실패했습니다.' });
     }
 });
@@ -1389,7 +1411,7 @@ router.get('/blog/posts', async (req, res) => {
         const pageLimit = parseInt(limit) || 10;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
 
-        const filters = {
+        const baseFilters = {
             limit: pageLimit,
             offset: offset,
             search: search || '',
@@ -1401,16 +1423,20 @@ router.get('/blog/posts', async (req, res) => {
             published_only: true
         };
 
-        let posts, totalCount;
-        
-        if (featured === 'true') {
-            filters.offset = 0;
-            posts = await BlogPosts.getWithFilters(filters);
-            totalCount = await BlogPosts.getCountWithFilters({ ...filters, limit: 1000, offset: 0 });
-        } else {
-            posts = await BlogPosts.getWithFilters(filters);
-            totalCount = await BlogPosts.getCountWithFilters(filters);
+        const listFilters = { ...baseFilters };
+        const countFilters = { ...baseFilters };
+        const isFeaturedOnly = featured === 'true';
+
+        if (isFeaturedOnly) {
+            listFilters.offset = 0;
+            countFilters.offset = 0;
+            countFilters.limit = 1000;
         }
+
+        const [posts, totalCount] = await Promise.all([
+            BlogPosts.getWithFilters(listFilters),
+            BlogPosts.getCountWithFilters(countFilters)
+        ]);
 
         const totalPages = Math.ceil(totalCount / pageLimit);
 
@@ -1425,7 +1451,7 @@ router.get('/blog/posts', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Blog posts fetch error:', error);
+        logger.error('블로그 포스트 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '블로그 포스트를 가져오는데 실패했습니다.'
@@ -1452,7 +1478,7 @@ router.get('/blog/posts/:slug', async (req, res) => {
             data: post
         });
     } catch (error) {
-        logger.error('Blog post fetch error:', error);
+        logger.error('블로그 포스트 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '블로그 포스트를 가져오는데 실패했습니다.'
@@ -1463,24 +1489,25 @@ router.get('/blog/posts/:slug', async (req, res) => {
 router.post('/blog/posts/:slug/view', async (req, res) => {
     try {
         const postSlug = req.params.slug;
-        
-        const post = await executeQuery('SELECT id FROM blog_posts WHERE slug = ? AND is_published = TRUE', [postSlug]);
-        
-        if (!post || post.length === 0) {
+
+        const updateResult = await executeQuery(
+            'UPDATE blog_posts SET view_count = view_count + 1 WHERE slug = ? AND is_published = TRUE',
+            [postSlug]
+        );
+
+        if (!updateResult || updateResult.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
                 message: '블로그 포스트를 찾을 수 없습니다.'
             });
         }
 
-        await executeQuery('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?', [post[0].id]);
-
         res.json({
             success: true,
             message: '조회수가 증가되었습니다.'
         });
     } catch (error) {
-        logger.error('블로그 조회수 증가 실패:', error);
+        logger.error('블로그 조회수 증가 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '조회수 증가에 실패했습니다.'
@@ -1512,7 +1539,7 @@ router.post('/blog/posts',
                 data: newPost
             });
         } catch (error) {
-            logger.error('Blog post creation error:', error);
+            logger.error('블로그 포스트 생성 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '블로그 포스트 생성에 실패했습니다.'
@@ -1715,7 +1742,7 @@ router.get('/settings', async (req, res) => {
             data: settingsObj
         });
     } catch (error) {
-        logger.error('Settings fetch error:', error);
+        logger.error('설정 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '설정 정보를 가져오는데 실패했습니다.'
@@ -1914,7 +1941,7 @@ router.get('/tags', async (req, res) => {
         }
         res.json({ success: true, data: tags });
     } catch (error) {
-        logger.error('Tags fetch error:', error);
+        logger.error('태그 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({ success: false, message: '태그 정보를 가져오는데 실패했습니다.' });
     }
 });
@@ -1924,7 +1951,7 @@ router.get('/tags/top-skills', async (req, res) => {
         const topSkills = await Tags.getTopSkills(10, 'general');
         res.json({ success: true, data: topSkills });
     } catch (error) {
-        logger.error('Top skills fetch error:', error);
+        logger.error('상위 기술 태그 조회 실패', buildErrorLog(error, req));
         res.status(500).json({ success: false, message: '상위 기술 스택을 가져오는데 실패했습니다.' });
     }
 });
@@ -1937,7 +1964,7 @@ router.get('/tags/:slug', async (req, res) => {
         }
         res.json({ success: true, data: tag });
     } catch (error) {
-        logger.error('Tag fetch error:', error);
+        logger.error('태그 상세 조회 실패', buildErrorLog(error, req));
         res.status(500).json({ success: false, message: '태그 정보를 가져오는데 실패했습니다.' });
     }
 });
@@ -1958,7 +1985,7 @@ router.get('/blog/tags', async (req, res) => {
             data: tags
         });
     } catch (error) {
-        logger.error('Blog tags fetch error:', error);
+        logger.error('블로그 태그 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '태그 정보를 가져오는데 실패했습니다.'
@@ -1972,8 +1999,10 @@ router.get('/blog/posts/tag/:tagSlug', async (req, res) => {
         const pageLimit = parseInt(limit) || 10;
         const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
         
-        const posts = await BlogPosts.getByTag(req.params.tagSlug, pageLimit, offset);
-        const tag = await Tags.getBySlug(req.params.tagSlug);
+        const [posts, tag] = await Promise.all([
+            BlogPosts.getByTag(req.params.tagSlug, pageLimit, offset),
+            Tags.getBySlug(req.params.tagSlug)
+        ]);
 
         res.json({
             success: true,
@@ -1986,7 +2015,7 @@ router.get('/blog/posts/tag/:tagSlug', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Blog posts by tag fetch error:', error);
+        logger.error('태그별 블로그 포스트 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '태그별 포스트를 가져오는데 실패했습니다.'
@@ -2218,7 +2247,7 @@ router.get('/experiences', async (req, res) => {
             data: experiences
         });
     } catch (error) {
-        logger.error('Experiences fetch error:', error);
+        logger.error('경력 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '경력 정보를 가져오는데 실패했습니다.'
@@ -2234,7 +2263,7 @@ router.get('/experiences/timeline', async (req, res) => {
             data: timeline
         });
     } catch (error) {
-        logger.error('Timeline fetch error:', error);
+        logger.error('타임라인 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '타임라인 정보를 가져오는데 실패했습니다.'
@@ -2267,7 +2296,7 @@ router.post('/experiences', async (req, res) => {
             data: newExperience
         });
     } catch (error) {
-        logger.error('Experience creation error:', error);
+        logger.error('경력 생성 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '경력 추가에 실패했습니다.'
@@ -2300,7 +2329,7 @@ router.put('/experiences/:id', async (req, res) => {
             data: updatedExperience
         });
     } catch (error) {
-        logger.error('Experience update error:', error);
+        logger.error('경력 수정 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '경력 수정에 실패했습니다.'
@@ -2318,7 +2347,7 @@ router.delete('/experiences/:id', async (req, res) => {
             message: '경력이 삭제되었습니다.'
         });
     } catch (error) {
-        logger.error('Experience deletion error:', error);
+        logger.error('경력 삭제 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '경력 삭제에 실패했습니다.'
@@ -2476,7 +2505,7 @@ router.get('/interests', async (req, res) => {
             data: interests
         });
     } catch (error) {
-        logger.error('Interests fetch error:', error);
+        logger.error('관심사 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '관심사 정보를 가져오는데 실패했습니다.'
@@ -2493,7 +2522,7 @@ router.post('/interests', async (req, res) => {
             data: interest
         });
     } catch (error) {
-        logger.error('Interest creation error:', error);
+        logger.error('관심사 생성 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '관심사 생성에 실패했습니다.'
@@ -2511,7 +2540,7 @@ router.put('/interests/:id', async (req, res) => {
             data: interest
         });
     } catch (error) {
-        logger.error('Interest update error:', error);
+        logger.error('관심사 수정 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '관심사 수정에 실패했습니다.'
@@ -2528,7 +2557,7 @@ router.delete('/interests/:id', async (req, res) => {
             message: '관심사가 삭제되었습니다.'
         });
     } catch (error) {
-        logger.error('Interest deletion error:', error);
+        logger.error('관심사 삭제 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '관심사 삭제에 실패했습니다.'
@@ -2710,7 +2739,7 @@ router.get('/dashboard', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Dashboard summary error:', error);
+        logger.error('대시보드 요약 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '대시보드 요약 정보를 가져오는데 실패했습니다.'
@@ -2737,7 +2766,7 @@ router.get('/dashboard/stats', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Dashboard stats error:', error);
+        logger.error('대시보드 통계 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '통계 정보를 가져오는데 실패했습니다.'
@@ -2792,7 +2821,7 @@ router.put('/admin/personal-info',
                 data: result
             });
         } catch (error) {
-            logger.error('Admin personal info update error:', error);
+            logger.error('관리자 개인 정보 저장 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '개인 정보 저장에 실패했습니다.'
