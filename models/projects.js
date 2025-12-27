@@ -284,25 +284,25 @@ const Projects = {
         
         if (!project) return null;
 
-        const skills = await executeQuery(`
-            SELECT s.* FROM skills s
-            INNER JOIN project_skills ps ON s.id = ps.skill_id
-            WHERE ps.project_id = ?
-            ORDER BY s.name ASC
-        `, [id]);
-
-        const images = await executeQuery(`
-            SELECT * FROM project_images 
-            WHERE project_id = ?
-            ORDER BY display_order ASC
-        `, [id]);
-
-        const tags = await executeQuery(`
-            SELECT t.* FROM tags t
-            INNER JOIN tag_usage tu ON t.id = tu.tag_id
-            WHERE tu.content_type = 'project' AND tu.content_id = ?
-            ORDER BY t.name ASC
-        `, [id]);
+        const [skills, images, tags] = await Promise.all([
+            executeQuery(`
+                SELECT s.* FROM skills s
+                INNER JOIN project_skills ps ON s.id = ps.skill_id
+                WHERE ps.project_id = ?
+                ORDER BY s.name ASC
+            `, [id]),
+            executeQuery(`
+                SELECT * FROM project_images 
+                WHERE project_id = ?
+                ORDER BY display_order ASC
+            `, [id]),
+            executeQuery(`
+                SELECT t.* FROM tags t
+                INNER JOIN tag_usage tu ON t.id = tu.tag_id
+                WHERE tu.content_type = 'project' AND tu.content_id = ?
+                ORDER BY t.name ASC
+            `, [id])
+        ]);
 
         return {
             ...project,
@@ -325,25 +325,25 @@ const Projects = {
         
         if (!project) return null;
 
-        const skills = await executeQuery(`
-            SELECT s.* FROM skills s
-            INNER JOIN project_skills ps ON s.id = ps.skill_id
-            WHERE ps.project_id = ?
-            ORDER BY s.name ASC
-        `, [project.id]);
-
-        const images = await executeQuery(`
-            SELECT * FROM project_images 
-            WHERE project_id = ?
-            ORDER BY display_order ASC
-        `, [project.id]);
-
-        const tags = await executeQuery(`
-            SELECT t.* FROM tags t
-            INNER JOIN tag_usage tu ON t.id = tu.tag_id
-            WHERE tu.content_type = 'project' AND tu.content_id = ?
-            ORDER BY t.name ASC
-        `, [project.id]);
+        const [skills, images, tags] = await Promise.all([
+            executeQuery(`
+                SELECT s.* FROM skills s
+                INNER JOIN project_skills ps ON s.id = ps.skill_id
+                WHERE ps.project_id = ?
+                ORDER BY s.name ASC
+            `, [project.id]),
+            executeQuery(`
+                SELECT * FROM project_images 
+                WHERE project_id = ?
+                ORDER BY display_order ASC
+            `, [project.id]),
+            executeQuery(`
+                SELECT t.* FROM tags t
+                INNER JOIN tag_usage tu ON t.id = tu.tag_id
+                WHERE tu.content_type = 'project' AND tu.content_id = ?
+                ORDER BY t.name ASC
+            `, [project.id])
+        ]);
 
         return {
             ...project,
