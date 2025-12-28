@@ -246,7 +246,7 @@ ${cleanText}
             return summary;
 
         } catch (error) {
-            logger.error('Gemini API 요약 생성 실패:', error);
+            logger.error('Gemini API 요약 생성 실패', { error: error.message, stack: error.stack });
             return this.fallbackSummary(content, maxLength);
         }
     }
@@ -314,7 +314,7 @@ ${cleanText}
             return keywords.length > 0 ? keywords : this.fallbackKeywords(content, maxKeywords);
 
         } catch (error) {
-            logger.error('Gemini API 키워드 추출 실패:', error);
+            logger.error('Gemini API 키워드 추출 실패', { error: error.message, stack: error.stack });
             return this.fallbackKeywords(content, maxKeywords);
         }
     }

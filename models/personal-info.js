@@ -77,7 +77,7 @@ const PersonalInfo = {
             logger.debug('최종 결과:', result);
             return result;
         } catch (error) {
-            logger.error('PersonalInfo.update() 오류:', error);
+            logger.error('개인 정보 업데이트 오류', { error: error.message, stack: error.stack });
             throw error;
         }
     }

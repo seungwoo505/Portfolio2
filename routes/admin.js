@@ -112,6 +112,14 @@ const {
     superAdminOnly
 } = require('../middleware/auth');
 
+const buildErrorLog = (error, req, extra = {}) => ({
+    error: error?.message,
+    path: req?.originalUrl,
+    method: req?.method,
+    stack: error?.stack,
+    ...extra
+});
+
 
 /**
  * @swagger
@@ -206,6 +214,10 @@ router.post('/login', async (req, res) => {
             error: error.message,
             attemptTime: new Date().toISOString()
         });
+
+        logger.warn('관리자 로그인 실패', buildErrorLog(error, req, {
+            username: req.body.username
+        }));
 
         res.status(401).json({
             success: false,
@@ -770,11 +782,10 @@ router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (
             data: updatedUser
         });
     } catch (error) {
-        logger.error('사용자 정보 수정 실패', {
+        logger.error('사용자 정보 수정 실패', buildErrorLog(error, req, {
             userId: req.params.id,
-            error: error.message,
             requestBody: req.body
-        });
+        }));
 
         res.status(500).json({
             success: false,
@@ -809,10 +820,9 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
             message: '관리자가 삭제되었습니다.'
         });
     } catch (error) {
-        logger.error('사용자 삭제 실패:', {
-            userId: req.params.id,
-            error: error.message
-        });
+        logger.error('사용자 삭제 실패', buildErrorLog(error, req, {
+            userId: req.params.id
+        }));
 
         res.status(500).json({
             success: false,
@@ -1166,7 +1176,7 @@ router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.
             data: post
         });
     } catch (error) {
-        logger.error('Blog post fetch error:', error);
+        logger.error('블로그 포스트 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '포스트 정보를 가져오는데 실패했습니다.'
@@ -1198,7 +1208,7 @@ router.put('/blog/posts/slug/:slug',
                 data: updatedPost
             });
         } catch (error) {
-            logger.error('Blog post update error:', error);
+            logger.error('블로그 포스트 수정 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '블로그 포스트 수정에 실패했습니다.'
@@ -1329,7 +1339,7 @@ router.put('/blog/posts/slug/:slug/featured',
                 data: updatedPost
             });
         } catch (error) {
-            logger.error('Blog post featured toggle error:', error);
+            logger.error('블로그 포스트 추천 상태 변경 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '포스트 추천 상태 변경에 실패했습니다.'
@@ -1361,7 +1371,7 @@ router.delete('/blog/posts/slug/:slug',
                 message: '블로그 포스트가 삭제되었습니다.'
             });
         } catch (error) {
-            logger.error('Blog post deletion error:', error);
+            logger.error('블로그 포스트 삭제 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '블로그 포스트 삭제에 실패했습니다.'
@@ -1480,7 +1490,7 @@ router.get('/projects/slug/:slug', authenticateToken, requirePermission('project
             data: project
         });
     } catch (error) {
-        logger.error('Project fetch error:', error);
+        logger.error('프로젝트 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '프로젝트 정보를 가져오는데 실패했습니다.'
@@ -1525,7 +1535,7 @@ router.post('/projects',
                 data: newProject
             });
         } catch (error) {
-            logger.error('Project creation error:', error);
+            logger.error('프로젝트 생성 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '프로젝트 생성에 실패했습니다.'
@@ -1582,12 +1592,11 @@ router.put('/projects/slug/:slug',
                     data: updatedProject
                 });
             } catch (updateError) {
-                logger.error('Projects.update 실패:', updateError);
-                logger.error('updateError.stack:', updateError.stack);
+                logger.error('프로젝트 업데이트 실패', buildErrorLog(updateError, req));
                 throw updateError;
             }
         } catch (error) {
-            logger.error('Project update error:', error);
+            logger.error('프로젝트 수정 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '프로젝트 수정에 실패했습니다.'
@@ -1619,7 +1628,7 @@ router.delete('/projects/slug/:slug',
                 message: '프로젝트가 삭제되었습니다.'
             });
         } catch (error) {
-            logger.error('Project deletion error:', error);
+            logger.error('프로젝트 삭제 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '프로젝트 삭제에 실패했습니다.'
@@ -1724,8 +1733,7 @@ router.post('/ai/summarize',
                     summary = await geminiService.generateSummary(preprocessedContent, 160, techTags);
                     verboseDebug('generateSummary 호출 성공');
                 } catch (error) {
-                    logger.error('generateSummary 호출 실패:', error);
-                    logger.error('에러 스택:', error.stack);
+                    logger.error('AI 요약 생성 호출 실패', buildErrorLog(error, req));
                     throw error;
                 }
 
@@ -1744,8 +1752,7 @@ router.post('/ai/summarize',
             }
 
         } catch (error) {
-            logger.error('Gemini AI 요약 생성 실패:', error);
-            logger.error('에러 스택:', error.stack);
+            logger.error('Gemini AI 요약 생성 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: 'AI 요약 생성에 실패했습니다.'
@@ -1821,7 +1828,7 @@ router.post('/ai/keywords',
             });
 
         } catch (error) {
-            logger.error('Gemini AI 키워드 추출 실패:', error);
+            logger.error('Gemini AI 키워드 추출 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: 'AI 키워드 추출에 실패했습니다.'
@@ -1974,7 +1981,7 @@ router.delete('/contacts/:id',
                 message: '메시지가 성공적으로 삭제되었습니다.'
             });
         } catch (error) {
-            logger.error('연락처 메시지 삭제 실패:', error);
+            logger.error('연락처 메시지 삭제 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '메시지 삭제에 실패했습니다.'
@@ -2482,7 +2489,7 @@ router.post('/upload/image',
             });
 
         } catch (error) {
-            logger.error('이미지 업로드 실패:', error);
+            logger.error('이미지 업로드 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: error.message || '이미지 업로드에 실패했습니다.'
@@ -2515,7 +2522,7 @@ router.delete('/upload/image/:filename',
             });
 
         } catch (error) {
-            logger.error('이미지 삭제 실패:', error);
+            logger.error('이미지 삭제 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '이미지 삭제에 실패했습니다.'
@@ -2566,7 +2573,7 @@ router.get('/logs',
             });
 
         } catch (error) {
-            logger.error('활동 로그 조회 실패:', error);
+            logger.error('활동 로그 조회 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '활동 로그를 가져오는데 실패했습니다.'
@@ -2589,7 +2596,7 @@ router.get('/logs/stats',
             });
 
         } catch (error) {
-            logger.error('활동 로그 통계 조회 실패:', error);
+            logger.error('활동 로그 통계 조회 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '활동 로그 통계를 가져오는데 실패했습니다.'
@@ -2695,7 +2702,7 @@ router.get('/logs/export',
             res.send(csvContent);
 
         } catch (error) {
-            logger.error('활동 로그 내보내기 실패:', error);
+            logger.error('활동 로그 내보내기 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '활동 로그 내보내기에 실패했습니다.'
@@ -2794,7 +2801,7 @@ router.post('/skills/categories',
             });
 
         } catch (error) {
-            logger.error('카테고리 추가 실패:', error);
+            logger.error('카테고리 추가 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '카테고리 추가에 실패했습니다.'
@@ -2842,7 +2849,7 @@ router.delete('/skills/categories/:id',
             });
 
         } catch (error) {
-            logger.error('카테고리 삭제 실패:', error);
+            logger.error('카테고리 삭제 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '카테고리 삭제에 실패했습니다.'
@@ -2865,7 +2872,7 @@ router.get('/skills/categories',
             });
 
         } catch (error) {
-            logger.error('카테고리 목록 조회 실패:', error);
+            logger.error('카테고리 목록 조회 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '카테고리 목록을 가져오는데 실패했습니다.'
@@ -2932,7 +2939,7 @@ router.get('/skills',
             });
 
         } catch (error) {
-            logger.error('기술 스택 목록 조회 실패:', error);
+            logger.error('기술 스택 목록 조회 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '기술 스택 목록을 가져오는데 실패했습니다.'
@@ -2987,7 +2994,7 @@ router.post('/skills',
             });
 
         } catch (error) {
-            logger.error('기술 스택 생성 실패:', error);
+            logger.error('기술 스택 생성 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '기술 스택 생성에 실패했습니다.'
@@ -3091,7 +3098,7 @@ router.put('/skills/:id',
             });
 
         } catch (error) {
-            logger.error('기술 스택 수정 실패:', error);
+            logger.error('기술 스택 수정 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '기술 스택 수정에 실패했습니다.'
@@ -3124,7 +3131,7 @@ router.delete('/skills/:id',
             });
 
         } catch (error) {
-            logger.error('기술 스택 삭제 실패:', error);
+            logger.error('기술 스택 삭제 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '기술 스택 삭제에 실패했습니다.'
@@ -3218,7 +3225,7 @@ router.patch('/skills/:id/featured',
             });
 
         } catch (error) {
-            logger.error('기술 스택 추천 상태 변경 실패:', error);
+            logger.error('기술 스택 추천 상태 변경 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '기술 스택 추천 상태 변경에 실패했습니다.'
@@ -3252,7 +3259,7 @@ router.patch('/skills/:id/order',
             });
 
         } catch (error) {
-            logger.error('기술 스택 순서 변경 실패:', error);
+            logger.error('기술 스택 순서 변경 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
                 message: '기술 스택 순서 변경에 실패했습니다.'

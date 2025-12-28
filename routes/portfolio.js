@@ -1800,12 +1800,10 @@ router.post('/contact', async (req, res) => {
             data: { id }
         });
     } catch (error) {
-        logger.error('연락처 메시지 생성 실패', {
-            error: error.message,
-            stack: error.stack,
+        logger.error('연락처 메시지 생성 실패', buildErrorLog(error, req, {
             ip: req.ip,
             formData: { name: req.body.name, email: req.body.email }
-        });
+        }));
         res.status(500).json({
             success: false,
             message: '메시지 전송에 실패했습니다.'

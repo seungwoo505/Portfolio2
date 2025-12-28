@@ -516,7 +516,7 @@ const logActivity = (action) => {
                             cleanUserAgent // 정리된 User Agent 사용
                         );
                     } catch (error) {
-                        logger.error('Activity logging error', { error: error.message, stack: error.stack });
+                        logger.error('활동 로그 기록 실패', { error: error.message, stack: error.stack });
                     }
                 });
             }

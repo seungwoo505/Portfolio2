@@ -144,6 +144,14 @@ const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 const redisCache = require('../utils/redis-cache');
 
+const buildErrorLog = (error, req, extra = {}) => ({
+    error: error?.message,
+    path: req?.originalUrl,
+    method: req?.method,
+    stack: error?.stack,
+    ...extra
+});
+
 router.get('/dashboard', async (req, res) => {
     try {
         const memoryUsage = process.memoryUsage();
@@ -180,7 +188,7 @@ router.get('/dashboard', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('모니터링 대시보드 조회 실패', { error: error.message });
+        logger.error('모니터링 대시보드 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             error: '모니터링 데이터를 가져오는데 실패했습니다.'
@@ -214,7 +222,7 @@ router.post('/cache/clear', async (req, res) => {
             message: `${type} 캐시가 성공적으로 초기화되었습니다.`
         });
     } catch (error) {
-        logger.error('캐시 초기화 실패', { error: error.message });
+        logger.error('캐시 초기화 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             error: '캐시 초기화에 실패했습니다.'
@@ -253,7 +261,7 @@ router.get('/metrics', async (req, res) => {
             data: metrics
         });
     } catch (error) {
-        logger.error('메트릭 조회 실패', { error: error.message });
+        logger.error('메트릭 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             error: '메트릭을 가져오는데 실패했습니다.'
