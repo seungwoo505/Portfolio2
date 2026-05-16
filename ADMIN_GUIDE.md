@@ -10,6 +10,7 @@
 - `admin_sessions` - JWT 세션 관리
 - `admin_activity_logs` - 모든 관리자 활동 로그
 - `admin_permissions` - 세분화된 권한 정의
+- `admin_role_permissions` - 역할별 권한 할당
 - `admin_user_permissions` - 관리자별 권한 할당
 
 ###  **관리자 역할 (Role)**
@@ -40,8 +41,13 @@
 
 - `contacts.read` - 연락처 메시지 조회
 - `settings.update` - 사이트 설정 수정
-- `admin.create` - 관리자 계정 관리
 - `dashboard.read` - 대시보드 접근
+- `logs.read` - 관리자 활동 로그 조회
+- `files.delete` - 업로드 파일 삭제
+- `personal_info.update` - 개인 정보 수정
+- `social_links.create` - 소셜 링크 생성
+- `experiences.create/update/delete` - 경력 생성/수정/삭제
+- `interests.create/update/delete` - 관심사 생성/수정/삭제
 
 ##  **API 엔드포인트**
 
@@ -194,6 +200,9 @@ JWT_SECRET=your-super-secret-jwt-key-here
 ```bash
 # database-admin-schema.sql 실행
 mysql -u user -p portfolio_db < database-admin-schema.sql
+
+# 서버 코드에서 사용하는 권한명과 역할 매핑 동기화
+mysql -u user -p portfolio_db < sync-admin-permissions.sql
 ```
 
 ### **3. 의존성 설치**

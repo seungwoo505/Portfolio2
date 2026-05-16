@@ -551,6 +551,7 @@ router.get('/personal-info', async (req, res) => {
 
 router.put('/personal-info',
     authenticateToken,
+    requirePermission('personal_info.update'),
     logActivity('update_personal_info'),
     async (req, res) => {
     try {
@@ -562,6 +563,7 @@ router.put('/personal-info',
         );
         
         const updatedInfo = await PersonalInfo.update(cleanedData);
+        CacheUtils.invalidateResources('personal_info', 'settings');
         res.json({
             success: true,
             message: '개인 정보가 업데이트되었습니다.',
@@ -592,8 +594,9 @@ router.get('/social-links', async (req, res) => {
     }
 });
 
-router.post('/social-links',
+router.post(['/social-links', '/admin/social-links'],
     authenticateToken,
+    requirePermission('social_links.create'),
     logActivity('create_social_link'),
     async (req, res) => {
     try {
@@ -608,6 +611,7 @@ router.post('/social-links',
 
         const id = await SocialLinks.create({ platform, url, icon, display_order });
         const newLink = await SocialLinks.getById(id);
+        CacheUtils.invalidateResources('social_links');
         
         res.status(201).json({
             success: true,
@@ -842,6 +846,7 @@ router.post('/skills',
                 display_order: display_order || 0,
                 is_featured: is_featured || false
             });
+            CacheUtils.invalidateResources('skills');
 
             res.status(201).json({
                 success: true,
@@ -2401,7 +2406,11 @@ router.get('/experiences/timeline', async (req, res) => {
     }
 });
 
-router.post('/experiences', authenticateToken, logActivity('create_experience'), async (req, res) => {
+router.post(['/experiences', '/admin/experiences'],
+    authenticateToken,
+    requirePermission('experiences.create'),
+    logActivity('create_experience'),
+    async (req, res) => {
     try {
         const { type, title } = req.body;
         
@@ -2419,6 +2428,7 @@ router.post('/experiences', authenticateToken, logActivity('create_experience'),
 
         const id = await Experiences.create(mappedData);
         const newExperience = await Experiences.getById(id);
+        CacheUtils.invalidateResources('experiences');
 
         res.status(201).json({
             success: true,
@@ -2434,7 +2444,11 @@ router.post('/experiences', authenticateToken, logActivity('create_experience'),
     }
 });
 
-router.put('/experiences/:id', authenticateToken, logActivity('update_experience'), async (req, res) => {
+router.put(['/experiences/:id', '/admin/experiences/:id'],
+    authenticateToken,
+    requirePermission('experiences.update'),
+    logActivity('update_experience'),
+    async (req, res) => {
     try {
         const { id } = req.params;
         const { type, title } = req.body;
@@ -2452,6 +2466,7 @@ router.put('/experiences/:id', authenticateToken, logActivity('update_experience
         };
 
         const updatedExperience = await Experiences.update(id, mappedData);
+        CacheUtils.invalidateResources('experiences');
 
         res.json({
             success: true,
@@ -2467,10 +2482,15 @@ router.put('/experiences/:id', authenticateToken, logActivity('update_experience
     }
 });
 
-router.delete('/experiences/:id', authenticateToken, logActivity('delete_experience'), async (req, res) => {
+router.delete(['/experiences/:id', '/admin/experiences/:id'],
+    authenticateToken,
+    requirePermission('experiences.delete'),
+    logActivity('delete_experience'),
+    async (req, res) => {
     try {
         const { id } = req.params;
         await Experiences.delete(id);
+        CacheUtils.invalidateResources('experiences');
 
         res.json({
             success: true,
@@ -2643,9 +2663,14 @@ router.get('/interests', async (req, res) => {
     }
 });
 
-router.post('/interests', authenticateToken, logActivity('create_interest'), async (req, res) => {
+router.post(['/interests', '/admin/interests'],
+    authenticateToken,
+    requirePermission('interests.create'),
+    logActivity('create_interest'),
+    async (req, res) => {
     try {
         const interest = await Interests.create(req.body);
+        CacheUtils.invalidateResources('interests');
         res.json({
             success: true,
             message: '관심사가 생성되었습니다.',
@@ -2660,10 +2685,15 @@ router.post('/interests', authenticateToken, logActivity('create_interest'), asy
     }
 });
 
-router.put('/interests/:id', authenticateToken, logActivity('update_interest'), async (req, res) => {
+router.put(['/interests/:id', '/admin/interests/:id'],
+    authenticateToken,
+    requirePermission('interests.update'),
+    logActivity('update_interest'),
+    async (req, res) => {
     try {
         const { id } = req.params;
         const interest = await Interests.update(id, req.body);
+        CacheUtils.invalidateResources('interests');
         res.json({
             success: true,
             message: '관심사가 수정되었습니다.',
@@ -2678,10 +2708,15 @@ router.put('/interests/:id', authenticateToken, logActivity('update_interest'), 
     }
 });
 
-router.delete('/interests/:id', authenticateToken, logActivity('delete_interest'), async (req, res) => {
+router.delete(['/interests/:id', '/admin/interests/:id'],
+    authenticateToken,
+    requirePermission('interests.delete'),
+    logActivity('delete_interest'),
+    async (req, res) => {
     try {
         const { id } = req.params;
         await Interests.delete(id);
+        CacheUtils.invalidateResources('interests');
         res.json({
             success: true,
             message: '관심사가 삭제되었습니다.'
@@ -2945,6 +2980,7 @@ router.put('/admin/personal-info',
                 logger.warn('개인정보 → 설정 동기화 실패', { error: syncError.message });
             }
             
+            CacheUtils.invalidateResources('personal_info', 'settings');
             res.json({
                 success: true,
                 message: '개인 정보가 저장되었습니다.',

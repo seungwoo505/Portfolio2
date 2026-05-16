@@ -1,5 +1,6 @@
 require("dotenv").config();
 const fs = require("fs");
+const http = require("http");
 const https = require("https");
 const express = require("express");
 const expressWs = require("express-ws");
@@ -637,26 +638,42 @@ app.use((error, req, res, next) => {
     });
 });
 
-const options = {
-    key: fs.readFileSync(process.env.HTTPS_KEY),
-    cert: fs.readFileSync(process.env.HTTPS_CERT),
-    ca: fs.readFileSync(process.env.HTTPS_CA),
-  };
-const server = https.createServer(options, app);
+const hasHttpsConfig = !!(process.env.HTTPS_KEY && process.env.HTTPS_CERT);
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction && !hasHttpsConfig) {
+    logger.error('운영 환경에서는 HTTPS_KEY와 HTTPS_CERT 환경 변수가 필요합니다.');
+    process.exit(1);
+}
+
+const server = (() => {
+    if (!hasHttpsConfig) {
+        logger.warn('HTTPS 인증서 설정이 없어 HTTP 서버로 실행합니다. 운영 환경에서는 HTTPS를 설정해야 합니다.');
+        return http.createServer(app);
+    }
+
+    const options = {
+        key: fs.readFileSync(process.env.HTTPS_KEY),
+        cert: fs.readFileSync(process.env.HTTPS_CERT),
+        ...(process.env.HTTPS_CA ? { ca: fs.readFileSync(process.env.HTTPS_CA) } : {})
+    };
+
+    return https.createServer(options, app);
+})();
 expressWs(app, server);
 logger.info('포트폴리오 서버 시작 중...');
 logger.info('환경 설정', {
     nodeEnv: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 3001,
+    port,
     dbHost: process.env.DB_HOST || 'localhost',
     dbSchema: process.env.DB_SCHEMA || 'portfolio_db',
     corsOrigins: [process.env.LOCALHOST, process.env.MY_HOST].filter(Boolean),
-    httpsEnabled: !!(process.env.HTTPS_KEY && process.env.HTTPS_CERT),
+    httpsEnabled: hasHttpsConfig,
     requestTimeout: `${REQUEST_TIMEOUT}ms`
 });
 
-server.listen(process.env.PORT, () => {
-    logger.info(`포트폴리오 서버가 포트 ${process.env.PORT}에서 실행 중입니다`);
+server.listen(port, () => {
+    logger.info(`포트폴리오 서버가 포트 ${port}에서 실행 중입니다`);
     logger.info(`데이터베이스: ${process.env.DB_HOST}의 ${process.env.DB_SCHEMA}`);
     logger.info(`CORS 허용 도메인: ${[process.env.LOCALHOST, process.env.MY_HOST].join(', ')}`);
     logger.info('서버 시작이 성공적으로 완료되었습니다');

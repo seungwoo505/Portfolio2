@@ -8,8 +8,6 @@ const cache = new NodeCache({
     deleteOnExpire: true, // 만료 시 자동 삭제
     maxKeys: 2000, // 1000 → 2000으로 증가 (더 많은 캐시 저장)
     forceString: false, // 키를 문자열로 강제 변환하지 않음
-    
-    useClones: false, // 객체 복사 비활성화 (메모리 절약)
     enableLegacyCallbacks: false, // 레거시 콜백 비활성화
     arrayValueSize: 100, // 배열 값 크기 제한
     objectValueSize: 1000, // 객체 값 크기 제한
@@ -105,6 +103,35 @@ const CacheUtils = {
         });
         
         logger.info('패턴 캐시 삭제', { pattern, deletedCount });
+        return deletedCount;
+    },
+
+    /**
+     * @description 리소스 이름 기준으로 관련 캐시를 무효화한다.
+     * @param {...string|string[]} resources 캐시를 비울 리소스 이름
+     * @returns {number} 삭제된 캐시 키 개수
+     */
+    invalidateResources(...resources) {
+        const patternMap = {
+            blog: ['^blog_posts:', '^blog_post:', '^blog_post_admin:'],
+            projects: ['^projects:', '^project:'],
+            skills: ['^skills:', '^skill:'],
+            personal_info: ['^personal_info:', '^personal:', '^settings:'],
+            social_links: ['^social_links:', '^social:'],
+            experiences: ['^experiences:', '^experience:'],
+            interests: ['^interests:', '^interest:'],
+            settings: ['^settings:']
+        };
+        const normalizedResources = resources.flat().filter(Boolean);
+        const patterns = new Set(
+            normalizedResources.flatMap(resource => patternMap[resource] || [`^${resource}:`])
+        );
+
+        let deletedCount = 0;
+        patterns.forEach(pattern => {
+            deletedCount += this.delPattern(pattern);
+        });
+
         return deletedCount;
     },
 
