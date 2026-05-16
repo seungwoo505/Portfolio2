@@ -18,6 +18,10 @@ async function runInterestsMigration() {
 
         logger.debug('interests 테이블 생성 마이그레이션 시작');
         const interestsMigrationPath = path.join(__dirname, 'migrations', 'create-interests-table.sql');
+        if (!fs.existsSync(interestsMigrationPath)) {
+            logger.error('interests 마이그레이션 SQL 파일을 찾을 수 없습니다.', { expectedPath: interestsMigrationPath });
+            process.exit(1);
+        }
         const interestsMigrationSQL = fs.readFileSync(interestsMigrationPath, 'utf8');
 
         const interestsStatements = interestsMigrationSQL
@@ -36,6 +40,10 @@ async function runInterestsMigration() {
 
         logger.debug('personal_info 테이블 수정 마이그레이션 시작');
         const personalInfoMigrationPath = path.join(__dirname, 'migrations', 'add-about-and-social-fields-to-personal-info.sql');
+        if (!fs.existsSync(personalInfoMigrationPath)) {
+            logger.error('personal_info 마이그레이션 SQL 파일을 찾을 수 없습니다.', { expectedPath: personalInfoMigrationPath });
+            process.exit(1);
+        }
         const personalInfoMigrationSQL = fs.readFileSync(personalInfoMigrationPath, 'utf8');
 
         const personalInfoStatements = personalInfoMigrationSQL

@@ -17,6 +17,11 @@ async function runMigration() {
         logger.debug('데이터베이스 연결 성공');
 
         const migrationPath = path.join(__dirname, 'migrations', 'add-meta-keywords.sql');
+        if (!fs.existsSync(migrationPath)) {
+            logger.error('마이그레이션 SQL 파일을 찾을 수 없습니다.', { expectedPath: migrationPath });
+            logger.error('현재 저장소의 SQL 파일 위치를 확인한 뒤 스크립트를 갱신해주세요.');
+            process.exit(1);
+        }
         const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
         logger.debug('마이그레이션 SQL 파일 읽기 완료');
