@@ -143,6 +143,7 @@ const router = express.Router();
 const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 const redisCache = require('../utils/redis-cache');
+const { adminOnly } = require('../middleware/auth');
 
 const buildErrorLog = (error, req, extra = {}) => ({
     error: error?.message,
@@ -152,7 +153,7 @@ const buildErrorLog = (error, req, extra = {}) => ({
     ...extra
 });
 
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', ...adminOnly, async (req, res) => {
     try {
         const memoryUsage = process.memoryUsage();
         const uptime = process.uptime();
@@ -196,18 +197,18 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
-router.post('/cache/clear', async (req, res) => {
+router.post('/cache/clear', ...adminOnly, async (req, res) => {
     try {
         const { type } = req.body;
         
         if (type === 'memory') {
-            CacheUtils.clear();
+            CacheUtils.flush();
             logger.info('메모리 캐시가 초기화되었습니다');
         } else if (type === 'redis') {
             await redisCache.flush();
             logger.info('Redis 캐시가 초기화되었습니다');
         } else if (type === 'all') {
-            CacheUtils.clear();
+            CacheUtils.flush();
             await redisCache.flush();
             logger.info('모든 캐시가 초기화되었습니다');
         } else {
@@ -230,7 +231,7 @@ router.post('/cache/clear', async (req, res) => {
     }
 });
 
-router.get('/metrics', async (req, res) => {
+router.get('/metrics', ...adminOnly, async (req, res) => {
     try {
         const startTime = Date.now();
         

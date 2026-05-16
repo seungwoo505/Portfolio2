@@ -549,7 +549,10 @@ router.get('/personal-info', async (req, res) => {
     }
 });
 
-router.put('/personal-info', async (req, res) => {
+router.put('/personal-info',
+    authenticateToken,
+    logActivity('update_personal_info'),
+    async (req, res) => {
     try {
         const cleanedData = Object.fromEntries(
             Object.entries(req.body).map(([key, value]) => [
@@ -589,7 +592,10 @@ router.get('/social-links', async (req, res) => {
     }
 });
 
-router.post('/social-links', async (req, res) => {
+router.post('/social-links',
+    authenticateToken,
+    logActivity('create_social_link'),
+    async (req, res) => {
     try {
         const { platform, url, icon, display_order } = req.body;
         
@@ -2395,7 +2401,7 @@ router.get('/experiences/timeline', async (req, res) => {
     }
 });
 
-router.post('/experiences', async (req, res) => {
+router.post('/experiences', authenticateToken, logActivity('create_experience'), async (req, res) => {
     try {
         const { type, title } = req.body;
         
@@ -2428,7 +2434,7 @@ router.post('/experiences', async (req, res) => {
     }
 });
 
-router.put('/experiences/:id', async (req, res) => {
+router.put('/experiences/:id', authenticateToken, logActivity('update_experience'), async (req, res) => {
     try {
         const { id } = req.params;
         const { type, title } = req.body;
@@ -2461,7 +2467,7 @@ router.put('/experiences/:id', async (req, res) => {
     }
 });
 
-router.delete('/experiences/:id', async (req, res) => {
+router.delete('/experiences/:id', authenticateToken, logActivity('delete_experience'), async (req, res) => {
     try {
         const { id } = req.params;
         await Experiences.delete(id);
@@ -2637,7 +2643,7 @@ router.get('/interests', async (req, res) => {
     }
 });
 
-router.post('/interests', async (req, res) => {
+router.post('/interests', authenticateToken, logActivity('create_interest'), async (req, res) => {
     try {
         const interest = await Interests.create(req.body);
         res.json({
@@ -2654,7 +2660,7 @@ router.post('/interests', async (req, res) => {
     }
 });
 
-router.put('/interests/:id', async (req, res) => {
+router.put('/interests/:id', authenticateToken, logActivity('update_interest'), async (req, res) => {
     try {
         const { id } = req.params;
         const interest = await Interests.update(id, req.body);
@@ -2672,7 +2678,7 @@ router.put('/interests/:id', async (req, res) => {
     }
 });
 
-router.delete('/interests/:id', async (req, res) => {
+router.delete('/interests/:id', authenticateToken, logActivity('delete_interest'), async (req, res) => {
     try {
         const { id } = req.params;
         await Interests.delete(id);

@@ -539,6 +539,49 @@ app.use((req, res, next) => {
         }
     next();
 });
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        let user = null;
+        if (req.headers.authorization) {
+            try {
+                const token = req.headers.authorization.split(' ')[1];
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.decode(token);
+                if (decoded) {
+                    user = { id: decoded.id, username: decoded.username, role: decoded.role };
+                }
+            } catch {
+            }
+        }
+        const isAdminApi = req.path.startsWith('/api/admin');
+        const isDataModifying = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
+        
+        if (isAdminApi || isDataModifying) {
+            logger.apiUsage(req.path, req.method, user, duration);
+        }
+        if (res.statusCode >= 400 || duration > 1000) {
+            const action = res.statusCode >= 400 ? '에러 발생' : '성능 경고';
+            if (res.statusCode >= 400) {
+                logger.incrementCounter('errors');
+            }
+            if (duration > 1000) {
+                logger.incrementCounter('slowRequests');
+            }
+            
+            logger.activity(action, {
+                method: req.method,
+                endpoint: req.path,
+                statusCode: res.statusCode,
+                responseTime: `${duration}ms`,
+                ip: req.ip
+            }, user);
+        }
+    });
+    
+    next();
+});
 app.get('/health', (req, res) => {
     const memoryUsage = process.memoryUsage();
     const uptime = process.uptime();
@@ -559,9 +602,9 @@ app.get('/health', (req, res) => {
     });
 });
 app.use('/api', portfolioRoutes);
+app.use('/api/admin/login', loginLimiter);
 app.use('/api/admin', adminLimiter, adminRoutes);
 app.use('/api/monitoring', monitoringRoutes);
-app.use('/api/admin/login', loginLimiter);
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -601,50 +644,6 @@ const options = {
   };
 const server = https.createServer(options, app);
 expressWs(app, server);
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        let user = null;
-        if (req.headers.authorization) {
-            try {
-                const token = req.headers.authorization.split(' ')[1];
-                const jwt = require('jsonwebtoken');
-                const decoded = jwt.decode(token);
-                if (decoded) {
-                    user = { id: decoded.id, username: decoded.username, role: decoded.role };
-                }
-            } catch {
-            }
-        }
-        const isAdminApi = req.path.startsWith('/api/admin');
-        const isDataModifying = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
-        
-        if (isAdminApi || isDataModifying) {
-            logger.apiUsage(req.path, req.method, user, duration);
-        }
-        if (res.statusCode >= 400 || duration > 1000) {
-            const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
-            const action = res.statusCode >= 400 ? '에러 발생' : '성능 경고';
-            if (res.statusCode >= 400) {
-                logger.incrementCounter('errors');
-            }
-            if (duration > 1000) {
-                logger.incrementCounter('slowRequests');
-            }
-            
-            logger.activity(action, {
-                method: req.method,
-                endpoint: req.path,
-                statusCode: res.statusCode,
-                responseTime: `${duration}ms`,
-                ip: req.ip
-            }, user);
-        }
-    });
-    
-    next();
-});
 logger.info('포트폴리오 서버 시작 중...');
 logger.info('환경 설정', {
     nodeEnv: process.env.NODE_ENV || 'development',
