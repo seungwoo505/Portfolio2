@@ -1,0 +1,19 @@
+{
+  "name": "portfolio-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read-only MCP server for the portfolio API",
+  "main": "src/server.js",
+  "bin": {
+    "portfolio-mcp": "./src/server.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "node --check src/server.js",
+    "smoke": "node scripts/smoke.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

@@ -135,6 +135,10 @@ portfolio-server/
 │   ├──  cache.js                 # 캐시 유틸리티
 │   └──  redis-cache.js           # Redis 캐시 유틸리티
 │
+├──  mcp/                         # Portfolio MCP 서버
+│   ├──  src/server.js            # stdio MCP 서버 엔트리
+│   └──  README.md                # MCP 실행 및 연결 문서
+│
 ├──  services/                    # 외부 서비스
 │   └──  gemini-ai.js             # Google Gemini AI 서비스
 │
