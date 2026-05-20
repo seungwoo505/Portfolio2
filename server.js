@@ -1,4 +1,5 @@
 require("dotenv").config();
+const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
@@ -112,6 +113,14 @@ app.use(express.urlencoded({
     verify: undefined,
 }));
 app.use(cookieParser());
+app.use((req, res, next) => {
+    const incomingRequestId = req.headers['x-request-id'];
+    req.requestId = typeof incomingRequestId === 'string' && incomingRequestId.trim()
+        ? incomingRequestId.trim()
+        : crypto.randomUUID();
+    res.setHeader('X-Request-Id', req.requestId);
+    next();
+});
 const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '2000', 10) || 2000;
 
 app.use((req, res, next) => {
@@ -497,88 +506,32 @@ const swaggerUiOptions = {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 app.use((req, res, next) => {
-    const isAdminApi = req.path.startsWith('/api/admin');
-    const isDataModifying = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
-    const isImportantEndpoint = req.path.includes('/login') || req.path.includes('/logout');
-    
-        if (isAdminApi || isDataModifying || isImportantEndpoint) {
-            let user = null;
-            if (req.headers.authorization) {
-                try {
-                    const token = req.headers.authorization.split(' ')[1];
-                    const jwt = require('jsonwebtoken');
-                    const decoded = jwt.decode(token);
-                    if (decoded) {
-                        user = { id: decoded.id, username: decoded.username, role: decoded.role };
-                    }
-                } catch {
-                }
-            }
-            let action = '';
-            if (req.path.includes('/login')) {
-                action = '로그인 시도';
-                logger.incrementCounter('loginAttempts');
-            } else if (req.path.includes('/logout')) {
-                action = '로그아웃';
-            } else if (req.path.includes('/admin')) {
-                action = '관리자 작업';
-                logger.incrementCounter('adminRequests');
-            } else if (isDataModifying) {
-                action = '데이터 변경';
-                logger.incrementCounter('totalRequests');
-            } else {
-                action = '중요 요청';
-                logger.incrementCounter('publicRequests');
-            }
-            
-            logger.activity(action, {
-                method: req.method,
-                endpoint: req.path,
-                ip: req.ip,
-                userAgent: req.headers['user-agent']
-            }, user);
-        }
-    next();
-});
-app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        let user = null;
-        if (req.headers.authorization) {
-            try {
-                const token = req.headers.authorization.split(' ')[1];
-                const jwt = require('jsonwebtoken');
-                const decoded = jwt.decode(token);
-                if (decoded) {
-                    user = { id: decoded.id, username: decoded.username, role: decoded.role };
-                }
-            } catch {
-            }
-        }
         const isAdminApi = req.path.startsWith('/api/admin');
         const isDataModifying = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
-        
-        if (isAdminApi || isDataModifying) {
-            logger.apiUsage(req.path, req.method, user, duration);
+        const isAuthEndpoint = req.path.includes('/login') || req.path.includes('/logout');
+        const isSlow = duration >= logger.getSlowRequestMs();
+
+        if (isAuthEndpoint && req.path.includes('/login')) {
+            logger.incrementCounter('loginAttempts');
+        } else if (isAdminApi) {
+            logger.incrementCounter('adminRequests');
+        } else if (isDataModifying) {
+            logger.incrementCounter('totalRequests');
+        } else {
+            logger.incrementCounter('publicRequests');
         }
-        if (res.statusCode >= 400 || duration > 1000) {
-            const action = res.statusCode >= 400 ? '에러 발생' : '성능 경고';
-            if (res.statusCode >= 400) {
-                logger.incrementCounter('errors');
-            }
-            if (duration > 1000) {
-                logger.incrementCounter('slowRequests');
-            }
-            
-            logger.activity(action, {
-                method: req.method,
-                endpoint: req.path,
-                statusCode: res.statusCode,
-                responseTime: `${duration}ms`,
-                ip: req.ip
-            }, user);
+
+        if (res.statusCode >= 400) {
+            logger.incrementCounter('errors');
         }
+        if (isSlow) {
+            logger.incrementCounter('slowRequests');
+        }
+
+        logger.requestSummary(req, res, { durationMs: duration });
     });
     
     next();
@@ -619,9 +572,10 @@ app.use((error, req, res, next) => {
         stack: error.stack,
         method: req.method,
         url: req.originalUrl,
+        requestId: req.requestId,
         ip: req.ip,
         userAgent: req.headers['user-agent'],
-        body: req.method !== 'GET' ? req.body : undefined,
+        body: req.method !== 'GET' ? logger.redact(req.body) : undefined,
         statusCode: error.status || 500
     };
     if (error.status >= 400 && error.status < 500) {

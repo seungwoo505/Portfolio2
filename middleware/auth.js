@@ -182,347 +182,183 @@ const requireRole = (roles) => {
     };
 };
 
+const actionLabels = {
+    admin_login: '로그인',
+    admin_login_failed: '로그인 실패',
+    admin_logout: '로그아웃',
+    change_password: '비밀번호 변경',
+    create_admin: '관리자 생성',
+    update_admin: '관리자 수정',
+    delete_admin: '관리자 삭제',
+    create_blog_post: '블로그 생성',
+    update_blog_post: '블로그 수정',
+    publish_blog_post: '블로그 발행',
+    feature_blog_post: '블로그 추천 변경',
+    delete_blog_post: '블로그 삭제',
+    create_project: '프로젝트 생성',
+    update_project: '프로젝트 수정',
+    delete_project: '프로젝트 삭제',
+    create_tag: '태그 생성',
+    update_tag: '태그 수정',
+    delete_tag: '태그 삭제',
+    mark_contact_read: '연락처 읽음',
+    delete_contact: '연락처 삭제',
+    update_settings: '설정 수정',
+    upload_image: '이미지 업로드',
+    delete_image: '이미지 삭제',
+    create_skill_category: '스킬 카테고리 생성',
+    delete_skill_category: '스킬 카테고리 삭제',
+    create_skill: '기술 스택 생성',
+    update_skill: '기술 스택 수정',
+    delete_skill: '기술 스택 삭제',
+    toggle_skill_featured: '기술 스택 추천 변경',
+    update_skill_order: '기술 스택 순서 변경',
+    update_personal_info: '개인 정보 수정',
+    create_social_link: '소셜 링크 생성',
+    create_experience: '경력 생성',
+    update_experience: '경력 수정',
+    delete_experience: '경력 삭제',
+    create_interest: '관심사 생성',
+    update_interest: '관심사 수정',
+    delete_interest: '관심사 삭제'
+};
+
+const actionVerbs = {
+    create: '생성',
+    update: '수정',
+    delete: '삭제',
+    publish: '발행',
+    feature: '추천 변경',
+    upload: '업로드',
+    mark: '상태 변경',
+    toggle: '추천 변경',
+    change: '변경'
+};
+
+const resourceLabels = {
+    admin: '관리자',
+    users: '관리자',
+    projects: '프로젝트',
+    blog: '블로그',
+    posts: '블로그',
+    tags: '태그',
+    contacts: '연락처',
+    settings: '설정',
+    images: '이미지',
+    uploads: '파일',
+    skills: '기술 스택',
+    'personal-info': '개인 정보',
+    'social-links': '소셜 링크',
+    experiences: '경력',
+    interests: '관심사'
+};
+
+const getClientIp = (req) => {
+    const ip = req.ip || req.connection.remoteAddress || null;
+    return ip && ip.startsWith('::ffff:') ? ip.substring(7) : ip;
+};
+
+const summarizeUserAgent = (userAgent = '') => {
+    if (!userAgent) {
+        return null;
+    }
+
+    const os = userAgent.includes('Windows') ? 'Windows'
+        : userAgent.includes('Macintosh') || userAgent.includes('Mac OS X') ? 'macOS'
+            : userAgent.includes('Android') ? 'Android'
+                : userAgent.includes('iPhone') || userAgent.includes('iPad') ? 'iOS'
+                    : userAgent.includes('Linux') ? 'Linux'
+                        : 'Unknown';
+
+    const browser = userAgent.includes('Edg/') ? 'Edge'
+        : userAgent.includes('Chrome') ? 'Chrome'
+            : userAgent.includes('Firefox') ? 'Firefox'
+                : userAgent.includes('Safari') ? 'Safari'
+                    : 'Unknown';
+
+    return `${os} | ${browser}`;
+};
+
+const inferResourceType = (req) => {
+    const pathSegments = String(req.originalUrl || '')
+        .split('?')[0]
+        .split('/')
+        .filter(Boolean);
+    const apiIndex = pathSegments.indexOf('api');
+    const apiPath = apiIndex >= 0 ? pathSegments.slice(apiIndex + 1) : pathSegments;
+
+    if (apiPath[0] === 'admin' && apiPath[1]) {
+        return apiPath[1];
+    }
+    if (apiPath[0]) {
+        return apiPath[0];
+    }
+
+    return req.baseUrl.split('/').pop() || 'unknown';
+};
+
+const getResourceId = (req) => (
+    req.params.id ||
+    req.params.slug ||
+    req.params.postId ||
+    req.params.projectId ||
+    req.body?.id ||
+    null
+);
+
+const buildActivityDetails = (action, req, resourceType, resourceId) => {
+    const resourceLabel = resourceLabels[resourceType] || resourceType;
+    const actionPrefix = action.split('_')[0];
+    const label = actionVerbs[actionPrefix] || actionLabels[action] || action.replace(/_/g, ' ');
+    const safeBody = logger.redact(req.body || {});
+    const changedFields = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)
+        ? Object.keys(safeBody).filter(key => safeBody[key] !== undefined)
+        : [];
+
+    const targetName = safeBody.title || safeBody.name || safeBody.username || safeBody.platform;
+    const target = targetName || (resourceId ? `#${resourceId}` : '');
+    const fieldText = changedFields.length > 0 ? ` 변경 필드: ${changedFields.join(', ')}` : '';
+
+    return `${resourceLabel} ${label}${target ? `: ${target}` : ''}${fieldText}`;
+};
+
 /**
- * @description 인증 과정의 활동을 기록한다.
-  * @param {*} action 입력값
- * @returns {any} 처리 결과
+ * @description 성공한 관리자 변경 작업을 DB 감사 로그에 기록한다.
+ * @param {string} action 액션 코드
+ * @returns {Function} Express 미들웨어
  */
 const logActivity = (action) => {
-    return async (req, res, next) => {
-        const originalSend = res.send;
-        
-        res.send = function(data) {
-            if (res.statusCode < 400 && req.admin) {
-                setImmediate(async () => {
-                    try {
-                        let resourceType = req.baseUrl.split('/').pop(); // URL에서 리소스 타입 추출
-                        
-                        const resourceTypeMap = {
-                            'admin': '사용자',
-                            'users': '사용자',
-                            'projects': '프로젝트',
-                            'blog': '블로그',
-                            'posts': '블로그',
-                            'tags': '태그',
-                            'contacts': '연락처',
-                            'settings': '설정',
-                            'images': '이미지',
-                            'uploads': '파일',
-                            'skills': '기술 스택'
-                        };
-                        
-                        resourceType = resourceTypeMap[resourceType] || resourceType;
-                        const resourceId = req.params.id || req.body.id;
-                        
-                        let cleanIp = req.ip || req.connection.remoteAddress;
-                        if (cleanIp && cleanIp.startsWith('::ffff:')) {
-                            cleanIp = cleanIp.substring(7);
-                        }
-                        
-                        let cleanUserAgent = req.headers['user-agent'] || '';
-                        if (cleanUserAgent) {
-                            try {
-                                let os = 'Unknown';
-                                if (cleanUserAgent.includes('Windows')) {
-                                    if (cleanUserAgent.includes('Windows NT 10.0')) os = 'Windows 10/11';
-                                    else if (cleanUserAgent.includes('Windows NT 6.3')) os = 'Windows 8.1';
-                                    else if (cleanUserAgent.includes('Windows NT 6.2')) os = 'Windows 8';
-                                    else if (cleanUserAgent.includes('Windows NT 6.1')) os = 'Windows 7';
-                                    else os = 'Windows';
-                                } else if (cleanUserAgent.includes('Macintosh')) {
-                                    if (cleanUserAgent.includes('Mac OS X 10_15')) os = 'macOS 10.15';
-                                    else if (cleanUserAgent.includes('Mac OS X 11_')) os = 'macOS 11';
-                                    else if (cleanUserAgent.includes('Mac OS X 12_')) os = 'macOS 12';
-                                    else if (cleanUserAgent.includes('Mac OS X 13_')) os = 'macOS 13';
-                                    else if (cleanUserAgent.includes('Mac OS X 14_')) os = 'macOS 14';
-                                    else os = 'macOS';
-                                } else if (cleanUserAgent.includes('Linux')) {
-                                    if (cleanUserAgent.includes('Android')) {
-                                        const androidVersion = cleanUserAgent.match(/Android (\d+)/);
-                                        os = androidVersion ? `Android ${androidVersion[1]}` : 'Android';
-                                    } else {
-                                        os = 'Linux';
-                                    }
-                                } else if (cleanUserAgent.includes('iPhone')) {
-                                    const iosVersion = cleanUserAgent.match(/OS (\d+)_/);
-                                    os = iosVersion ? `iOS ${iosVersion[1]}` : 'iOS';
-                                } else if (cleanUserAgent.includes('iPad')) {
-                                    const iosVersion = cleanUserAgent.match(/OS (\d+)_/);
-                                    os = iosVersion ? `iPadOS ${iosVersion[1]}` : 'iPadOS';
-                                }
-                                
-                                let browser = 'Unknown';
-                                if (cleanUserAgent.includes('Chrome')) {
-                                    const chromeVersion = cleanUserAgent.match(/Chrome\/(\d+)/);
-                                    browser = chromeVersion ? `Chrome ${chromeVersion[1]}` : 'Chrome';
-                                } else if (cleanUserAgent.includes('Firefox')) {
-                                    const firefoxVersion = cleanUserAgent.match(/Firefox\/(\d+)/);
-                                    browser = firefoxVersion ? `Firefox ${firefoxVersion[1]}` : 'Firefox';
-                                } else if (cleanUserAgent.includes('Safari') && !cleanUserAgent.includes('Chrome')) {
-                                    const safariVersion = cleanUserAgent.match(/Version\/(\d+)/);
-                                    browser = safariVersion ? `Safari ${safariVersion[1]}` : 'Safari';
-                                } else if (cleanUserAgent.includes('Edge')) {
-                                    const edgeVersion = cleanUserAgent.match(/Edge\/(\d+)/);
-                                    browser = edgeVersion ? `Edge ${edgeVersion[1]}` : 'Edge';
-                                } else if (cleanUserAgent.includes('Opera')) {
-                                    const operaVersion = cleanUserAgent.match(/Opera\/(\d+)/);
-                                    browser = operaVersion ? `Opera ${operaVersion[1]}` : 'Opera';
-                                }
-                                
-                                cleanUserAgent = `${os} | ${browser}`;
-                            } catch (error) {
-                                if (cleanUserAgent.length > 50) {
-                                    cleanUserAgent = cleanUserAgent.substring(0, 50) + '...';
-                                }
-                            }
-                        }
-                        
-                        /**
-                         * @description 인증 액션의 한국어명을 조회한다.
-                          * @param {*} actionName 입력값
-                         * @returns {any} 처리 결과
-                         */
-                        const getActionKoreanName = (actionName) => {
-                            const actionMap = {
-                                'admin_login': '로그인',
-                                'admin_login_failed': '로그인 실패',
-                                'admin_logout': '로그아웃',
-                                'change_password': '비밀번호 변경',
-                                'view_profile': '프로필 조회',
-                                
-                                'view_dashboard': '대시보드',
-                                'view_activity_logs': '로그 조회',
-                                
-                                'create_blog_post': '블로그 생성',
-                                'update_blog_post': '블로그 수정',
-                                'delete_blog_post': '블로그 삭제',
-                                'publish_blog_post': '블로그 발행',
-                                'view_blog_posts': '블로그 목록',
-                                
-                                'create_project': '프로젝트 생성',
-                                'update_project': '프로젝트 수정',
-                                'delete_project': '프로젝트 삭제',
-                                'view_projects': '프로젝트 목록',
-                                'view_project_detail': '프로젝트 상세',
-                                
-                                'create_tag': '태그 생성',
-                                'update_tag': '태그 수정',
-                                'delete_tag': '태그 삭제',
-                                'view_tags': '태그 목록',
-                                
-                                'create_admin': '관리자 생성',
-                                'update_admin': '관리자 수정',
-                                'delete_admin': '관리자 삭제',
-                                'create_user': '사용자 생성',
-                                'update_user': '사용자 수정',
-                                'delete_user': '사용자 삭제',
-                                
-                                'view_contacts': '연락처 조회',
-                                'mark_contact_read': '연락처 읽음',
-                                'mark_contact_unread': '연락처 읽지 않음',
-                                
-                                'upload_image': '이미지 업로드',
-                                'delete_image': '이미지 삭제',
-                                
-                                'update_settings': '설정 수정'
-                            };
-                            
-                            return actionMap[actionName] || actionName.replace(/_/g, ' ');
-                        };
-                        
-                        let activityDetails = '';
-                        
-                        if (action) {
-                            if (action === 'view_activity_logs') {
-                                activityDetails = '활동 로그 조회';
-                            } else if (action === 'create_blog_post') {
-                                activityDetails = '새 블로그 포스트 생성';
-                            } else if (action === 'update_blog_post') {
-                                const postTitle = req.body.title || `#${resourceId}`;
-                                let changeDetails = [];
-                                
-                                if (req.body.title) {
-                                    changeDetails.push('제목');
-                                }
-                                
-                                if (req.body.content) {
-                                    changeDetails.push('내용');
-                                }
-                                
-                                if (req.body.is_published !== undefined) {
-                                    changeDetails.push(req.body.is_published ? '공개로 변경' : '비공개로 변경');
-                                }
-                                
-                                if (req.body.tags) {
-                                    changeDetails.push('태그');
-                                }
-                                
-                                if (req.body.meta_description || req.body.meta_keywords) {
-                                    changeDetails.push('메타 정보');
-                                }
-                                
-                                if (changeDetails.length > 0) {
-                                    activityDetails = `블로그 포스트 수정: ${postTitle} (${changeDetails.join(', ')})`;
-                                } else {
-                                    activityDetails = `블로그 포스트 수정: ${postTitle}`;
-                                }
-                            } else if (action === 'delete_blog_post') {
-                                const postTitle = req.body.title || `#${resourceId}`;
-                                activityDetails = `블로그 포스트 삭제: ${postTitle}`;
-                            } else if (action === 'view_blog_posts') {
-                                activityDetails = '블로그 포스트 목록 조회';
-                            } else if (action === 'view_projects') {
-                                activityDetails = '프로젝트 목록 조회';
-                            } else if (action === 'view_project_detail') {
-                                activityDetails = '프로젝트 상세 조회';
-                            } else if (action === 'view_contacts') {
-                                activityDetails = '연락처 메시지 조회';
-                            } else if (action === 'view_tags') {
-                                activityDetails = '태그 목록 조회';
-                            } else if (action === 'view_dashboard') {
-                                activityDetails = '대시보드 조회';
-                            } else if (action === 'view_profile') {
-                                const username = req.admin.username || '알 수 없음';
-                                activityDetails = `${username} 프로필 정보 조회`;
-                            } else if (action === 'view_settings') {
-                                activityDetails = '사이트 설정 조회';
-                            } else if (action === 'create_project') {
-                                activityDetails = '새 프로젝트 생성';
-                            } else if (action === 'update_project') {
-                                const projectTitle = req.body.title || `#${resourceId}`;
-                                let changeDetails = [];
-                                
-                                if (req.body.title) {
-                                    changeDetails.push('제목');
-                                }
-                                
-                                if (req.body.description) {
-                                    changeDetails.push('설명');
-                                }
-                                
-                                if (req.body.tech_stack) {
-                                    changeDetails.push('기술 스택');
-                                }
-                                
-                                if (req.body.github_url || req.body.live_url) {
-                                    changeDetails.push('링크');
-                                }
-                                
-                                if (req.body.is_featured !== undefined) {
-                                    changeDetails.push(req.body.is_featured ? '대표 프로젝트로 설정' : '대표 프로젝트 해제');
-                                }
-                                
-                                if (changeDetails.length > 0) {
-                                    activityDetails = `프로젝트 수정: ${projectTitle} (${changeDetails.join(', ')})`;
-                                } else {
-                                    activityDetails = `프로젝트 수정: ${projectTitle}`;
-                                }
-                            } else if (action === 'delete_project') {
-                                const projectTitle = req.body.title || `#${resourceId}`;
-                                activityDetails = `프로젝트 삭제: ${projectTitle}`;
-                            } else if (action === 'create_tag') {
-                                const tagName = req.body.name || '이름 없음';
-                                activityDetails = `새 태그 생성: ${tagName}`;
-                            } else if (action === 'update_tag') {
-                                const tagName = req.body.name || `#${resourceId}`;
-                                let changeDetails = [];
-                                
-                                if (req.body.name) {
-                                    changeDetails.push('이름');
-                                }
-                                
-                                if (req.body.description) {
-                                    changeDetails.push('설명');
-                                }
-                                
-                                if (req.body.color) {
-                                    changeDetails.push('색상');
-                                }
-                                
-                                if (req.body.type) {
-                                    changeDetails.push(`타입: ${req.body.type}`);
-                                }
-                                
-                                if (changeDetails.length > 0) {
-                                    activityDetails = `태그 수정: ${tagName} (${changeDetails.join(', ')})`;
-                                } else {
-                                    activityDetails = `태그 수정: ${tagName}`;
-                                }
-                            } else if (action === 'delete_tag') {
-                                const tagName = req.body.name || `#${resourceId}`;
-                                activityDetails = `태그 삭제: ${tagName}`;
-                            } else if (action === 'create_user') {
-                                const username = req.body.username || '사용자명 없음';
-                                activityDetails = `새 사용자 생성: ${username}`;
-                            } else if (action === 'update_user') {
-                                const username = req.body.username || `#${resourceId}`;
-                                let changeDetails = [];
-                                
-                                if (req.body.username) {
-                                    changeDetails.push('사용자명');
-                                }
-                                
-                                if (req.body.email) {
-                                    changeDetails.push('이메일');
-                                }
-                                
-                                if (req.body.full_name) {
-                                    changeDetails.push('전체 이름');
-                                }
-                                
-                                if (req.body.role) {
-                                    changeDetails.push(`역할: ${req.body.role}`);
-                                }
-                                
-                                if (changeDetails.length > 0) {
-                                    activityDetails = `사용자 정보 수정: ${username} (${changeDetails.join(', ')})`;
-                                } else {
-                                    activityDetails = `사용자 정보 수정: ${username}`;
-                                }
-                            } else if (action === 'delete_user') {
-                                const username = req.body.username || `#${resourceId}`;
-                                activityDetails = `사용자 삭제: ${username}`;
-                            } else if (action === 'mark_contact_read') {
-                                activityDetails = `연락처 #${resourceId} 읽음 처리`;
-                            } else if (action === 'mark_contact_unread') {
-                                activityDetails = `연락처 #${resourceId} 읽지 않음 처리`;
-                            } else {
-                                activityDetails = `${action.replace(/_/g, ' ')}`;
-                            }
-                        } else {
-                            const method = req.method.toLowerCase();
-                            if (method === 'post') {
-                                activityDetails = `새 ${resourceType} 생성`;
-                            } else if (method === 'put' || method === 'patch') {
-                                activityDetails = `${resourceType} 수정: #${resourceId || 'ID 없음'}`;
-                            } else if (method === 'delete') {
-                                activityDetails = `${resourceType} 삭제: #${resourceId || 'ID 없음'}`;
-                            } else if (method === 'get') {
-                                activityDetails = `${resourceType} 조회: #${resourceId || 'ID 없음'}`;
-                            } else {
-                                activityDetails = `${method} ${resourceType}`;
-                            }
-                        }
-
-                        const koreanActionName = getActionKoreanName(action || `${req.method.toLowerCase()}_${resourceType}`);
-
-                        await AdminActivityLogs.log(
-                            req.admin.id,
-                            koreanActionName,  // 한글 액션명 사용
-                            resourceType,
-                            resourceId,
-                            activityDetails,  // JSON 대신 깔끔한 텍스트 전달
-                            cleanIp, // 정리된 IP 주소 사용
-                            cleanUserAgent // 정리된 User Agent 사용
-                        );
-                    } catch (error) {
-                        logger.error('활동 로그 기록 실패', { error: error.message, stack: error.stack });
-                    }
-                });
+    return (req, res, next) => {
+        res.on('finish', () => {
+            if (res.statusCode >= 400 || !req.admin) {
+                return;
             }
-            
-            originalSend.call(this, data);
-        };
+
+            setImmediate(async () => {
+                try {
+                    const resourceType = inferResourceType(req);
+                    const resourceId = getResourceId(req);
+                    const details = buildActivityDetails(action, req, resourceType, resourceId);
+
+                    await AdminActivityLogs.log(
+                        req.admin.id,
+                        action,
+                        resourceType,
+                        resourceId,
+                        details,
+                        getClientIp(req),
+                        summarizeUserAgent(req.headers['user-agent'])
+                    );
+                } catch (error) {
+                    logger.error('활동 로그 기록 실패', {
+                        requestId: req.requestId,
+                        action,
+                        error: error.message,
+                        stack: error.stack
+                    });
+                }
+            });
+        });
 
         next();
     };

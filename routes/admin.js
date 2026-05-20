@@ -174,8 +174,8 @@ router.post('/login', async (req, res) => {
 
         await AdminActivityLogs.log(
             result.user.id,
-            '회원',
-            '인증',
+            'admin_login',
+            'auth',
             null,
             `${username} 로그인`,
             req.ip,
@@ -199,8 +199,8 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         await AdminActivityLogs.log(
             null,
-            '회원',
-            '인증',
+            'admin_login_failed',
+            'auth',
             null,
             `${req.body.username} 로그인 실패`,
             req.ip,
@@ -268,8 +268,8 @@ router.post('/logout', authenticateToken, async (req, res) => {
 
         await AdminActivityLogs.log(
             req.admin.id,
-            '회원',
-            '인증',
+            'admin_logout',
+            'auth',
             null,
             '로그아웃',
             req.ip,
@@ -2100,129 +2100,6 @@ router.put('/settings',
 
 /**
  * @swagger
- * /api/admin/logs:
- *   get:
- *     summary: 관리자 활동 로그 조회
- *     tags: ['Admin - Logs']
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: admin_id
- *         schema:
- *           type: integer
- *       - in: query
- *         name: action
- *         schema:
- *           type: string
- *       - in: query
- *         name: resource
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 로그 조회 성공
- *       500:
- *         description: 서버 오류
- */
-router.get('/logs', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
-    try {
-        const { limit, page, admin_id, action, resource } = req.query;
-        const pageLimit = parseInt(limit) || 50;
-        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
-
-        let logs;
-        if (admin_id) {
-            logs = await AdminActivityLogs.getByAdmin(admin_id, pageLimit, offset);
-        } else if (action) {
-            logs = await AdminActivityLogs.getByAction(action, pageLimit);
-        } else {
-            logs = await AdminActivityLogs.getAll(pageLimit, offset);
-        }
-
-        res.json({
-            success: true,
-            data: logs,
-            pagination: {
-                page: parseInt(page) || 1,
-                limit: pageLimit,
-                total: logs.length
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: '활동 로그를 가져오는데 실패했습니다.'
-        });
-    }
-});
-
-/**
- * @swagger
- * /api/admin/logs/stats:
- *   get:
- *     summary: 활동 로그 통계 조회
- *     tags: ['Admin - Logs']
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: days
- *         schema:
- *           type: integer
- *           default: 30
- *     responses:
- *       200:
- *         description: 통계 조회 성공
- *       500:
- *         description: 서버 오류
- */
-router.get('/logs/stats', authenticateToken, requireRole(['super_admin', 'admin']), async (req, res) => {
-    try {
-        const { days } = req.query;
-        const period = parseInt(days) || 30;
-
-        const [
-            generalStats,
-            activityStats,
-            resourceStats,
-            dailyStats
-        ] = await Promise.all([
-            AdminActivityLogs.getStats(period),
-            AdminActivityLogs.getActivityStats(period),
-            AdminActivityLogs.getResourceStats(period),
-            AdminActivityLogs.getDailyStats(period)
-        ]);
-
-        res.json({
-            success: true,
-            data: {
-                general: generalStats,
-                activities: activityStats,
-                resources: resourceStats,
-                daily: dailyStats
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: '활동 통계를 가져오는데 실패했습니다.'
-        });
-    }
-});
-
-/**
- * @swagger
  * /api/admin/tags:
  *   get:
  *     summary: 태그 목록 조회 (관리자)
@@ -2572,6 +2449,8 @@ router.get('/logs',
                 page = 1,
                 limit = 50
             } = req.query;
+            const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+            const pageLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 1000);
 
             const filters = {
                 search,
@@ -2579,8 +2458,8 @@ router.get('/logs',
                 action,
                 resource_type,
                 date_filter,
-                page: parseInt(page),
-                limit: parseInt(limit)
+                page: pageNumber,
+                limit: pageLimit
             };
 
             const ActivityLogs = require('../models/activity-logs');
@@ -2591,10 +2470,10 @@ router.get('/logs',
                 success: true,
                 data: logs,
                 pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
+                    page: pageNumber,
+                    limit: pageLimit,
                     total,
-                    pages: Math.ceil(total / parseInt(limit))
+                    pages: Math.ceil(total / pageLimit)
                 }
             });
 

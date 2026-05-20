@@ -488,10 +488,10 @@ curl -X GET https://localhost:3001/api/blog/posts
 
 ```bash
 # 상세 로그 활성화
-LOG_LEVEL=debug npm run dev
+LOG_LEVEL=debug ENABLE_VERBOSE_LOGS=true npm run dev
 
-# 특정 모듈 디버깅
-DEBUG=portfolio:* npm run dev
+# 느린 요청 기준 조정
+SLOW_REQUEST_MS=500 npm run dev
 ```
 
 ## 모니터링
@@ -529,7 +529,9 @@ curl https://localhost:3001/health
 
 - **일별 로그 로테이션**: 자동으로 오래된 로그 압축/삭제
 - **로그 레벨**: error, warn, info, debug
-- **구조화된 로깅**: JSON 형식으로 상세 정보 기록
+- **요청 추적**: 모든 응답에 `X-Request-Id`를 부여하고 관리자/변경/오류/느린 요청을 요약 기록
+- **민감정보 보호**: password, token, secret 계열 필드는 로그 저장 전에 마스킹
+- **상세 로그**: `ENABLE_VERBOSE_LOGS=true`일 때 공개 조회와 DB 성공 로그까지 추가 기록
 
 ## 기여하기
 
