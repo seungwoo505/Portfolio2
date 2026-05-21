@@ -109,19 +109,19 @@ const tools = [
 ];
 
 const toolHandlers = {
-    get_profile: async () => apiGet('/personal-info'),
-    list_projects: async (args) => apiGet('/projects', normalizeListArgs(args, ['tags', 'skills'])),
-    get_project: async (args) => apiGet(`/projects/slug/${encodeURIComponent(requireString(args, 'slug'))}`),
-    list_blog_posts: async (args) => apiGet('/blog/posts', normalizeListArgs(args, ['tags'])),
-    get_blog_post: async (args) => apiGet(`/blog/posts/${encodeURIComponent(requireString(args, 'slug'))}`),
-    list_skills: async (args) => apiGet(args.featured ? '/skills/featured' : '/skills'),
+    get_profile: async () => apiGet('/public/profile'),
+    list_projects: async (args) => apiGet('/public/projects', normalizeListArgs(args, ['tags', 'skills'])),
+    get_project: async (args) => apiGet(`/public/projects/${encodeURIComponent(requireString(args, 'slug'))}`),
+    list_blog_posts: async (args) => apiGet('/public/posts', normalizeListArgs(args, ['tags'])),
+    get_blog_post: async (args) => apiGet(`/public/posts/${encodeURIComponent(requireString(args, 'slug'))}`),
+    list_skills: async (args) => apiGet(args.featured ? '/public/skills/featured' : '/public/skills'),
     list_experiences: async (args) => {
         if (args.timeline) {
-            return apiGet('/experiences/timeline');
+            return apiGet('/public/experiences/timeline');
         }
-        return apiGet('/experiences', pickDefined({ type: args.type }));
+        return apiGet('/public/experiences', pickDefined({ type: args.type }));
     },
-    list_interests: async (args) => apiGet('/interests', pickDefined({ category: args.category }))
+    list_interests: async (args) => apiGet('/public/interests', pickDefined({ category: args.category }))
 };
 
 let inputBuffer = Buffer.alloc(0);

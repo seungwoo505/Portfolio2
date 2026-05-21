@@ -263,23 +263,31 @@ ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,webp,pdf,doc,docx
 
 ```bash
 # 포트폴리오 정보
-GET /api/personal-info          # 개인 정보
-GET /api/social-links           # 소셜 링크
-GET /api/skills                 # 기술 스택
-GET /api/projects               # 프로젝트 목록
-GET /api/projects/:id           # 특정 프로젝트
-GET /api/experiences            # 경력/경험
-GET /api/interests              # 관심사
+GET /api/public/profile         # 개인 정보
+GET /api/public/social-links    # 소셜 링크
+GET /api/public/skills          # 기술 스택
+GET /api/public/skills/featured # 주요 기술 스택
+GET /api/public/projects        # 프로젝트 목록
+GET /api/public/projects/:slug  # 특정 프로젝트
+POST /api/public/projects/:slug/view # 프로젝트 조회수 증가
+GET /api/public/experiences     # 경력/경험
+GET /api/public/experiences/timeline # 타임라인
+GET /api/public/interests       # 관심사
 
 # 블로그
-GET /api/blog/posts             # 발행된 블로그 포스트
-GET /api/blog/posts/:id         # 특정 포스트
-GET /api/blog/posts/tag/:tag    # 태그별 포스트
+GET /api/public/posts           # 발행된 블로그 포스트
+GET /api/public/posts/:slug     # 특정 포스트
+GET /api/public/posts/tag/:tag  # 태그별 포스트
+POST /api/public/posts/:slug/view # 포스트 조회수 증가
+
 # 기타
-GET /api/settings               # 사이트 설정
-POST /api/contact               # 연락처 메시지
+GET /api/public/tags            # 공개 태그
+GET /api/public/settings        # 공개 사이트 설정
+POST /api/public/contact        # 연락처 메시지
 GET /api/health                 # 헬스체크
 ```
+
+기존 `/api/projects`, `/api/blog/posts` 등의 공개 경로는 점진 제거 대상입니다. 신규 프론트와 MCP는 `/api/public/*` 경로를 기준으로 연동합니다.
 
 #### ** 관리자 API (JWT 인증 필요)**
 
@@ -323,6 +331,24 @@ PUT /api/admin/settings         # 설정 업데이트
 ```
 
 ## 데이터베이스 스키마
+
+### **마이그레이션**
+
+신규 스키마는 `migrations/001_schema.sql` 기준으로 생성합니다. 초기 관리자 계정은 다음 환경 변수를 설정한 뒤 `npm run migrate`로 생성합니다.
+
+```env
+ADMIN_BOOTSTRAP_USERNAME=admin
+ADMIN_BOOTSTRAP_EMAIL=admin@example.com
+ADMIN_BOOTSTRAP_PASSWORD=change_me
+```
+
+기존 DB에서 신규 DB로 콘텐츠만 이전할 때는 기존 DB와 신규 DB를 분리해서 지정합니다.
+
+```bash
+SOURCE_DB_SCHEMA=portfolio_old TARGET_DB_SCHEMA=portfolio_new npm run migrate:content
+```
+
+콘텐츠 이전 대상은 프로필, 소셜 링크, 스킬, 프로젝트, 블로그, 태그, 경력, 관심사, 공개 설정입니다. 관리자 활동 로그, 문의 메시지, 조회 통계는 초기화합니다.
 
 ### **주요 테이블**
 
