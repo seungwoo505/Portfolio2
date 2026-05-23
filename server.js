@@ -86,6 +86,29 @@ const loginLimiter = rateLimit({
         });
     }
 });
+const contactLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: Number(process.env.CONTACT_RATE_LIMIT_MAX || 5),
+    message: {
+      success: false,
+      error: "문의 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        logger.warn('Contact rate limit exceeded', {
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+            url: req.originalUrl,
+            method: req.method
+        });
+        res.status(429).json({
+            success: false,
+            error: "문의 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+            retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+        });
+    }
+});
 app.use(generalLimiter);
 app.use(compression({
     level: 7,
@@ -230,6 +253,7 @@ const swaggerSpec = swaggerJsdoc({
                 - 일반 API: 1분에 300회
                 - 관리자 API: 1분에 100회
                 - 로그인 API: 15분에 5회
+                - 문의 API: 15분에 5회
                 
                 ## API 태그
                 - **Authentication**: 로그인/로그아웃, 토큰 관리
@@ -556,6 +580,7 @@ app.get('/health', (req, res) => {
         }
     });
 });
+app.use('/api/public/contact', contactLimiter);
 app.use('/api/public', publicRoutes);
 app.use('/api/admin/login', loginLimiter);
 app.use('/api/admin', adminLimiter, adminRoutes);
