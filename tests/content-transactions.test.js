@@ -135,6 +135,23 @@ test('BlogPosts._delete removes post tag usage and recalculates tag counts in on
     assert.equal(hasOperation(fixture.operations, 'update tags t left join'), true);
 });
 
+test('BlogPosts._update can explicitly clear nullable fields and tags', async () => {
+    const fixture = createModelFixture(['models', 'blog-posts.js']);
+
+    await fixture.model._update(10, {
+        featured_image: null,
+        meta_description: null,
+        tags: []
+    });
+
+    const updateQuery = fixture.operations.find((operation) => operation.sql.startsWith('update blog_posts set'));
+    assert.ok(updateQuery);
+    assert.equal(updateQuery.sql.includes('featured_image = ?'), true);
+    assert.equal(updateQuery.sql.includes('meta_description = ?'), true);
+    assert.deepEqual(updateQuery.params, [null, null, 10]);
+    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'blog_post'"), true);
+});
+
 test('Projects.create writes the project and tags inside one transaction connection', async () => {
     const fixture = createModelFixture(['models', 'projects.js']);
 
@@ -163,6 +180,17 @@ test('Projects.getAll binds pagination values instead of interpolating them', as
     assert.ok(listQuery);
     assert.equal(listQuery.sql.includes('limit ? offset ?'), true);
     assert.deepEqual(listQuery.params, [25, 50]);
+});
+
+test('Projects.update can explicitly clear demo_url through project_url', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.update(20, { project_url: '' });
+
+    const updateQuery = fixture.operations.find((operation) => operation.sql.startsWith('update projects set'));
+    assert.ok(updateQuery);
+    assert.equal(updateQuery.sql.includes('demo_url = ?'), true);
+    assert.deepEqual(updateQuery.params, [null, 20]);
 });
 
 test('Projects.delete removes child rows and recalculates tag counts in one transaction', async () => {

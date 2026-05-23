@@ -18,6 +18,10 @@ const defaultQueryContext = {
     querySingle: executeQuerySingle
 };
 
+const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+const normalizeOptionalUrl = (value) => (value === '' ? null : value);
+
 const Projects = {
     /**
      * @description 프로젝트 제목을 기반으로 URL 슬러그를 생성한다.
@@ -478,7 +482,9 @@ const Projects = {
     async update(id, data) {
         const { title, slug: providedSlug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
-        const finalDemoUrl = demo_url || project_url;
+        const finalDemoUrl = hasOwn(data, 'demo_url')
+            ? demo_url
+            : (hasOwn(data, 'project_url') ? project_url : undefined);
         
         await executeTransaction(async (connection) => {
             const db = createQueryContext(connection);
@@ -515,7 +521,7 @@ const Projects = {
             if (meta_description !== undefined) updateFields.push('meta_description = ?'), updateValues.push(meta_description);
             if (thumbnail_image !== undefined) updateFields.push('thumbnail_image = ?'), updateValues.push(thumbnail_image);
             if (featured_image !== undefined) updateFields.push('featured_image = ?'), updateValues.push(featured_image);
-            if (finalDemoUrl !== undefined) updateFields.push('demo_url = ?'), updateValues.push(finalDemoUrl);
+            if (finalDemoUrl !== undefined) updateFields.push('demo_url = ?'), updateValues.push(normalizeOptionalUrl(finalDemoUrl));
             if (github_url !== undefined) updateFields.push('github_url = ?'), updateValues.push(github_url);
             if (start_date !== undefined) updateFields.push('start_date = ?'), updateValues.push(start_date);
             if (end_date !== undefined) updateFields.push('end_date = ?'), updateValues.push(end_date);

@@ -357,6 +357,8 @@ const BlogPosts = {
         await executeTransaction(async (connection) => {
             const db = createQueryContext(connection);
             let finalSlug = null;
+            const updateFields = [];
+            const updateValues = [];
 
             if (slug !== undefined || title !== undefined) {
                 finalSlug = await createUniqueSlug({
@@ -371,47 +373,43 @@ const BlogPosts = {
                 });
             }
 
-            const cleanData = {
-                title: title === undefined ? null : title,
-                slug: finalSlug,
-                excerpt: excerpt === undefined ? null : excerpt,
-                content: content === undefined ? null : content,
-                featured_image: featured_image === undefined ? null : featured_image,
-                is_published: is_published === undefined ? null : is_published,
-                is_featured: is_featured === undefined ? null : is_featured,
-                meta_title: meta_title === undefined ? null : meta_title,
-                meta_description: meta_description === undefined ? null : meta_description,
-                meta_keywords: meta_keywords === undefined ? null : meta_keywords
+            const pushField = (field, value) => {
+                if (value !== undefined) {
+                    updateFields.push(`${field} = ?`);
+                    updateValues.push(value);
+                }
             };
 
-            const reading_time = cleanData.content ? Math.ceil(cleanData.content.split(' ').length / 200) : null;
+            pushField('title', title);
+            if (slug !== undefined || title !== undefined) {
+                pushField('slug', finalSlug);
+            }
+            pushField('excerpt', excerpt);
+            pushField('featured_image', featured_image);
+            pushField('is_published', is_published);
+            pushField('is_featured', is_featured);
+            pushField('meta_title', meta_title);
+            pushField('meta_description', meta_description);
+            pushField('meta_keywords', meta_keywords);
 
-            let query = `
-                UPDATE blog_posts
-                SET title = COALESCE(?, title),
-                    slug = COALESCE(?, slug),
-                    excerpt = COALESCE(?, excerpt),
-                    content = COALESCE(?, content),
-                    featured_image = COALESCE(?, featured_image),
-                    is_published = COALESCE(?, is_published),
-                    is_featured = COALESCE(?, is_featured),
-                    meta_title = COALESCE(?, meta_title),
-                    meta_description = COALESCE(?, meta_description),
-                    meta_keywords = COALESCE(?, meta_keywords),
-                    reading_time = COALESCE(?, reading_time),
-                    updated_at = NOW()
-            `;
-
-            if (is_published !== undefined) {
-                query += `, published_at = ${is_published ? 'NOW()' : 'NULL'}`;
+            if (content !== undefined) {
+                pushField('content', content);
+                pushField('reading_time', content ? Math.ceil(content.split(' ').length / 200) : null);
             }
 
-            query += ` WHERE id = ?`;
+            if (is_published !== undefined) {
+                updateFields.push(`published_at = ${is_published ? 'NOW()' : 'NULL'}`);
+            }
 
-            await db.query(query, [cleanData.title, cleanData.slug, cleanData.excerpt, cleanData.content, cleanData.featured_image, cleanData.is_published, cleanData.is_featured, cleanData.meta_title, cleanData.meta_description, cleanData.meta_keywords, reading_time, id]);
+            if (updateFields.length > 0) {
+                updateFields.push('updated_at = NOW()');
+                updateValues.push(id);
 
-            if (tags) {
-                await this.updateTags(id, tags, db);
+                await db.query(`UPDATE blog_posts SET ${updateFields.join(', ')} WHERE id = ?`, updateValues);
+            }
+
+            if (tags !== undefined) {
+                await this.updateTags(id, tags || [], db);
             }
         });
 
