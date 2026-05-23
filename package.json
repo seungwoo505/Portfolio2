@@ -10,7 +10,9 @@
     "migrate": "node scripts/setup-database.js",
     "migrate:content": "node migrations/content-migration.js",
     "migrate:ip": "node scripts/run-ip-useragent-migration.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check": "node scripts/check.js",
+    "check:mcp": "npm --prefix mcp run smoke",
+    "test": "npm run check"
   },
   "keywords": [
     "blog",

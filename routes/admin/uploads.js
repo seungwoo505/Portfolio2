@@ -2,64 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
-
-
-const multer = require('multer');
-const path = require('path');
 const fs = require('fs');
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const uploadPath = path.join(__dirname, '..', '..', 'uploads', 'images');
-
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-
-        cb(null, uploadPath);
-    },
-    filename: function (req, file, cb) {
-        const timestamp = Date.now();
-        const ext = path.extname(file.originalname).toLowerCase();
-        let baseName = path.basename(file.originalname, ext);
-
-        baseName = baseName
-            .replace(/[^a-zA-Z0-9가-힣]/g, '')
-            .substring(0, 20);
-
-        if (!baseName) {
-            baseName = 'image';
-        }
-
-        const finalName = timestamp + '-' + baseName + ext;
-
-        cb(null, finalName);
-    }
-});
-
-const fileFilter = (req, file, cb) => {
-    const allowedMimes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp'
-    ];
-
-    if (allowedMimes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('지원되지 않는 이미지 형식입니다.'), false);
-    }
-};
-
-const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024
-    }
-});
+const { upload, getUploadedImagePath } = require('../../utils/upload');
 
 /**
  * @swagger
@@ -160,7 +104,7 @@ router.delete('/upload/image/:filename',
     async (req, res) => {
         try {
             const filename = req.params.filename;
-            const filePath = path.join(__dirname, '..', '..', 'uploads', 'images', filename);
+            const filePath = getUploadedImagePath(filename);
 
             if (!fs.existsSync(filePath)) {
                 return res.status(404).json({
@@ -187,4 +131,3 @@ router.delete('/upload/image/:filename',
 );
 
 module.exports = router;
-

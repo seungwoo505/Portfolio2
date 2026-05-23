@@ -3,7 +3,6 @@ const SocialLinks = require('./social-links');
 const Skills = require('./skills');
 const Projects = require('./projects');
 const BlogPosts = require('./blog-posts');
-const BlogTags = require('./blog-tags');
 const Tags = require('./tags');
 const ContactMessages = require('./contact-messages');
 const Experiences = require('./experiences');
@@ -20,7 +19,6 @@ module.exports = {
     Skills,
     Projects,
     BlogPosts,
-    BlogTags,
     Tags,
     ContactMessages,
     Experiences,
