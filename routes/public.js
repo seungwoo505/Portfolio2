@@ -145,7 +145,7 @@ const buildPostFilters = (query) => {
     };
 };
 
-router.get(['/profile', '/personal-info'], async (req, res) => {
+router.get('/profile', async (req, res) => {
     try {
         const data = await cached(cacheKey('personal_info', 'profile'), () => PersonalInfo.get());
         return ok(res, data);
@@ -271,7 +271,7 @@ router.get('/projects', async (req, res) => {
     }
 });
 
-router.post(['/projects/:slug/view', '/projects/slug/:slug/view'], async (req, res) => {
+router.post('/projects/:slug/view', async (req, res) => {
     try {
         const project = await Projects.getBySlug(req.params.slug);
         if (!project || !project.is_published) {
@@ -292,7 +292,7 @@ router.post(['/projects/:slug/view', '/projects/slug/:slug/view'], async (req, r
     }
 });
 
-router.get(['/projects/slug/:slug', '/projects/:slug'], async (req, res) => {
+router.get('/projects/:slug', async (req, res) => {
     try {
         const data = await cached(cacheKey('project', 'slug', req.params.slug), () => Projects.getBySlug(req.params.slug));
 
@@ -306,7 +306,7 @@ router.get(['/projects/slug/:slug', '/projects/:slug'], async (req, res) => {
     }
 });
 
-router.get(['/posts', '/blog/posts'], async (req, res) => {
+router.get('/posts', async (req, res) => {
     try {
         const filters = buildPostFilters(req.query);
         const data = await cached(cacheKey('blog_posts', stableStringify(filters)), async () => {
@@ -331,7 +331,7 @@ router.get(['/posts', '/blog/posts'], async (req, res) => {
     }
 });
 
-router.get(['/posts/tag/:tagSlug', '/blog/posts/tag/:tagSlug'], async (req, res) => {
+router.get('/posts/tag/:tagSlug', async (req, res) => {
     try {
         const filters = buildPostFilters({
             ...req.query,
@@ -359,7 +359,7 @@ router.get(['/posts/tag/:tagSlug', '/blog/posts/tag/:tagSlug'], async (req, res)
     }
 });
 
-router.post(['/posts/:slug/view', '/blog/posts/:slug/view'], async (req, res) => {
+router.post('/posts/:slug/view', async (req, res) => {
     try {
         const post = await BlogPosts.getBySlug(req.params.slug);
         if (!post) {
@@ -380,7 +380,7 @@ router.post(['/posts/:slug/view', '/blog/posts/:slug/view'], async (req, res) =>
     }
 });
 
-router.get(['/posts/:slug', '/blog/posts/:slug'], async (req, res) => {
+router.get('/posts/:slug', async (req, res) => {
     try {
         const data = await cached(cacheKey('blog_post', 'slug', req.params.slug), () => BlogPosts.getBySlug(req.params.slug));
 
