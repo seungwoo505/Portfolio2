@@ -1,4 +1,30 @@
-const { executeQuery, executeQuerySingle } = require('./db-utils');
+const {
+    executeQuery,
+    executeQuerySingle,
+    executeConnectionQuery,
+    executeConnectionQuerySingle,
+    executeTransaction
+} = require('./db-utils');
+
+const createQueryContext = (connection) => ({
+    query: (query, params = []) => executeConnectionQuery(connection, query, params),
+    querySingle: (query, params = []) => executeConnectionQuerySingle(connection, query, params)
+});
+
+const defaultQueryContext = {
+    query: executeQuery,
+    querySingle: executeQuerySingle
+};
+
+const serializeSettingValue = (value, type = 'string') => {
+    if (type === 'json') {
+        return JSON.stringify(value);
+    }
+    if (type === 'boolean') {
+        return value ? 'true' : 'false';
+    }
+    return String(value);
+};
 
 const SiteSettings = {
     /**
@@ -49,16 +75,8 @@ const SiteSettings = {
       * @param {*} description 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async set(key, value, type = 'string', is_public = false, description = null) {
-        let stringValue = value;
-        if (type === 'json') {
-            stringValue = JSON.stringify(value);
-        } else if (type === 'boolean') {
-            stringValue = value ? 'true' : 'false';
-        } else {
-            stringValue = String(value);
-        }
-
+    async set(key, value, type = 'string', is_public = false, description = null, db = defaultQueryContext) {
+        const stringValue = serializeSettingValue(value, type);
         const query = `
             INSERT INTO site_settings (setting_key, setting_value, setting_type, is_public, description)
             VALUES (?, ?, ?, ?, ?)
@@ -69,8 +87,34 @@ const SiteSettings = {
             description = COALESCE(VALUES(description), description),
             updated_at = NOW()
         `;
-        await executeQuery(query, [key, stringValue, type, is_public, description]);
-        return await this.get(key);
+        await db.query(query, [key, stringValue, type, is_public, description]);
+        return await db.querySingle('SELECT * FROM site_settings WHERE setting_key = ?', [key]);
+    },
+
+    /**
+     * @description 여러 사이트 설정을 하나의 트랜잭션으로 저장한다.
+      * @param {*} settings 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async setMany(settings) {
+        return await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            const updatedSettings = [];
+
+            for (const [key, config] of Object.entries(settings)) {
+                const setting = await this.set(
+                    key,
+                    config.value,
+                    config.type,
+                    config.is_public,
+                    config.description,
+                    db
+                );
+                updatedSettings.push(setting);
+            }
+
+            return updatedSettings;
+        });
     },
 
     /**

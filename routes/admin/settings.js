@@ -85,15 +85,7 @@ router.put('/settings',
                 }
             }
 
-            for (const [key, config] of Object.entries(settings)) {
-                await SiteSettings.set(
-                    key,
-                    config.value,
-                    config.type,
-                    config.is_public,
-                    config.description
-                );
-            }
+            await SiteSettings.setMany(settings);
             CacheUtils.invalidateResources('settings');
 
             res.json({
