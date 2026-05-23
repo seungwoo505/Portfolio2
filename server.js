@@ -10,6 +10,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const compression = require("compression");
 const logger = require("./log");
+const { getRetryAfterSeconds } = require('./utils/rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -55,7 +56,7 @@ const generalLimiter = rateLimit({
         res.status(429).json({
             success: false,
             error: "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.",
-            retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+            retryAfter: getRetryAfterSeconds(req.rateLimit, 60)
         });
     }
 });
@@ -77,8 +78,8 @@ const adminLimiter = rateLimit({
         });
         res.status(429).json({
             success: false,
-            error: "관리자 API 요청이 너무 많습니다. 15분 후 다시 시도해주세요.",
-            retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+            error: "관리자 API 요청이 너무 많습니다. 1분 후 다시 시도해주세요.",
+            retryAfter: getRetryAfterSeconds(req.rateLimit, 60)
         });
     }
 });
@@ -100,7 +101,7 @@ const loginLimiter = rateLimit({
         res.status(429).json({
             success: false,
             error: "로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요.",
-            retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+            retryAfter: getRetryAfterSeconds(req.rateLimit, 15 * 60)
         });
     }
 });
@@ -123,7 +124,7 @@ const contactLimiter = rateLimit({
         res.status(429).json({
             success: false,
             error: "문의 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
-            retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+            retryAfter: getRetryAfterSeconds(req.rateLimit, 15 * 60)
         });
     }
 });
