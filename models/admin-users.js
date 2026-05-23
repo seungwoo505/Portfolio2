@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const logger = require('../log');
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
 const AdminUsers = {
     _userPermissionColumn: undefined,
 
@@ -432,27 +434,34 @@ const AdminUsers = {
      * @returns {Promise<any>} 처리 결과
      */
     async update(id, data) {
-        const { username, email, full_name, role, is_active } = data;
-
-        const cleanParams = [
-            username === undefined ? null : username,
-            email === undefined ? null : email,
-            full_name === undefined ? null : full_name,
-            role === undefined ? null : role,
-            is_active === undefined ? null : is_active,
-            id
+        const allowedFields = [
+            'username',
+            'email',
+            'full_name',
+            'role',
+            'is_active'
         ];
+        const updateFields = [];
+        const updateValues = [];
 
-        await executeQuery(`
-            UPDATE admin_users 
-            SET username = COALESCE(?, username),
-                email = COALESCE(?, email),
-                full_name = COALESCE(?, full_name),
-                role = COALESCE(?, role),
-                is_active = COALESCE(?, is_active),
-                updated_at = NOW()
-            WHERE id = ?
-        `, cleanParams);
+        for (const field of allowedFields) {
+            if (hasOwn(data, field) && data[field] !== undefined) {
+                updateFields.push(`${field} = ?`);
+                updateValues.push(data[field]);
+            }
+        }
+
+        if (updateFields.length === 0) {
+            return await this.getById(id);
+        }
+
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(id);
+
+        await executeQuery(
+            `UPDATE admin_users SET ${updateFields.join(', ')} WHERE id = ?`,
+            updateValues
+        );
 
         return await this.getById(id);
     },

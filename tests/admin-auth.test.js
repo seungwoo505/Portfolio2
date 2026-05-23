@@ -292,6 +292,23 @@ test('AdminUsers.cleanupExpiredSessions removes expired and old revoked sessions
     assert.equal(sessions.length, 1);
 });
 
+test('AdminUsers.update can explicitly clear nullable profile fields', async () => {
+    const { AdminUsers, queryCalls } = await createAdminUsersFixture();
+
+    await AdminUsers.update(1, {
+        full_name: null,
+        is_active: false
+    });
+
+    const updateCall = queryCalls.find((call) => call.sql.startsWith('update admin_users'));
+    assert.ok(updateCall);
+    assert.equal(updateCall.sql.includes('coalesce'), false);
+    assert.equal(updateCall.sql.includes('full_name = ?'), true);
+    assert.equal(updateCall.sql.includes('is_active = ?'), true);
+    assert.equal(updateCall.sql.includes('username = ?'), false);
+    assert.deepEqual(updateCall.params, [null, false, 1]);
+});
+
 test('authenticateToken accepts an access token only when its session is active', async () => {
     let assertedSession = false;
     const AdminUsers = {

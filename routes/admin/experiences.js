@@ -5,6 +5,20 @@ const Experiences = require('../../models/experiences');
 const CacheUtils = require('../../utils/cache');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+const mapExperienceBody = (body) => {
+    const mappedData = { ...body };
+
+    if (hasOwn(body, 'company')) {
+        mappedData.company_or_institution = body.company;
+    } else if (hasOwn(body, 'company_or_institution')) {
+        mappedData.company_or_institution = body.company_or_institution;
+    }
+
+    return mappedData;
+};
+
 router.get('/experiences',
     authenticateToken,
     requirePermission('experiences.read'),
@@ -64,10 +78,7 @@ router.post('/experiences',
                 });
             }
 
-            const mappedData = {
-                ...req.body,
-                company_or_institution: req.body.company || req.body.company_or_institution
-            };
+            const mappedData = mapExperienceBody(req.body);
 
             const id = await Experiences.create(mappedData);
             const newExperience = await Experiences.getById(id);
@@ -104,10 +115,7 @@ router.put('/experiences/:id',
                 });
             }
 
-            const mappedData = {
-                ...req.body,
-                company_or_institution: req.body.company || req.body.company_or_institution
-            };
+            const mappedData = mapExperienceBody(req.body);
 
             const updatedExperience = await Experiences.update(id, mappedData);
             CacheUtils.invalidateResources('experiences');

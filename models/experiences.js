@@ -1,5 +1,9 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+const normalizeNullableValue = (value) => (value === '' ? null : value);
+
 const Experiences = {
     /**
      * @description 경험 모델의 전체 목록을 조회한다.
@@ -79,30 +83,36 @@ const Experiences = {
      * @returns {Promise<any>} 처리 결과
      */
     async update(id, data) {
-        const { type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order } = data;
-        
-        const params = [type, title, company_or_institution, location, description, start_date, end_date, is_current, display_order]
-            .map(value => {
-                if (value === undefined) return null;
-                if (value === '') return null; // 빈 문자열도 null로 변환
-                return value;
-            });
-        
-        const query = `
-            UPDATE experiences 
-            SET type = COALESCE(?, type), 
-                title = COALESCE(?, title), 
-                company_or_institution = COALESCE(?, company_or_institution), 
-                location = COALESCE(?, location), 
-                description = COALESCE(?, description), 
-                start_date = COALESCE(?, start_date), 
-                end_date = COALESCE(?, end_date), 
-                is_current = COALESCE(?, is_current), 
-                display_order = COALESCE(?, display_order),
-                updated_at = NOW()
-            WHERE id = ?
-        `;
-        await executeQuery(query, [...params, id]);
+        const allowedFields = [
+            'type',
+            'title',
+            'company_or_institution',
+            'location',
+            'description',
+            'start_date',
+            'end_date',
+            'is_current',
+            'display_order'
+        ];
+        const updateFields = [];
+        const updateValues = [];
+
+        for (const field of allowedFields) {
+            if (hasOwn(data, field) && data[field] !== undefined) {
+                updateFields.push(`${field} = ?`);
+                updateValues.push(normalizeNullableValue(data[field]));
+            }
+        }
+
+        if (updateFields.length === 0) {
+            return await this.getById(id);
+        }
+
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(id);
+
+        const query = `UPDATE experiences SET ${updateFields.join(', ')} WHERE id = ?`;
+        await executeQuery(query, updateValues);
         return await this.getById(id);
     },
 

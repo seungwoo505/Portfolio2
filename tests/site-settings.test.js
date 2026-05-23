@@ -17,10 +17,14 @@ const loadSiteSettingsFixture = () => {
 
     const operations = [];
     let transactionCount = 0;
+    const recordOperation = (query, params = []) => {
+        const operation = { sql: normalizeSql(query), params };
+        operations.push(operation);
+        return operation;
+    };
     const connection = {
         execute: async (query, params = []) => {
-            const sql = normalizeSql(query);
-            operations.push({ sql, params });
+            const { sql } = recordOperation(query, params);
 
             if (sql.startsWith('select * from site_settings')) {
                 return [[{
@@ -35,8 +39,21 @@ const loadSiteSettingsFixture = () => {
     };
 
     stubRootModule(['models', 'db-utils.js'], {
-        executeQuery: async () => [],
-        executeQuerySingle: async () => null,
+        executeQuery: async (query, params = []) => {
+            recordOperation(query, params);
+            return [];
+        },
+        executeQuerySingle: async (query, params = []) => {
+            const { sql } = recordOperation(query, params);
+            if (sql.startsWith('select * from site_settings')) {
+                return {
+                    setting_key: params[0],
+                    setting_value: 'stored',
+                    setting_type: 'string'
+                };
+            }
+            return null;
+        },
         executeConnectionQuery: async (activeConnection, query, params = []) => {
             const [result] = await activeConnection.execute(query, params);
             return result;
@@ -83,4 +100,22 @@ test('SiteSettings.setMany stores all settings through one transaction connectio
     assert.deepEqual(insertOperations[0].params, ['site_title', 'Portfolio', 'string', true, '사이트 제목']);
     assert.deepEqual(insertOperations[1].params, ['feature_flags', '{"ai":true}', 'json', false, null]);
     assert.equal(result.length, 2);
+});
+
+test('SiteSettings.update can explicitly clear nullable values', async () => {
+    const fixture = loadSiteSettingsFixture();
+
+    await fixture.SiteSettings.update('hero.subtitle', {
+        setting_value: null,
+        description: null,
+        is_public: false
+    });
+
+    const updateOperation = fixture.operations.find((operation) => operation.sql.startsWith('update site_settings'));
+    assert.ok(updateOperation);
+    assert.equal(updateOperation.sql.includes('coalesce'), false);
+    assert.equal(updateOperation.sql.includes('setting_value = ?'), true);
+    assert.equal(updateOperation.sql.includes('description = ?'), true);
+    assert.equal(updateOperation.sql.includes('is_public = ?'), true);
+    assert.deepEqual(updateOperation.params, [null, false, null, 'hero.subtitle']);
 });

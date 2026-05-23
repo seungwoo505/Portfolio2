@@ -16,6 +16,8 @@ const defaultQueryContext = {
     querySingle: executeQuerySingle
 };
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
 const serializeSettingValue = (value, type = 'string') => {
     if (type === 'json') {
         return JSON.stringify(value);
@@ -124,27 +126,48 @@ const SiteSettings = {
      * @returns {Promise<any>} 처리 결과
      */
     async update(key, updates) {
-        const { setting_value, setting_type, is_public, description } = updates;
-        
-        let stringValue = setting_value;
-        if (setting_type === 'json' && typeof setting_value !== 'string') {
-            stringValue = JSON.stringify(setting_value);
-        } else if (setting_type === 'boolean') {
-            stringValue = setting_value ? 'true' : 'false';
-        } else if (setting_value !== undefined) {
-            stringValue = String(setting_value);
+        const updateFields = [];
+        const updateValues = [];
+        const settingValueProvided = hasOwn(updates, 'setting_value') && updates.setting_value !== undefined;
+        const settingType = hasOwn(updates, 'setting_type') ? updates.setting_type : undefined;
+
+        if (settingValueProvided) {
+            let stringValue = updates.setting_value;
+            if (updates.setting_value !== null) {
+                if (settingType === 'json' && typeof updates.setting_value !== 'string') {
+                    stringValue = JSON.stringify(updates.setting_value);
+                } else if (settingType === 'boolean') {
+                    stringValue = updates.setting_value ? 'true' : 'false';
+                } else {
+                    stringValue = String(updates.setting_value);
+                }
+            }
+            updateFields.push('setting_value = ?');
+            updateValues.push(stringValue);
         }
 
-        const query = `
-            UPDATE site_settings 
-            SET setting_value = COALESCE(?, setting_value),
-                setting_type = COALESCE(?, setting_type),
-                is_public = COALESCE(?, is_public),
-                description = COALESCE(?, description),
-                updated_at = NOW()
-            WHERE setting_key = ?
-        `;
-        await executeQuery(query, [stringValue, setting_type, is_public, description, key]);
+        if (hasOwn(updates, 'setting_type') && updates.setting_type !== undefined) {
+            updateFields.push('setting_type = ?');
+            updateValues.push(updates.setting_type);
+        }
+        if (hasOwn(updates, 'is_public') && updates.is_public !== undefined) {
+            updateFields.push('is_public = ?');
+            updateValues.push(updates.is_public);
+        }
+        if (hasOwn(updates, 'description') && updates.description !== undefined) {
+            updateFields.push('description = ?');
+            updateValues.push(updates.description);
+        }
+
+        if (updateFields.length === 0) {
+            return await this.get(key);
+        }
+
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(key);
+
+        const query = `UPDATE site_settings SET ${updateFields.join(', ')} WHERE setting_key = ?`;
+        await executeQuery(query, updateValues);
         return await this.get(key);
     },
 
