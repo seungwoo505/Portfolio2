@@ -464,7 +464,8 @@ const swaggerSpec = swaggerJsdoc({
         ]
     },
     apis: [
-        './routes/*.js'
+        './routes/*.js',
+        './routes/admin/*.js'
     ]
 });
 const swaggerUiOptions = {

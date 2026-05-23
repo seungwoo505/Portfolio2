@@ -1,0 +1,160 @@
+const express = require('express');
+const router = express.Router();
+const { logger, buildErrorLog } = require('./common');
+const ContactMessages = require('../../models/contact-messages');
+const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
+
+/**
+ * @swagger
+ * /api/admin/contacts:
+ *   get:
+ *     summary: 문의 메시지 목록 조회
+ *     tags: ['Admin - Contacts']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: unread
+ *         schema:
+ *           type: boolean
+ *           description: 읽지 않은 메시지만 조회
+ *     responses:
+ *       200:
+ *         description: 문의 목록 조회 성공
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/contacts', authenticateToken, requirePermission('contacts.read'), async (req, res) => {
+    try {
+        const { limit, page, unread } = req.query;
+        const pageLimit = parseInt(limit) || 50;
+        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
+
+        let messages;
+        if (unread === 'true') {
+            messages = await ContactMessages.getUnread(pageLimit);
+        } else {
+            messages = await ContactMessages.getAll(pageLimit, offset);
+        }
+
+        res.json({
+            success: true,
+            data: messages,
+            pagination: {
+                page: parseInt(page) || 1,
+                limit: pageLimit,
+                total: messages.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '연락처 메시지를 가져오는데 실패했습니다.'
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/admin/contacts/{id}/read:
+ *   put:
+ *     summary: 문의 메시지 읽음 처리
+ *     tags: ['Admin - Contacts']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 읽음 처리 성공
+ *       500:
+ *         description: 서버 오류
+ * /api/admin/contacts/{id}:
+ *   delete:
+ *     summary: 문의 메시지 삭제
+ *     tags: ['Admin - Contacts']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 메시지 삭제 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
+router.put('/contacts/:id/read',
+    authenticateToken,
+    requirePermission('contacts.update'),
+    logActivity('mark_contact_read'),
+    async (req, res) => {
+        try {
+            const message = await ContactMessages.markAsRead(req.params.id);
+
+            res.json({
+                success: true,
+                message: '메시지가 읽음 처리되었습니다.',
+                data: message
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: '메시지 읽음 처리에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.delete('/contacts/:id',
+    authenticateToken,
+    requirePermission('contacts.delete'),
+    logActivity('delete_contact'),
+    async (req, res) => {
+        try {
+            const messageId = req.params.id;
+
+            if (!messageId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '메시지 ID가 필요합니다.'
+                });
+            }
+
+            await ContactMessages.delete(messageId);
+
+            res.json({
+                success: true,
+                message: '메시지가 성공적으로 삭제되었습니다.'
+            });
+        } catch (error) {
+            logger.error('연락처 메시지 삭제 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '메시지 삭제에 실패했습니다.'
+            });
+        }
+    }
+);
+
+module.exports = router;
+
