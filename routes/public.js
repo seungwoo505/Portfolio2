@@ -46,6 +46,35 @@ const parseCsv = (value) => {
         .filter(Boolean);
 };
 
+const CONTACT_FIELD_LIMITS = {
+    name: 120,
+    email: 255,
+    subject: 255,
+    message: 5000
+};
+const CONTACT_FIELD_LABELS = {
+    name: '이름',
+    email: '이메일',
+    subject: '제목',
+    message: '메시지'
+};
+const getPositiveInteger = (value, fallback, max = 100) => {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+        return fallback;
+    }
+    return Math.min(parsed, max);
+};
+const CONTACT_RECENT_WINDOW_HOURS = getPositiveInteger(process.env.CONTACT_RECENT_WINDOW_HOURS, 1, 24);
+const CONTACT_RECENT_IP_MAX = getPositiveInteger(process.env.CONTACT_RECENT_IP_MAX, 3, 50);
+
+const normalizeContactField = (value) => String(value ?? '').trim();
+
+const validateContactLength = (field, value) => {
+    const maxLength = CONTACT_FIELD_LIMITS[field];
+    return !maxLength || value.length <= maxLength;
+};
+
 const stableStringify = (value) => {
     if (!value || typeof value !== 'object') {
         return String(value ?? '');
@@ -174,13 +203,25 @@ router.get('/social-links', async (req, res) => {
 
 router.post('/contact', async (req, res) => {
     try {
-        const { name, email, subject, message } = req.body || {};
+        const name = normalizeContactField(req.body?.name);
+        const email = normalizeContactField(req.body?.email).toLowerCase();
+        const subject = normalizeContactField(req.body?.subject);
+        const message = normalizeContactField(req.body?.message);
 
         if (!name || !email || !message) {
             return res.status(400).json({
                 success: false,
                 message: '이름, 이메일, 메시지는 필수입니다.'
             });
+        }
+
+        for (const [field, value] of Object.entries({ name, email, subject, message })) {
+            if (!validateContactLength(field, value)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `${CONTACT_FIELD_LABELS[field]} 길이가 허용 범위를 초과했습니다.`
+                });
+            }
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -191,10 +232,19 @@ router.post('/contact', async (req, res) => {
             });
         }
 
+        const recentCount = await ContactMessages.countRecentByIp(req.ip, CONTACT_RECENT_WINDOW_HOURS);
+        if (recentCount >= CONTACT_RECENT_IP_MAX) {
+            res.setHeader('Cache-Control', 'no-store');
+            return res.status(429).json({
+                success: false,
+                message: '문의 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+            });
+        }
+
         const id = await ContactMessages.create({
             name,
             email,
-            subject,
+            subject: subject || null,
             message,
             ip_address: req.ip,
             user_agent: req.headers['user-agent']
