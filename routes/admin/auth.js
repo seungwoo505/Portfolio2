@@ -259,7 +259,9 @@ router.post('/refresh', async (req, res) => {
             });
         }
 
-        const newToken = AdminUsers.generateToken(user, clientIP);
+        await AdminUsers.verifyRefreshSession(refreshToken, decoded);
+
+        const newToken = AdminUsers.generateToken(user, clientIP, decoded.sid);
 
         res.json({
             success: true,
@@ -421,4 +423,3 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
 });
 
 module.exports = router;
-

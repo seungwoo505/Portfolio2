@@ -51,8 +51,17 @@ const AdminUsers = {
 
         await this.handleSuccessfulLogin(user.id, ipAddress);
 
-        const token = this.generateToken(user, ipAddress);
-        const refreshToken = this.generateRefreshToken(user, ipAddress);
+        const sessionId = crypto.randomUUID();
+        const token = this.generateToken(user, ipAddress, sessionId);
+        const refreshToken = this.generateRefreshToken(user, ipAddress, sessionId);
+
+        await this.createSession({
+            sessionId,
+            adminId: user.id,
+            refreshToken,
+            ipAddress,
+            userAgent
+        });
 
         logger.auth('로그인 성공', this.sanitizeUser(user), { ipAddress });
 
@@ -69,12 +78,13 @@ const AdminUsers = {
       * @param {*} ipAddress 입력값
      * @returns {any} 처리 결과
      */
-    generateToken(user, ipAddress) {
+    generateToken(user, ipAddress, sessionId) {
         return jwt.sign(
             {
                 id: user.id,
                 username: user.username,
                 role: user.role,
+                sid: sessionId,
                 ip: ipAddress, // IP 주소 포함
                 iat: Math.floor(Date.now() / 1000) // 발급 시간
             },
@@ -89,12 +99,13 @@ const AdminUsers = {
       * @param {*} ipAddress 입력값
      * @returns {any} 처리 결과
      */
-    generateRefreshToken(user, ipAddress) {
+    generateRefreshToken(user, ipAddress, sessionId) {
         return jwt.sign(
             {
                 id: user.id,
                 username: user.username,
                 type: 'refresh', // 토큰 타입 구분
+                sid: sessionId,
                 ip: ipAddress,
                 iat: Math.floor(Date.now() / 1000)
             },
@@ -138,6 +149,121 @@ const AdminUsers = {
     },
 
     /**
+     * @description 관리자 리프레시 토큰 저장용 해시를 생성한다.
+      * @param {*} token 입력값
+     * @returns {string} 처리 결과
+     */
+    hashToken(token) {
+        return crypto.createHash('sha256').update(token).digest('hex');
+    },
+
+    /**
+     * @description 관리자 세션 만료 시각을 계산한다.
+     * @returns {Date} 처리 결과
+     */
+    getRefreshTokenExpiresAt() {
+        return new Date(Date.now() + 12 * 60 * 60 * 1000);
+    },
+
+    /**
+     * @description 관리자 로그인 세션을 저장한다.
+      * @param {*} session 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async createSession(session) {
+        const { sessionId, adminId, refreshToken, ipAddress, userAgent } = session;
+
+        await executeQuery(`
+            INSERT INTO admin_sessions (
+                session_id, admin_id, refresh_token_hash, ip_address, user_agent, expires_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [
+            sessionId,
+            adminId,
+            this.hashToken(refreshToken),
+            ipAddress,
+            userAgent,
+            this.getRefreshTokenExpiresAt()
+        ]);
+    },
+
+    /**
+     * @description 활성 관리자 세션을 조회한다.
+      * @param {*} sessionId 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async getActiveSession(sessionId) {
+        if (!sessionId) {
+            return null;
+        }
+
+        return await executeQuerySingle(`
+            SELECT *
+            FROM admin_sessions
+            WHERE session_id = ?
+                AND revoked_at IS NULL
+                AND expires_at > NOW()
+        `, [sessionId]);
+    },
+
+    /**
+     * @description 토큰에 연결된 관리자 세션이 활성 상태인지 검증한다.
+      * @param {*} sessionId 입력값
+      * @param {*} adminId 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async assertActiveSession(sessionId, adminId) {
+        const session = await this.getActiveSession(sessionId);
+
+        if (!session || Number(session.admin_id) !== Number(adminId)) {
+            throw new Error('세션이 만료되었거나 로그아웃되었습니다.');
+        }
+
+        return session;
+    },
+
+    /**
+     * @description 리프레시 토큰과 서버 저장 세션을 함께 검증한다.
+      * @param {*} refreshToken 입력값
+      * @param {*} decoded 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async verifyRefreshSession(refreshToken, decoded) {
+        const session = await this.assertActiveSession(decoded.sid, decoded.id);
+        const tokenHash = this.hashToken(refreshToken);
+
+        if (session.refresh_token_hash !== tokenHash) {
+            throw new Error('Refresh Token 세션이 유효하지 않습니다.');
+        }
+
+        await executeQuery(`
+            UPDATE admin_sessions
+            SET last_used_at = NOW()
+            WHERE session_id = ?
+        `, [decoded.sid]);
+
+        return session;
+    },
+
+    /**
+     * @description 관리자 세션을 폐기한다.
+      * @param {*} sessionId 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async revokeSession(sessionId) {
+        if (!sessionId) {
+            return;
+        }
+
+        await executeQuery(`
+            UPDATE admin_sessions
+            SET revoked_at = COALESCE(revoked_at, NOW())
+            WHERE session_id = ?
+        `, [sessionId]);
+    },
+
+    /**
      * @description 관리자 사용자 모델에서 로그아웃을 처리한다.
       * @param {*} token 입력값
      * @returns {Promise<any>} 처리 결과
@@ -146,6 +272,8 @@ const AdminUsers = {
         try {
             const decoded = this.verifyToken(token);
             const user = await this.getById(decoded.id);
+
+            await this.revokeSession(decoded.sid);
             
             if (user) {
                 logger.auth('로그아웃 성공', { username: user.username }, {

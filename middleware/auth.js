@@ -23,7 +23,7 @@ const authenticateToken = async (req, res, next) => {
         }
 
         try {
-        const decoded = AdminUsers.verifyToken(token);
+            const decoded = AdminUsers.verifyToken(token);
         
             const clientIP = req.ip || req.connection.remoteAddress;
             if (decoded.ip && decoded.ip !== clientIP) {
@@ -35,19 +35,22 @@ const authenticateToken = async (req, res, next) => {
             
             const user = await AdminUsers.getById(decoded.id);
             if (!user || !user.is_active) {
-            return res.status(401).json({
-                success: false,
+                return res.status(401).json({
+                    success: false,
                     message: '비활성화된 사용자입니다.'
-            });
-        }
+                });
+            }
 
-        req.admin = {
-            id: decoded.id,
-            username: decoded.username,
-            role: decoded.role
-        };
+            await AdminUsers.assertActiveSession(decoded.sid, decoded.id);
 
-        next();
+            req.admin = {
+                id: decoded.id,
+                username: decoded.username,
+                role: decoded.role,
+                sessionId: decoded.sid
+            };
+
+            next();
         } catch (tokenError) {
             if (refreshToken) {
                 try {
@@ -69,12 +72,15 @@ const authenticateToken = async (req, res, next) => {
                         });
                     }
 
-                    const newToken = AdminUsers.generateToken(user, clientIP);
+                    await AdminUsers.verifyRefreshSession(refreshToken, refreshDecoded);
+
+                    const newToken = AdminUsers.generateToken(user, clientIP, refreshDecoded.sid);
                     
                     req.admin = {
                         id: user.id,
                         username: user.username,
-                        role: user.role
+                        role: user.role,
+                        sessionId: refreshDecoded.sid
                     };
 
                     res.setHeader('X-New-Token', newToken);
