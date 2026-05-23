@@ -7,6 +7,7 @@ const {
 } = require('./db-utils');
 const CacheUtils = require('../utils/cache');
 const { generateSlug, createUniqueSlug } = require('../utils/slug');
+const { toBooleanOrNull, toChoice, toStringArray, toStringValue } = require('../utils/filter-values');
 
 const createQueryContext = (connection) => ({
     query: (query, params = []) => executeConnectionQuery(connection, query, params),
@@ -103,25 +104,32 @@ const Projects = {
             order = 'desc', // 'asc', 'desc'
             published_only = true
         } = filters;
+        const normalizedSearch = toStringValue(search).trim();
+        const normalizedTags = toStringArray(tags);
+        const normalizedSkills = toStringArray(skills);
+        const normalizedFeatured = toBooleanOrNull(featured);
+        const normalizedStatus = toChoice(status, ['published', 'draft', 'all'], 'published');
+        const normalizedSort = toChoice(sort, ['created_at', 'title', 'view_count', 'display_order'], 'created_at');
+        const normalizedOrder = toChoice(order, ['asc', 'desc'], 'desc');
 
         let whereConditions = [];
         let queryParams = [];
 
-        if (status === 'published') {
+        if (normalizedStatus === 'published') {
             whereConditions.push('p.is_published = 1');
-        } else if (status === 'draft') {
+        } else if (normalizedStatus === 'draft') {
             whereConditions.push('p.is_published = 0');
         } else if (published_only) {
             whereConditions.push('p.is_published = 1');
         }
 
-        if (featured !== null) {
+        if (normalizedFeatured !== null) {
             whereConditions.push('p.is_featured = ?');
-            queryParams.push(featured ? 1 : 0);
+            queryParams.push(normalizedFeatured ? 1 : 0);
         }
 
-        if (tags && tags.length > 0) {
-            const tagPlaceholders = tags.map(() => '?').join(',');
+        if (normalizedTags.length > 0) {
+            const tagPlaceholders = normalizedTags.map(() => '?').join(',');
             whereConditions.push(`
                 p.id IN (
                     SELECT tu.content_id 
@@ -131,11 +139,11 @@ const Projects = {
                     AND t.slug IN (${tagPlaceholders})
                 )
             `);
-            queryParams.push(...tags);
+            queryParams.push(...normalizedTags);
         }
 
-        if (skills && skills.length > 0) {
-            const skillPlaceholders = skills.map(() => '?').join(',');
+        if (normalizedSkills.length > 0) {
+            const skillPlaceholders = normalizedSkills.map(() => '?').join(',');
             whereConditions.push(`
                 p.id IN (
                     SELECT ps.project_id 
@@ -144,11 +152,11 @@ const Projects = {
                     WHERE s.name IN (${skillPlaceholders})
                 )
             `);
-            queryParams.push(...skills);
+            queryParams.push(...normalizedSkills);
         }
 
-        if (search && search.trim()) {
-            const searchTerm = `%${search.trim()}%`;
+        if (normalizedSearch) {
+            const searchTerm = `%${normalizedSearch}%`;
             whereConditions.push(`(
                 p.title LIKE ? OR 
                 p.short_description LIKE ? OR 
@@ -162,11 +170,8 @@ const Projects = {
         const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
         let orderClause = '';
-        const validSortFields = ['created_at', 'title', 'view_count', 'display_order'];
-        const validOrders = ['asc', 'desc'];
-        
-        const sortField = validSortFields.includes(sort) ? sort : 'created_at';
-        const sortOrder = validOrders.includes(order.toLowerCase()) ? order.toUpperCase() : 'DESC';
+        const sortField = normalizedSort;
+        const sortOrder = normalizedOrder.toUpperCase();
         
         if (sortField === 'display_order') {
             orderClause = `ORDER BY p.is_featured DESC, p.display_order ASC, p.created_at DESC`;
@@ -218,25 +223,30 @@ const Projects = {
             status = 'published',
             published_only = true
         } = filters;
+        const normalizedSearch = toStringValue(search).trim();
+        const normalizedTags = toStringArray(tags);
+        const normalizedSkills = toStringArray(skills);
+        const normalizedFeatured = toBooleanOrNull(featured);
+        const normalizedStatus = toChoice(status, ['published', 'draft', 'all'], 'published');
 
         let whereConditions = [];
         let queryParams = [];
 
-        if (status === 'published') {
+        if (normalizedStatus === 'published') {
             whereConditions.push('p.is_published = 1');
-        } else if (status === 'draft') {
+        } else if (normalizedStatus === 'draft') {
             whereConditions.push('p.is_published = 0');
         } else if (published_only) {
             whereConditions.push('p.is_published = 1');
         }
 
-        if (featured !== null) {
+        if (normalizedFeatured !== null) {
             whereConditions.push('p.is_featured = ?');
-            queryParams.push(featured ? 1 : 0);
+            queryParams.push(normalizedFeatured ? 1 : 0);
         }
 
-        if (tags && tags.length > 0) {
-            const tagPlaceholders = tags.map(() => '?').join(',');
+        if (normalizedTags.length > 0) {
+            const tagPlaceholders = normalizedTags.map(() => '?').join(',');
             whereConditions.push(`
                 p.id IN (
                     SELECT tu.content_id 
@@ -246,11 +256,11 @@ const Projects = {
                     AND t.slug IN (${tagPlaceholders})
                 )
             `);
-            queryParams.push(...tags);
+            queryParams.push(...normalizedTags);
         }
 
-        if (skills && skills.length > 0) {
-            const skillPlaceholders = skills.map(() => '?').join(',');
+        if (normalizedSkills.length > 0) {
+            const skillPlaceholders = normalizedSkills.map(() => '?').join(',');
             whereConditions.push(`
                 p.id IN (
                     SELECT ps.project_id 
@@ -259,11 +269,11 @@ const Projects = {
                     WHERE s.name IN (${skillPlaceholders})
                 )
             `);
-            queryParams.push(...skills);
+            queryParams.push(...normalizedSkills);
         }
 
-        if (search && search.trim()) {
-            const searchTerm = `%${search.trim()}%`;
+        if (normalizedSearch) {
+            const searchTerm = `%${normalizedSearch}%`;
             whereConditions.push(`(
                 p.title LIKE ? OR 
                 p.short_description LIKE ? OR 

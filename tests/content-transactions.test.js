@@ -16,6 +16,7 @@ const createModelFixture = (modelPath) => {
         ['models', 'db-utils.js'],
         ['utils', 'slug.js'],
         ['utils', 'cache.js'],
+        ['utils', 'filter-values.js'],
         ['log.js']
     ]);
 
@@ -180,6 +181,41 @@ test('Projects.getAll binds pagination values instead of interpolating them', as
     assert.ok(listQuery);
     assert.equal(listQuery.sql.includes('limit ? offset ?'), true);
     assert.deepEqual(listQuery.params, [25, 50]);
+});
+
+test('Projects.getWithFilters normalizes array query values', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.getWithFilters({
+        order: ['desc', 'asc'],
+        sort: ['title'],
+        search: ['portfolio'],
+        tags: 'backend',
+        skills: ['Node.js'],
+        featured: ['false']
+    });
+
+    const listQuery = fixture.operations.find((operation) => operation.sql.startsWith('pool:select p.*'));
+    assert.ok(listQuery);
+    assert.equal(listQuery.sql.includes('order by p.is_featured desc, p.title desc'), true);
+    assert.deepEqual(listQuery.params, [0, 'backend', 'Node.js', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', 10, 0]);
+});
+
+test('BlogPosts.getWithFilters normalizes array query values', async () => {
+    const fixture = createModelFixture(['models', 'blog-posts.js']);
+
+    await fixture.model.getWithFilters({
+        order: ['asc', 'desc'],
+        sort: ['title'],
+        search: ['node'],
+        tags: 'backend',
+        featured: ['true']
+    });
+
+    const listQuery = fixture.operations.find((operation) => operation.sql.startsWith('pool:select bp.*'));
+    assert.ok(listQuery);
+    assert.equal(listQuery.sql.includes('order by bp.is_featured desc, bp.title asc'), true);
+    assert.deepEqual(listQuery.params, [1, 'backend', '%node%', '%node%', '%node%', '%node%', 10, 0]);
 });
 
 test('Projects.update can explicitly clear demo_url through project_url', async () => {

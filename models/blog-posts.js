@@ -8,6 +8,7 @@ const {
 const crypto = require('crypto');
 const CacheUtils = require('../utils/cache');
 const { createUniqueSlug } = require('../utils/slug');
+const { toBooleanOrNull, toChoice, toStringArray, toStringValue } = require('../utils/filter-values');
 
 const createQueryContext = (connection) => ({
     query: (query, params = []) => executeConnectionQuery(connection, query, params),
@@ -71,25 +72,31 @@ const BlogPosts = {
             order = 'desc', // 'asc', 'desc'
             published_only = true
         } = filters;
+        const normalizedSearch = toStringValue(search).trim();
+        const normalizedTags = toStringArray(tags);
+        const normalizedFeatured = toBooleanOrNull(featured);
+        const normalizedStatus = toChoice(status, ['published', 'draft', 'all'], 'published');
+        const normalizedSort = toChoice(sort, ['published_at', 'created_at', 'title', 'view_count', 'reading_time'], 'published_at');
+        const normalizedOrder = toChoice(order, ['asc', 'desc'], 'desc');
 
         let whereConditions = [];
         let queryParams = [];
 
-        if (status === 'published') {
+        if (normalizedStatus === 'published') {
             whereConditions.push('bp.is_published = TRUE');
-        } else if (status === 'draft') {
+        } else if (normalizedStatus === 'draft') {
             whereConditions.push('bp.is_published = FALSE');
         } else if (published_only) {
             whereConditions.push('bp.is_published = TRUE');
         }
 
-        if (featured !== null) {
+        if (normalizedFeatured !== null) {
             whereConditions.push('bp.is_featured = ?');
-            queryParams.push(featured ? 1 : 0);
+            queryParams.push(normalizedFeatured ? 1 : 0);
         }
 
-        if (tags && tags.length > 0) {
-            const tagPlaceholders = tags.map(() => '?').join(',');
+        if (normalizedTags.length > 0) {
+            const tagPlaceholders = normalizedTags.map(() => '?').join(',');
             whereConditions.push(`
                 bp.id IN (
                     SELECT tu.content_id 
@@ -99,11 +106,11 @@ const BlogPosts = {
                     AND t.slug IN (${tagPlaceholders})
                 )
             `);
-            queryParams.push(...tags);
+            queryParams.push(...normalizedTags);
         }
 
-        if (search && search.trim()) {
-            const searchTerm = `%${search.trim()}%`;
+        if (normalizedSearch) {
+            const searchTerm = `%${normalizedSearch}%`;
             whereConditions.push(`(
                 bp.title LIKE ? OR 
                 bp.excerpt LIKE ? OR 
@@ -116,11 +123,8 @@ const BlogPosts = {
         const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
         let orderClause = '';
-        const validSortFields = ['published_at', 'created_at', 'title', 'view_count', 'reading_time'];
-        const validOrders = ['asc', 'desc'];
-        
-        const sortField = validSortFields.includes(sort) ? sort : 'published_at';
-        const sortOrder = validOrders.includes(order.toLowerCase()) ? order.toUpperCase() : 'DESC';
+        const sortField = normalizedSort;
+        const sortOrder = normalizedOrder.toUpperCase();
         
         orderClause = `ORDER BY bp.is_featured DESC, bp.${sortField} ${sortOrder}`;
 
@@ -159,25 +163,29 @@ const BlogPosts = {
             status = 'published',
             published_only = true
         } = filters;
+        const normalizedSearch = toStringValue(search).trim();
+        const normalizedTags = toStringArray(tags);
+        const normalizedFeatured = toBooleanOrNull(featured);
+        const normalizedStatus = toChoice(status, ['published', 'draft', 'all'], 'published');
 
         let whereConditions = [];
         let queryParams = [];
 
-        if (status === 'published') {
+        if (normalizedStatus === 'published') {
             whereConditions.push('bp.is_published = TRUE');
-        } else if (status === 'draft') {
+        } else if (normalizedStatus === 'draft') {
             whereConditions.push('bp.is_published = FALSE');
         } else if (published_only) {
             whereConditions.push('bp.is_published = TRUE');
         }
 
-        if (featured !== null) {
+        if (normalizedFeatured !== null) {
             whereConditions.push('bp.is_featured = ?');
-            queryParams.push(featured ? 1 : 0);
+            queryParams.push(normalizedFeatured ? 1 : 0);
         }
 
-        if (tags && tags.length > 0) {
-            const tagPlaceholders = tags.map(() => '?').join(',');
+        if (normalizedTags.length > 0) {
+            const tagPlaceholders = normalizedTags.map(() => '?').join(',');
             whereConditions.push(`
                 bp.id IN (
                     SELECT tu.content_id 
@@ -187,11 +195,11 @@ const BlogPosts = {
                     AND t.slug IN (${tagPlaceholders})
                 )
             `);
-            queryParams.push(...tags);
+            queryParams.push(...normalizedTags);
         }
 
-        if (search && search.trim()) {
-            const searchTerm = `%${search.trim()}%`;
+        if (normalizedSearch) {
+            const searchTerm = `%${normalizedSearch}%`;
             whereConditions.push(`(
                 bp.title LIKE ? OR 
                 bp.excerpt LIKE ? OR 
