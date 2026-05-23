@@ -183,6 +183,18 @@ test('Projects.getAll binds pagination values instead of interpolating them', as
     assert.deepEqual(listQuery.params, [25, 50]);
 });
 
+test('Projects.getFeatured binds pagination values', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.getFeatured(12, 24);
+
+    const listQuery = fixture.operations.find((operation) => operation.sql.startsWith('pool:select p.*'));
+    assert.ok(listQuery);
+    assert.equal(listQuery.sql.includes('where p.is_featured = 1 and p.is_published = 1'), true);
+    assert.equal(listQuery.sql.includes('limit ? offset ?'), true);
+    assert.deepEqual(listQuery.params, [12, 24]);
+});
+
 test('Projects.getWithFilters normalizes array query values', async () => {
     const fixture = createModelFixture(['models', 'projects.js']);
 

@@ -100,7 +100,7 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
 
         let projects;
         if (featured === 'true') {
-            projects = await Projects.getFeatured();
+            projects = await Projects.getFeatured(pagination.limit, pagination.offset);
         } else {
             projects = await Projects.getAll(pagination.limit, pagination.offset);
         }
