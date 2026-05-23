@@ -114,7 +114,6 @@ portfolio-server/
 ├──  log.js                       # 로깅 설정
 │
 ├──  models/                      # 데이터베이스 모델
-│   ├──  index.js                 # 모델 통합 export
 │   ├──  db-utils.js              # DB 유틸리티 함수
 │   ├──  personal-info.js         # 개인 정보 모델
 │   ├──  projects.js              # 프로젝트 모델
@@ -123,17 +122,18 @@ portfolio-server/
 │   └── ...                         # 기타 모델들
 │
 ├──  routes/                      # API 라우트
-│   ├──  portfolio.js             # 포트폴리오 공개 API
-│   ├──  admin.js                 # 관리자 전용 API
+│   ├──  public.js                # 포트폴리오 공개 API
+│   ├──  admin.js                 # 관리자 라우트 호환 엔트리
+│   ├──  admin/                   # 관리자 도메인별 라우트
 │   └──  monitoring.js            # 모니터링 API
 │
 ├──  middleware/                  # 미들웨어
 │   └──  auth.js                  # 인증 미들웨어
 │
 ├──  utils/                       # 유틸리티
-│   ├──  activity-logger.js       # 활동 로그 유틸리티
 │   ├──  cache.js                 # 캐시 유틸리티
-│   └──  redis-cache.js           # Redis 캐시 유틸리티
+│   ├──  redis-cache.js           # Redis 캐시 유틸리티
+│   └──  upload.js                # 업로드 유틸리티
 │
 ├──  mcp/                         # Portfolio MCP 서버
 │   ├──  src/server.js            # stdio MCP 서버 엔트리
