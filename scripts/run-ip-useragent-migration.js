@@ -1,7 +1,9 @@
 const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
-const logger = require('./log');
+const logger = require('../log');
+
+const migrationPath = path.join(__dirname, '..', 'migrations', 'manual', 'add-ip-useragent.sql');
 
 async function runIpUserAgentMigration() {
     let connection;
@@ -16,7 +18,7 @@ async function runIpUserAgentMigration() {
 
         logger.info('데이터베이스 연결 성공');
 
-        const migrationSQL = fs.readFileSync(path.join(__dirname, 'add-ip-useragent.sql'), 'utf8');
+        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
         logger.info('마이그레이션 SQL 준비 완료');
 
@@ -100,4 +102,3 @@ if (require.main === module) {
 }
 
 module.exports = runIpUserAgentMigration;
-

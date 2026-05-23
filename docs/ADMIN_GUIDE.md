@@ -202,7 +202,7 @@ JWT_SECRET=your-super-secret-jwt-key-here
 mysql -u user -p portfolio_db < database-admin-schema.sql
 
 # 서버 코드에서 사용하는 권한명과 역할 매핑 동기화
-mysql -u user -p portfolio_db < sync-admin-permissions.sql
+mysql -u user -p portfolio_db < migrations/manual/sync-admin-permissions.sql
 ```
 
 ### **3. 의존성 설치**

@@ -139,9 +139,15 @@ portfolio-server/
 │   ├──  src/server.js            # stdio MCP 서버 엔트리
 │   └──  README.md                # MCP 실행 및 연결 문서
 │
+├──  docs/                        # 운영/배포/DB 문서
+│   └──  assets/                  # 문서 이미지
+│
+├──  scripts/                     # 운영 스크립트
+│   ├──  setup-database.js        # DB 초기 설정 스크립트
+│   └──  run-ip-useragent-migration.js
+│
 ├──  services/                    # 외부 서비스
 │   └──  gemini-ai.js             # Google Gemini AI 서비스
-│
 │
 ├──  uploads/                     # 업로드된 파일
 │   └──  images/                  # 이미지 파일들
@@ -149,8 +155,7 @@ portfolio-server/
 ├──  logs/                        # 로그 파일들
 │   └──  *.log                    # 일별 로그 파일들
 │
-├──  setup-database.js            # DB 초기 설정 스크립트
-└──  *.md                         # 문서 파일들
+└──  README.md                    # 서버 개요 문서
 ```
 
 ## 설치 및 실행
@@ -477,7 +482,7 @@ server {
 }
 ```
 
-자세한 배포 가이드는 [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)를 참고하세요.
+자세한 배포 가이드는 [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)를 참고하세요.
 
 ## ‍ 개발 가이드
 
@@ -585,10 +590,10 @@ curl https://localhost:3001/health
 
 ## 추가 문서
 
-- [ 관리자 시스템 가이드](./ADMIN_GUIDE.md) - 관리자 인증 및 권한 관리
-- [ 배포 가이드](./DEPLOYMENT_GUIDE.md) - 프로덕션 배포 방법
-- [ 로그 가이드](./LOG_GUIDE.md) - 로깅 시스템 사용법
-- [ 데이터베이스 문서](./README-DB.md) - DB 설정 및 관리
+- [ 관리자 시스템 가이드](./docs/ADMIN_GUIDE.md) - 관리자 인증 및 권한 관리
+- [ 배포 가이드](./docs/DEPLOYMENT_GUIDE.md) - 프로덕션 배포 방법
+- [ 로그 가이드](./docs/LOG_GUIDE.md) - 로깅 시스템 사용법
+- [ 데이터베이스 문서](./docs/README-DB.md) - DB 설정 및 관리
 
 ## 버전 히스토리
 

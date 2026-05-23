@@ -8,9 +8,9 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const logger = require('./log');
+const logger = require('../log');
 
-const migrationEntry = path.join(__dirname, 'migrations', 'init.js');
+const migrationEntry = path.join(__dirname, '..', 'migrations', 'init.js');
 
 logger.info('포트폴리오 데이터베이스 설정을 시작합니다...');
 logger.info(` 데이터베이스: ${process.env.DB_SCHEMA}`);
@@ -22,7 +22,7 @@ if (!fs.existsSync(migrationEntry)) {
     logger.error('초기 마이그레이션 진입 파일을 찾을 수 없습니다.', {
         expectedPath: migrationEntry
     });
-    logger.error('현재 저장소에는 초기 DB 스키마 마이그레이션이 포함되어 있지 않습니다. README-DB.md와 SQL 마이그레이션 파일을 확인해 수동으로 적용해주세요.');
+    logger.error('현재 저장소에는 초기 DB 스키마 마이그레이션이 포함되어 있지 않습니다. docs/README-DB.md와 SQL 마이그레이션 파일을 확인해 수동으로 적용해주세요.');
     process.exit(1);
 }
 

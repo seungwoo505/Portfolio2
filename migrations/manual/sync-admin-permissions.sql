@@ -1,5 +1,5 @@
 -- 관리자 권한 테이블과 현재 서버 코드에서 사용하는 권한명을 동기화한다.
--- 사용 예: mysql -u <user> -p <database> < sync-admin-permissions.sql
+-- 사용 예: mysql -u <user> -p <database> < migrations/manual/sync-admin-permissions.sql
 
 CREATE TABLE IF NOT EXISTS admin_permissions (
     id INT AUTO_INCREMENT PRIMARY KEY,

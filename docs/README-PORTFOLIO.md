@@ -1,6 +1,6 @@
 # 🚀 Portfolio Project
 
-![Portfolio Preview](https://github.com/seungwoo505/Portfolio2/blob/main/image/mainImage.png)
+![Portfolio Preview](./assets/mainImage.png)
 
 **Next.js + Express.js 풀스택 포트폴리오 웹사이트**
 
@@ -102,8 +102,8 @@ Portfolio2/
 
 ## ✨ 주요 기능
 
-![Homepage](https://github.com/seungwoo505/Portfolio2/blob/main/image/mainImage.png)
-![Admin Dashboard](https://github.com/seungwoo505/Portfolio2/blob/main/image/adminPage.png)
+![Homepage](./assets/mainImage.png)
+![Admin Dashboard](./assets/adminPage.png)
 
 ### 🏠 포트폴리오
 
@@ -154,9 +154,9 @@ pm2 start server.js
 
 ### 상세 문서
 
-- [🔧 백엔드 문서](./portfolio-server/README.md)
-- [🔐 관리자 가이드](./portfolio-server/ADMIN_GUIDE.md)
-- [🚀 배포 가이드](./portfolio-server/DEPLOYMENT_GUIDE.md)
+- [🔧 백엔드 문서](../README.md)
+- [🔐 관리자 가이드](./ADMIN_GUIDE.md)
+- [🚀 배포 가이드](./DEPLOYMENT_GUIDE.md)
 
 ### API 문서
 
