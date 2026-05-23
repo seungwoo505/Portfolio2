@@ -234,23 +234,16 @@ HTTPS_CA=/path/to/ssl/ca-bundle.crt
 
 ```env
 # Redis 캐싱 (선택사항)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
+REDIS_SOCKET=/run/synocached.sock
 
 # AI 서비스 (선택사항)
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# 이메일 설정 (연락처 폼용)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-
 # 파일 업로드 설정
-MAX_FILE_SIZE=10485760
-UPLOAD_PATH=./uploads
-ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,webp,pdf,doc,docx
+UPLOAD_MAX_FILE_SIZE=5242880
+
+# 공개 문의 API 제한
+CONTACT_RATE_LIMIT_MAX=5
 ```
 
 ## API 문서
@@ -289,7 +282,7 @@ POST /api/public/posts/:slug/view # 포스트 조회수 증가
 GET /api/public/tags            # 공개 태그
 GET /api/public/settings        # 공개 사이트 설정
 POST /api/public/contact        # 연락처 메시지
-GET /api/health                 # 헬스체크
+GET /health                     # 헬스체크
 ```
 
 기존 `/api/projects`, `/api/blog/posts` 등의 공개 경로는 제거되었습니다. 신규 프론트와 MCP는 `/api/public/*` 경로를 기준으로 연동합니다.
@@ -316,19 +309,31 @@ POST /api/admin/ai/keywords     # AI 키워드 추출
 # 블로그 관리
 GET /api/admin/blog/posts       # 모든 포스트 (비공개 포함)
 POST /api/admin/blog/posts      # 새 포스트 생성
-PUT /api/admin/blog/posts/:id   # 포스트 수정
-DELETE /api/admin/blog/posts/:id # 포스트 삭제
-PUT /api/admin/blog/posts/:id/publish # 발행/비발행
+GET /api/admin/blog/posts/slug/:slug # 포스트 상세
+PUT /api/admin/blog/posts/slug/:slug # 포스트 수정
+DELETE /api/admin/blog/posts/slug/:slug # 포스트 삭제
+PUT /api/admin/blog/posts/slug/:slug/publish # 발행/비발행
+PUT /api/admin/blog/posts/slug/:slug/featured # 추천/추천해제
 
 # 프로젝트 관리
 GET /api/admin/projects         # 모든 프로젝트
 POST /api/admin/projects        # 새 프로젝트 생성
-PUT /api/admin/projects/:id     # 프로젝트 수정
-DELETE /api/admin/projects/:id  # 프로젝트 삭제
+GET /api/admin/projects/slug/:slug # 프로젝트 상세
+PUT /api/admin/projects/slug/:slug # 프로젝트 수정
+DELETE /api/admin/projects/slug/:slug # 프로젝트 삭제
+
+# 프로필/소셜 링크 관리
+GET /api/admin/personal-info    # 개인 정보 조회
+PUT /api/admin/personal-info    # 개인 정보 수정
+GET /api/admin/social-links     # 소셜 링크 조회
+POST /api/admin/social-links    # 소셜 링크 생성
+PUT /api/admin/social-links/:id # 소셜 링크 수정
+DELETE /api/admin/social-links/:id # 소셜 링크 삭제
 
 # 연락처 관리
 GET /api/admin/contacts         # 연락처 메시지
 PUT /api/admin/contacts/:id/read # 읽음 처리
+DELETE /api/admin/contacts/:id  # 연락처 메시지 삭제
 
 # 설정 관리
 GET /api/admin/settings         # 사이트 설정
@@ -359,11 +364,13 @@ SOURCE_DB_SCHEMA=portfolio_old TARGET_DB_SCHEMA=portfolio_new npm run migrate:co
 
 | 테이블명           | 설명          | 주요 컬럼                                |
 | ------------------ | ------------- | ---------------------------------------- |
-| `personal_info`    | 개인 정보     | name, title, bio, email, profile_image   |
+| `personal_info`    | 개인 정보     | name, title, bio, email, avatar_url      |
 | `social_links`     | 소셜 링크     | platform, url, icon, display_order       |
 | `skills`           | 기술 스택     | name, proficiency_level, category_id     |
 | `projects`         | 프로젝트      | title, description, demo_url, github_url |
 | `blog_posts`       | 블로그 포스트 | title, content, is_published, view_count |
+| `tags`             | 태그          | name, slug, type, usage_count            |
+| `tag_usage`        | 태그 사용처   | tag_id, content_type, content_id         |
 | `admin_users`      | 관리자 계정   | username, password_hash, role            |
 | `contact_messages` | 연락처 메시지 | name, email, message, is_read            |
 | `site_settings`    | 사이트 설정   | key, value, type, is_public              |
@@ -377,8 +384,9 @@ erDiagram
     projects ||--o{ project_images : "has"
     projects ||--o{ project_skills : "uses"
     skills ||--o{ project_skills : "used_in"
-    blog_posts ||--o{ blog_tags : "tagged_with"
-    tags ||--o{ blog_tags : "applied_to"
+    projects ||--o{ tag_usage : "tagged_with"
+    blog_posts ||--o{ tag_usage : "tagged_with"
+    tags ||--o{ tag_usage : "applied_to"
     admin_users ||--o{ admin_activity_logs : "performs"
 ```
 
@@ -402,6 +410,7 @@ erDiagram
 - **일반 API**: 1분에 300회 요청
 - **관리자 API**: 1분에 100회 요청
 - **로그인 API**: 15분에 5회 시도
+- **문의 API**: 15분에 5회 요청
 
 ### **입력 검증**
 
@@ -511,7 +520,7 @@ tail -f logs/$(date +%Y-%m-%d).log
 
 ```bash
 # API 테스트 (예시)
-curl -X GET https://localhost:3001/api/health
+curl -X GET https://localhost:3001/health
 curl -X GET https://localhost:3001/api/public/posts
 ```
 

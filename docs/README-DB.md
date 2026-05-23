@@ -8,7 +8,7 @@
 
 - 이름, 직책, 자기소개
 - 연락처 정보 (이메일, 전화번호, 위치)
-- 프로필 이미지, 이력서 URL
+- 프로필 이미지 URL(`avatar_url`), 이력서 URL
 
 ### 소셜 링크 (social_links)
 
@@ -29,15 +29,14 @@
 ### 블로그 시스템
 
 - **blog_posts**: 블로그 포스트 (제목, 내용, 메타데이터)
-- **blog_tags**: 태그 시스템
-- **blog_post_tags**: 포스트-태그 연결 테이블
+- **tags**: 공통 태그 시스템
+- **tag_usage**: 프로젝트/블로그 포스트와 태그 연결 테이블
 
 ### 연락처 및 기타
 
 - **contact_messages**: 연락처 폼으로 받은 메시지
 - **experiences**: 경력/학력/자격증 정보
 - **site_settings**: 사이트 설정 키-값 저장
-- **visitor_stats**: 방문자 통계 (선택사항)
 
 ## 설치 및 설정
 
@@ -111,12 +110,16 @@ npm start
 ### 개인 정보
 
 - `GET /api/public/profile` - 개인 정보 조회
+- `GET /api/admin/personal-info` - 관리자 개인 정보 조회
 - `PUT /api/admin/personal-info` - 개인 정보 수정
 
 ### 소셜 링크
 
 - `GET /api/public/social-links` - 모든 소셜 링크 조회
+- `GET /api/admin/social-links` - 관리자 소셜 링크 조회
 - `POST /api/admin/social-links` - 소셜 링크 추가
+- `PUT /api/admin/social-links/:id` - 소셜 링크 수정
+- `DELETE /api/admin/social-links/:id` - 소셜 링크 삭제
 
 ### 스킬
 
@@ -128,17 +131,30 @@ npm start
 
 - `GET /api/public/projects` - 프로젝트 목록 조회
 - `GET /api/public/projects/:slug` - 특정 프로젝트 상세 조회
+- `GET /api/admin/projects` - 관리자 프로젝트 목록 조회
 - `POST /api/admin/projects` - 새 프로젝트 생성
+- `GET /api/admin/projects/slug/:slug` - 관리자 프로젝트 상세 조회
+- `PUT /api/admin/projects/slug/:slug` - 프로젝트 수정
+- `DELETE /api/admin/projects/slug/:slug` - 프로젝트 삭제
 
 ### 블로그
 
 - `GET /api/public/posts` - 블로그 포스트 목록
 - `GET /api/public/posts/:slug` - 특정 포스트 조회
+- `GET /api/admin/blog/posts` - 관리자 블로그 포스트 목록 조회
 - `POST /api/admin/blog/posts` - 새 포스트 생성
+- `GET /api/admin/blog/posts/slug/:slug` - 관리자 포스트 상세 조회
+- `PUT /api/admin/blog/posts/slug/:slug` - 포스트 수정
+- `PUT /api/admin/blog/posts/slug/:slug/publish` - 포스트 발행 상태 수정
+- `PUT /api/admin/blog/posts/slug/:slug/featured` - 포스트 추천 상태 수정
+- `DELETE /api/admin/blog/posts/slug/:slug` - 포스트 삭제
 
 ### 연락처
 
 - `POST /api/public/contact` - 연락처 메시지 전송
+- `GET /api/admin/contacts` - 연락처 메시지 조회
+- `PUT /api/admin/contacts/:id/read` - 연락처 읽음 처리
+- `DELETE /api/admin/contacts/:id` - 연락처 메시지 삭제
 
 ### 설정
 
@@ -146,7 +162,7 @@ npm start
 
 ### 헬스체크
 
-- `GET /api/health` - 서버 및 DB 상태 확인
+- `GET /health` - 서버 상태 확인
 
 ## 사용법 예시
 
@@ -254,7 +270,7 @@ export const api = {
 
 1. **환경 변수**: 운영 환경의 데이터베이스 정보와 HTTPS 인증서 경로 설정
 2. **CORS**: 프론트엔드 도메인을 CORS 설정에 추가
-3. **보안**: Rate limiting과 helmet 미들웨어가 활성화되어 있음
+3. **보안**: Rate limiting, 문의 API 별도 제한, helmet 미들웨어가 활성화되어 있음
 4. **로깅**: log.js를 통한 로그 관리
 5. **데이터베이스**: 커넥션 풀링과 에러 핸들링 구현됨
 

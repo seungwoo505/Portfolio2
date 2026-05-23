@@ -244,7 +244,7 @@ const http = require("http");
 const options = {
   hostname: "localhost",
   port: process.env.PORT || 3001,
-  path: "/api/health",
+  path: "/health",
   method: "GET",
   timeout: 5000,
 };
@@ -394,7 +394,7 @@ node --max-old-space-size=2048 server.js
 
 ```bash
 # API 엔드포인트 테스트
-curl -k https://yourdomain.com/api/health
+curl -k https://yourdomain.com/health
 curl -k https://yourdomain.com/api/public/posts
 ```
 
@@ -413,7 +413,7 @@ curl -I https://yourdomain.com
 ```bash
 # 부하 테스트 (선택사항)
 npm install -g artillery
-artillery quick --count 10 --num 50 https://yourdomain.com/api/health
+artillery quick --count 10 --num 50 https://yourdomain.com/health
 ```
 
 이 가이드를 따라하면 안전하고 안정적인 프로덕션 환경에서 포트폴리오 서버를 운영할 수 있습니다! 

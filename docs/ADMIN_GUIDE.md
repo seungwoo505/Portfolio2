@@ -49,8 +49,12 @@
 - `logs.read` - 관리자 활동 로그 조회
 - `files.create` - 업로드 파일 생성
 - `files.delete` - 업로드 파일 삭제
+- `personal_info.read` - 개인 정보 조회
 - `personal_info.update` - 개인 정보 수정
+- `social_links.read` - 소셜 링크 조회
 - `social_links.create` - 소셜 링크 생성
+- `social_links.update` - 소셜 링크 수정
+- `social_links.delete` - 소셜 링크 삭제
 - `experiences.read/create/update/delete` - 경력 조회/생성/수정/삭제
 - `interests.read/create/update/delete` - 관심사 조회/생성/수정/삭제
 
@@ -126,11 +130,48 @@ GET /api/admin/logs/stats?days=30
 # 모든 포스트 조회 (비공개 포함)
 GET /api/admin/blog/posts?limit=20&page=1
 
+# 포스트 상세 조회
+GET /api/admin/blog/posts/slug/:slug
+
+# 포스트 수정
+PUT /api/admin/blog/posts/slug/:slug
+
 # 포스트 발행/발행취소
-PUT /api/admin/blog/posts/:id/publish
+PUT /api/admin/blog/posts/slug/:slug/publish
 {
     "is_published": true
 }
+
+# 포스트 추천/추천해제
+PUT /api/admin/blog/posts/slug/:slug/featured
+{
+    "is_featured": true
+}
+
+# 포스트 삭제
+DELETE /api/admin/blog/posts/slug/:slug
+```
+
+###  **프로필 및 소셜 링크 관리**
+
+```bash
+# 개인 정보 조회
+GET /api/admin/personal-info
+
+# 개인 정보 수정
+PUT /api/admin/personal-info
+
+# 소셜 링크 조회
+GET /api/admin/social-links
+
+# 소셜 링크 생성
+POST /api/admin/social-links
+
+# 소셜 링크 수정
+PUT /api/admin/social-links/:id
+
+# 소셜 링크 삭제
+DELETE /api/admin/social-links/:id
 ```
 
 ###  **연락처 관리**
