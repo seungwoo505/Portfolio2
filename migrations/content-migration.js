@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const mysql = require('mysql2/promise');
 const logger = require('../log');
 

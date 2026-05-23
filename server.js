@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");

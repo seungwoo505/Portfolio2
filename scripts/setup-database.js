@@ -5,7 +5,7 @@
  * 이 스크립트는 데이터베이스 테이블을 생성하고 초기 데이터를 삽입합니다.
  */
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const fs = require('fs');
 const path = require('path');
 const logger = require('../log');
