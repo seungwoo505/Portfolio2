@@ -38,7 +38,7 @@ logs/
   "level": "info",
   "message": "HTTP Request",
   "method": "POST",
-  "url": "/api/contact",
+  "url": "/api/public/contact",
   "statusCode": 201,
   "responseTime": "45ms",
   "ip": "192.168.1.100",

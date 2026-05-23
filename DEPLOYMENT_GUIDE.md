@@ -395,7 +395,7 @@ node --max-old-space-size=2048 server.js
 ```bash
 # API 엔드포인트 테스트
 curl -k https://yourdomain.com/api/health
-curl -k https://yourdomain.com/api/blog/posts
+curl -k https://yourdomain.com/api/public/posts
 ```
 
 ### **2. 보안 테스트**

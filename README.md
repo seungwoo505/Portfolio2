@@ -287,7 +287,7 @@ POST /api/public/contact        # 연락처 메시지
 GET /api/health                 # 헬스체크
 ```
 
-기존 `/api/projects`, `/api/blog/posts` 등의 공개 경로는 점진 제거 대상입니다. 신규 프론트와 MCP는 `/api/public/*` 경로를 기준으로 연동합니다.
+기존 `/api/projects`, `/api/blog/posts` 등의 공개 경로는 제거되었습니다. 신규 프론트와 MCP는 `/api/public/*` 경로를 기준으로 연동합니다.
 
 #### ** 관리자 API (JWT 인증 필요)**
 
@@ -507,7 +507,7 @@ tail -f logs/$(date +%Y-%m-%d).log
 ```bash
 # API 테스트 (예시)
 curl -X GET https://localhost:3001/api/health
-curl -X GET https://localhost:3001/api/blog/posts
+curl -X GET https://localhost:3001/api/public/posts
 ```
 
 ### **디버깅**

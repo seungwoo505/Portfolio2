@@ -162,7 +162,7 @@ pm2 start server.js
 
 - **Swagger UI**: https://localhost:3001/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
 - **API 엔드포인트**:
-  - `GET /api/personal-info` - 개인 정보
-  - `GET /api/projects` - 프로젝트 목록
-  - `GET /api/blog/posts` - 블로그 포스트
-  - `POST /api/contact` - 연락처 메시지
+  - `GET /api/public/profile` - 개인 정보
+  - `GET /api/public/projects` - 프로젝트 목록
+  - `GET /api/public/posts` - 블로그 포스트
+  - `POST /api/public/contact` - 연락처 메시지

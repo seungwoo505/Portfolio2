@@ -110,39 +110,39 @@ npm start
 
 ### 개인 정보
 
-- `GET /api/personal-info` - 개인 정보 조회
-- `PUT /api/personal-info` - 개인 정보 수정
+- `GET /api/public/profile` - 개인 정보 조회
+- `PUT /api/admin/personal-info` - 개인 정보 수정
 
 ### 소셜 링크
 
-- `GET /api/social-links` - 모든 소셜 링크 조회
-- `POST /api/social-links` - 소셜 링크 추가
+- `GET /api/public/social-links` - 모든 소셜 링크 조회
+- `POST /api/admin/social-links` - 소셜 링크 추가
 
 ### 스킬
 
-- `GET /api/skills` - 모든 스킬 및 카테고리 조회
-- `GET /api/skills/featured` - 주요 스킬만 조회
-- `POST /api/skills` - 새 스킬 추가
+- `GET /api/public/skills` - 모든 스킬 및 카테고리 조회
+- `GET /api/public/skills/featured` - 주요 스킬만 조회
+- `POST /api/admin/skills` - 새 스킬 추가
 
 ### 프로젝트
 
-- `GET /api/projects` - 프로젝트 목록 조회
-- `GET /api/projects/:id` - 특정 프로젝트 상세 조회
-- `POST /api/projects` - 새 프로젝트 생성
+- `GET /api/public/projects` - 프로젝트 목록 조회
+- `GET /api/public/projects/:slug` - 특정 프로젝트 상세 조회
+- `POST /api/admin/projects` - 새 프로젝트 생성
 
 ### 블로그
 
-- `GET /api/blog/posts` - 블로그 포스트 목록
-- `GET /api/blog/posts/:slug` - 특정 포스트 조회
-- `POST /api/blog/posts` - 새 포스트 생성
+- `GET /api/public/posts` - 블로그 포스트 목록
+- `GET /api/public/posts/:slug` - 특정 포스트 조회
+- `POST /api/admin/blog/posts` - 새 포스트 생성
 
 ### 연락처
 
-- `POST /api/contact` - 연락처 메시지 전송
+- `POST /api/public/contact` - 연락처 메시지 전송
 
 ### 설정
 
-- `GET /api/settings` - 공개 사이트 설정 조회
+- `GET /api/public/settings` - 공개 사이트 설정 조회
 
 ### 헬스체크
 
@@ -156,9 +156,9 @@ npm start
 // pages/index.js - 홈페이지
 export async function getStaticProps() {
   const [personalInfo, featuredSkills, featuredProjects] = await Promise.all([
-    fetch(`${process.env.API_URL}/api/personal-info`).then((r) => r.json()),
-    fetch(`${process.env.API_URL}/api/skills/featured`).then((r) => r.json()),
-    fetch(`${process.env.API_URL}/api/projects?featured=true`).then((r) =>
+    fetch(`${process.env.API_URL}/api/public/profile`).then((r) => r.json()),
+    fetch(`${process.env.API_URL}/api/public/skills/featured`).then((r) => r.json()),
+    fetch(`${process.env.API_URL}/api/public/projects?featured=true`).then((r) =>
       r.json()
     ),
   ]);
@@ -177,7 +177,7 @@ export async function getStaticProps() {
 ```javascript
 // pages/projects/index.js - 프로젝트 목록
 export async function getStaticProps() {
-  const response = await fetch(`${process.env.API_URL}/api/projects`);
+  const response = await fetch(`${process.env.API_URL}/api/public/projects`);
   const { data: projects } = await response.json();
 
   return {
@@ -190,7 +190,7 @@ export async function getStaticProps() {
 ```javascript
 // pages/blog/[slug].js - 개별 블로그 포스트
 export async function getStaticPaths() {
-  const response = await fetch(`${process.env.API_URL}/api/blog/posts`);
+  const response = await fetch(`${process.env.API_URL}/api/public/posts`);
   const { data: posts } = await response.json();
 
   const paths = posts.map((post) => ({
@@ -202,7 +202,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const response = await fetch(
-    `${process.env.API_URL}/api/blog/posts/${params.slug}`
+    `${process.env.API_URL}/api/public/posts/${params.slug}`
   );
 
   if (!response.ok) {
@@ -226,23 +226,23 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 export const api = {
   // 개인 정보
   getPersonalInfo: () =>
-    fetch(`${API_BASE}/personal-info`).then((r) => r.json()),
+    fetch(`${API_BASE}/public/profile`).then((r) => r.json()),
 
   // 프로젝트
   getProjects: (params = {}) => {
     const query = new URLSearchParams(params);
-    return fetch(`${API_BASE}/projects?${query}`).then((r) => r.json());
+    return fetch(`${API_BASE}/public/projects?${query}`).then((r) => r.json());
   },
 
   // 블로그
   getBlogPosts: (params = {}) => {
     const query = new URLSearchParams(params);
-    return fetch(`${API_BASE}/blog/posts?${query}`).then((r) => r.json());
+    return fetch(`${API_BASE}/public/posts?${query}`).then((r) => r.json());
   },
 
   // 연락처
   sendContactMessage: (data) =>
-    fetch(`${API_BASE}/contact`, {
+    fetch(`${API_BASE}/public/contact`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

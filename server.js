@@ -16,7 +16,6 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const app = express();
 const cors = require("cors");
 const publicRoutes = require('./routes/public');
-const portfolioRoutes = require('./routes/portfolio');
 const adminRoutes = require('./routes/admin');
 const monitoringRoutes = require('./routes/monitoring');
 const generalLimiter = rateLimit({
@@ -557,7 +556,6 @@ app.get('/health', (req, res) => {
     });
 });
 app.use('/api/public', publicRoutes);
-app.use('/api', portfolioRoutes);
 app.use('/api/admin/login', loginLimiter);
 app.use('/api/admin', adminLimiter, adminRoutes);
 app.use('/api/monitoring', monitoringRoutes);
