@@ -1,4 +1,5 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
+const { clampInteger } = require('../utils/pagination');
 
 const buildDateCondition = (dateFilter) => {
     switch (dateFilter) {
@@ -106,9 +107,11 @@ class ActivityLogs {
     }
 
     async findWithFilters(filters = {}) {
-        const { page = 1, limit = 50 } = filters;
-        const pageLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 10000);
-        const offset = (Math.max(parseInt(page, 10) || 1, 1) - 1) * pageLimit;
+        const { page = 1, limit = 50, offset } = filters;
+        const pageLimit = clampInteger(limit, { min: 1, max: 10000, fallback: 50 });
+        const pageOffset = offset === undefined
+            ? (clampInteger(page, { min: 1, max: 10000, fallback: 1 }) - 1) * pageLimit
+            : clampInteger(offset, { min: 0, max: 10000000, fallback: 0 });
         const { whereClause, values } = buildFilterWhere(filters);
 
         return await executeQuery(`
@@ -118,7 +121,7 @@ class ActivityLogs {
             ${whereClause}
             ORDER BY l.created_at DESC
             LIMIT ? OFFSET ?
-        `, [...values, pageLimit, offset]);
+        `, [...values, pageLimit, pageOffset]);
     }
 
     async countWithFilters(filters = {}) {

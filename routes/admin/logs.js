@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const ActivityLogs = require('../../models/activity-logs');
 const { escapeCsvField } = require('../../utils/csv');
+const { parsePagination } = require('../../utils/pagination');
 const { authenticateToken, requirePermission } = require('../../middleware/auth');
 
 router.get('/logs',
@@ -15,12 +16,12 @@ router.get('/logs',
                 user = 'all',
                 action = 'all',
                 resource_type = 'all',
-                date_filter = 'all',
-                page = 1,
-                limit = 50
+                date_filter = 'all'
             } = req.query;
-            const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
-            const pageLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 1000);
+            const pagination = parsePagination(req.query, {
+                defaultLimit: 50,
+                maxLimit: 1000
+            });
 
             const filters = {
                 search,
@@ -28,20 +29,22 @@ router.get('/logs',
                 action,
                 resource_type,
                 date_filter,
-                page: pageNumber,
-                limit: pageLimit
+                limit: pagination.limit,
+                offset: pagination.offset
             };
             const logs = await ActivityLogs.findWithFilters(filters);
             const total = await ActivityLogs.countWithFilters(filters);
+            const pages = Math.ceil(total / pagination.limit);
 
             res.json({
                 success: true,
                 data: logs,
                 pagination: {
-                    page: pageNumber,
-                    limit: pageLimit,
+                    page: pagination.page,
+                    limit: pagination.limit,
                     total,
-                    pages: Math.ceil(total / pageLimit)
+                    pages,
+                    totalPages: pages
                 }
             });
 
