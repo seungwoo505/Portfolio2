@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const ContactMessages = require('../../models/contact-messages');
+const { parsePagination } = require('../../utils/pagination');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -36,27 +37,32 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
  */
 router.get('/contacts', authenticateToken, requirePermission('contacts.read'), async (req, res) => {
     try {
-        const { limit, page, unread } = req.query;
-        const pageLimit = parseInt(limit) || 50;
-        const offset = page ? (parseInt(page) - 1) * pageLimit : 0;
+        const { unread } = req.query;
+        const { limit, page, offset } = parsePagination(req.query, {
+            defaultLimit: 50,
+            maxLimit: 1000
+        });
+        const unreadOnly = unread === true || unread === 'true';
 
-        let messages;
-        if (unread === 'true') {
-            messages = await ContactMessages.getUnread(pageLimit);
-        } else {
-            messages = await ContactMessages.getAll(pageLimit, offset);
-        }
+        const [messages, total] = await Promise.all([
+            unreadOnly
+                ? ContactMessages.getUnread(limit, offset)
+                : ContactMessages.getAll(limit, offset),
+            ContactMessages.countAll({ unread: unreadOnly ? true : null })
+        ]);
 
         res.json({
             success: true,
             data: messages,
             pagination: {
-                page: parseInt(page) || 1,
-                limit: pageLimit,
-                total: messages.length
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
             }
         });
     } catch (error) {
+        logger.error('연락처 메시지 목록 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
             message: '연락처 메시지를 가져오는데 실패했습니다.'
@@ -157,4 +163,3 @@ router.delete('/contacts/:id',
 );
 
 module.exports = router;
-

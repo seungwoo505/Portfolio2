@@ -39,13 +39,24 @@ const ContactMessages = {
         return await executeQuerySingle('SELECT * FROM contact_messages WHERE id = ?', [id]);
     },
 
-    async getUnread(limit = 50) {
+    async getUnread(limit = 50, offset = 0) {
         return await executeQuery(`
             SELECT * FROM contact_messages 
             WHERE is_read = FALSE
             ORDER BY created_at DESC 
-            LIMIT ?
-        `, [limit]);
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
+    },
+
+    async countAll({ unread = null } = {}) {
+        const whereClause = unread === true ? 'WHERE is_read = FALSE' : '';
+        const result = await executeQuerySingle(`
+            SELECT COUNT(*) AS total
+            FROM contact_messages
+            ${whereClause}
+        `);
+
+        return Number(result?.total || 0);
     },
 
     /**
