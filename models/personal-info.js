@@ -1,5 +1,54 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
-const logger = require('../log');
+
+const profileFields = [
+    'name',
+    'full_name',
+    'title',
+    'bio',
+    'about',
+    'email',
+    'phone',
+    'location',
+    'avatar_url',
+    'resume_url',
+    'github_url',
+    'linkedin_url',
+    'twitter_url',
+    'instagram_url'
+];
+
+const normalizeProfileInput = (data = {}) => {
+    const normalized = { ...data };
+
+    if (normalized.full_name !== undefined && normalized.name === undefined) {
+        normalized.name = normalized.full_name;
+    }
+    if (normalized.name !== undefined && normalized.full_name === undefined) {
+        normalized.full_name = normalized.name;
+    }
+    if (normalized.profile_image !== undefined && normalized.avatar_url === undefined) {
+        normalized.avatar_url = normalized.profile_image;
+    }
+
+    return normalized;
+};
+
+const formatProfile = (profile) => {
+    if (!profile) {
+        return null;
+    }
+
+    const fullName = profile.full_name || profile.name || null;
+    const avatarUrl = profile.avatar_url || null;
+
+    return {
+        ...profile,
+        name: profile.name || fullName,
+        full_name: fullName,
+        avatar_url: avatarUrl,
+        profile_image: avatarUrl
+    };
+};
 
 const PersonalInfo = {
     /**
@@ -7,21 +56,8 @@ const PersonalInfo = {
      * @returns {Promise<any>} 처리 결과
      */
     async get() {
-        logger.debug('PersonalInfo.get() 호출됨');
         const result = await executeQuerySingle('SELECT * FROM personal_info ORDER BY id DESC LIMIT 1');
-        logger.debug('데이터베이스에서 가져온 결과:', result);
-        
-        if (result) {
-            const transformedResult = {
-                ...result,
-                full_name: result.name,
-                avatar_url: result.profile_image
-            };
-            logger.debug('변환된 결과:', transformedResult);
-            return transformedResult;
-        }
-        logger.debug('결과가 null이므로 null 반환');
-        return result;
+        return formatProfile(result);
     },
 
     /**
@@ -30,56 +66,44 @@ const PersonalInfo = {
      * @returns {Promise<any>} 처리 결과
      */
     async update(data) {
-        try {
-            logger.debug('PersonalInfo.update() 호출됨, 받은 데이터:', data);
-            
-            const name = data.full_name || data.name;
-            const profile_image = data.avatar_url || data.profile_image;
-            
-            const { title, bio, about, email, phone, location, resume_url, github_url, linkedin_url, twitter_url, instagram_url } = data;
-            
-            const params = [name, title, bio, about, email, phone, location, profile_image, resume_url, github_url, linkedin_url, twitter_url, instagram_url]
-                .map(value => {
-                    if (value === undefined) return null;
-                    if (value === null) return ''; // NOT NULL 컬럼을 위해 빈 문자열로 변환
-                    return value;
-                });
-            
-            logger.debug('변환된 파라미터:', params);
-            
-            logger.debug('기존 데이터 확인 중...');
-            const existingData = await executeQuerySingle('SELECT id FROM personal_info ORDER BY id DESC LIMIT 1');
-            logger.debug('기존 데이터:', existingData);
-            
-            if (existingData) {
-                logger.debug('기존 데이터 UPDATE 실행');
-                const updateQuery = `
-                    UPDATE personal_info 
-                    SET name = ?, title = ?, bio = ?, about = ?, email = ?, phone = ?, location = ?, 
-                        profile_image = ?, resume_url = ?, github_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, updated_at = NOW()
-                    WHERE id = ?
-                `;
-                await executeQuery(updateQuery, [...params, existingData.id]);
-                logger.debug('UPDATE 완료');
-            } else {
-                logger.debug('새 데이터 INSERT 실행');
-                const insertQuery = `
-                    INSERT INTO personal_info (name, title, bio, about, email, phone, location, 
-                        profile_image, resume_url, github_url, linkedin_url, twitter_url, instagram_url, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                `;
-                await executeQuery(insertQuery, params);
-                logger.debug('INSERT 완료');
+        const normalized = normalizeProfileInput(data);
+        const existingData = await executeQuerySingle('SELECT id FROM personal_info ORDER BY id DESC LIMIT 1');
+
+        if (existingData) {
+            const updateFields = [];
+            const updateValues = [];
+
+            for (const field of profileFields) {
+                if (normalized[field] !== undefined) {
+                    updateFields.push(`${field} = ?`);
+                    updateValues.push(normalized[field]);
+                }
             }
-            
-            logger.debug('데이터 저장 완료, 최종 데이터 조회 중...');
-            const result = await this.get();
-            logger.debug('최종 결과:', result);
-            return result;
-        } catch (error) {
-            logger.error('개인 정보 업데이트 오류', { error: error.message, stack: error.stack });
-            throw error;
+
+            if (updateFields.length === 0) {
+                return await this.get();
+            }
+
+            updateFields.push('updated_at = NOW()');
+            updateValues.push(existingData.id);
+
+            await executeQuery(
+                `UPDATE personal_info SET ${updateFields.join(', ')} WHERE id = ?`,
+                updateValues
+            );
+            return await this.get();
         }
+
+        const insertValues = profileFields.map((field) => (
+            normalized[field] === undefined ? null : normalized[field]
+        ));
+
+        await executeQuery(`
+            INSERT INTO personal_info (${profileFields.join(', ')}, created_at, updated_at)
+            VALUES (${profileFields.map(() => '?').join(', ')}, NOW(), NOW())
+        `, insertValues);
+
+        return await this.get();
     }
 };
 

@@ -215,6 +215,8 @@ const actionLabels = {
     update_skill_order: '기술 스택 순서 변경',
     update_personal_info: '개인 정보 수정',
     create_social_link: '소셜 링크 생성',
+    update_social_link: '소셜 링크 수정',
+    delete_social_link: '소셜 링크 삭제',
     create_experience: '경력 생성',
     update_experience: '경력 수정',
     delete_experience: '경력 삭제',

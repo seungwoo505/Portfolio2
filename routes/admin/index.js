@@ -5,6 +5,7 @@ router.use(require('./auth'));
 router.use(require('./users'));
 router.use(require('./blog'));
 router.use(require('./projects'));
+router.use(require('./profile'));
 router.use(require('./dashboard'));
 router.use(require('./ai'));
 router.use(require('./contacts'));
