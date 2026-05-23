@@ -121,27 +121,40 @@ const Tags = {
                 ))
             });
         }
-        
-        const cleanParams = [
-            name,
-            finalSlug,
-            description === undefined ? null : description,
-            color,
-            type,
-            id
-        ];
-        
-        const query = `
-            UPDATE tags
-            SET name = COALESCE(?, name),
-                slug = COALESCE(?, slug),
-                description = ?,
-                color = COALESCE(?, color),
-                type = COALESCE(?, type),
-                updated_at = NOW()
-            WHERE id = ?
-        `;
-        await executeQuery(query, cleanParams);
+
+        const updateFields = [];
+        const updateValues = [];
+
+        if (name !== undefined) {
+            updateFields.push('name = ?');
+            updateValues.push(name);
+        }
+        if (slug !== undefined || name !== undefined) {
+            updateFields.push('slug = ?');
+            updateValues.push(finalSlug);
+        }
+        if (description !== undefined) {
+            updateFields.push('description = ?');
+            updateValues.push(description);
+        }
+        if (color !== undefined) {
+            updateFields.push('color = ?');
+            updateValues.push(color);
+        }
+        if (type !== undefined) {
+            updateFields.push('type = ?');
+            updateValues.push(type);
+        }
+
+        if (updateFields.length === 0) {
+            return await this.getById(id);
+        }
+
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(id);
+
+        const query = `UPDATE tags SET ${updateFields.join(', ')} WHERE id = ?`;
+        await executeQuery(query, updateValues);
         return await this.getById(id);
     },
 
@@ -193,4 +206,3 @@ const Tags = {
 };
 
 module.exports = Tags;
-

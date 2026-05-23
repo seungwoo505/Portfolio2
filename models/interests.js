@@ -43,12 +43,12 @@ const Interests = {
      * @returns {Promise<any>} 처리 결과
      */
     async create(data) {
-        const { title, description, category, display_order } = data;
+        const { title, description, icon, category, display_order } = data;
         const query = `
-            INSERT INTO interests (title, description, category, display_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO interests (title, description, icon, category, display_order, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
         `;
-        const result = await executeQuery(query, [title, description, category, display_order]);
+        const result = await executeQuery(query, [title, description, icon, category, display_order]);
         return await this.getById(result.insertId);
     },
 
@@ -59,13 +59,32 @@ const Interests = {
      * @returns {Promise<any>} 처리 결과
      */
     async update(id, data) {
-        const { title, description, category, display_order } = data;
-        const query = `
-            UPDATE interests 
-            SET title = ?, description = ?, category = ?, display_order = ?, updated_at = NOW()
-            WHERE id = ?
-        `;
-        await executeQuery(query, [title, description, category, display_order, id]);
+        const allowedFields = {
+            title: data.title,
+            description: data.description,
+            icon: data.icon,
+            category: data.category,
+            display_order: data.display_order
+        };
+        const updateFields = [];
+        const updateValues = [];
+
+        for (const [field, value] of Object.entries(allowedFields)) {
+            if (value !== undefined) {
+                updateFields.push(`${field} = ?`);
+                updateValues.push(value);
+            }
+        }
+
+        if (updateFields.length === 0) {
+            return await this.getById(id);
+        }
+
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(id);
+
+        const query = `UPDATE interests SET ${updateFields.join(', ')} WHERE id = ?`;
+        await executeQuery(query, updateValues);
         return await this.getById(id);
     },
 
