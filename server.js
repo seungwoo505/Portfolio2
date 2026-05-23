@@ -616,7 +616,7 @@ app.use('/api/public', publicRoutes);
 app.use('/api/admin/login', loginLimiter);
 app.use('/api/admin', adminLimiter, adminRoutes);
 app.use('/api/monitoring', monitoringRoutes);
-app.use('*', (req, res) => {
+app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: '요청하신 리소스를 찾을 수 없습니다.',

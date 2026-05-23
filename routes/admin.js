@@ -84,4 +84,4 @@
  *           example: 156
  */
 
-module.exports = require('./admin');
+module.exports = require('./admin/index');

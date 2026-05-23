@@ -38,15 +38,60 @@ const syntaxCheckFiles = Array.from(new Set([
     ...collectJsFiles(path.join('mcp', 'scripts'))
 ])).sort();
 
-const run = (args, label) => {
+const run = (args, label, options = {}) => {
+    const stdio = options.stdio || 'inherit';
     const result = spawnSync(process.execPath, args, {
         cwd: rootDir,
-        stdio: 'inherit'
+        stdio,
+        encoding: stdio === 'pipe' ? 'utf8' : undefined,
+        env: {
+            ...process.env,
+            ...(options.env || {})
+        },
+        timeout: options.timeout
     });
 
     if (result.status !== 0) {
+        if (stdio === 'pipe') {
+            if (result.stdout) {
+                process.stdout.write(result.stdout);
+            }
+            if (result.stderr) {
+                process.stderr.write(result.stderr);
+            }
+        }
+        if (result.error) {
+            throw result.error;
+        }
         throw new Error(`${label} failed`);
     }
+};
+
+const checkAdminRouteExport = () => {
+    const adminRoutes = require(path.join(rootDir, 'routes', 'admin'));
+    if (typeof adminRoutes !== 'function') {
+        throw new Error('routes/admin must export an Express router function');
+    }
+};
+
+const checkServerBoots = () => {
+    const bootScript = `
+        process.env.PORT = '0';
+        process.env.NODE_ENV = 'development';
+        process.env.LOCALHOST = 'http://localhost:3000';
+        process.env.MY_HOST = 'http://localhost:3001';
+        process.env.HTTPS_KEY = '';
+        process.env.HTTPS_CERT = '';
+        process.env.HTTPS_CA = '';
+        process.env.REDIS_SOCKET = process.env.REDIS_SOCKET || '/tmp/portfolio-server-check.sock';
+        require('./server');
+        setTimeout(() => process.exit(0), 500);
+    `;
+
+    run(['-e', bootScript], 'server boot smoke', {
+        stdio: 'pipe',
+        timeout: 5000
+    });
 };
 
 const checkRouteModelMethods = () => {
@@ -128,8 +173,9 @@ for (const file of syntaxCheckFiles) {
     run(['-c', file], `syntax check ${file}`);
 }
 
-run(['-e', "require('./routes/admin'); console.log('admin routes import ok')"], 'admin route import');
+checkAdminRouteExport();
 checkRouteModelMethods();
 checkRoutePermissionsSeeded();
+checkServerBoots();
 
 console.log(`server check passed (${syntaxCheckFiles.length} files)`);
