@@ -1,6 +1,7 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 const { v4: uuidv4 } = require('uuid');
 const CacheUtils = require('../utils/cache');
+const { createUniqueSlug } = require('../utils/slug');
 
 const BlogPosts = {
     /**
@@ -297,7 +298,16 @@ const BlogPosts = {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         const uuid = uuidv4();
         
-        const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
+        const finalSlug = await createUniqueSlug({
+            value: title,
+            providedSlug: slug,
+            fallback: 'post',
+            maxLength: 255,
+            exists: async candidate => !!(await executeQuerySingle(
+                'SELECT id FROM blog_posts WHERE slug = ? LIMIT 1',
+                [candidate]
+            ))
+        });
         
         const reading_time = Math.ceil(content.split(' ').length / 200);
         
@@ -324,10 +334,24 @@ const BlogPosts = {
      */
     async _update(id, data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
+        let finalSlug = null;
+        
+        if (slug !== undefined || title !== undefined) {
+            finalSlug = await createUniqueSlug({
+                value: title,
+                providedSlug: slug,
+                fallback: 'post',
+                maxLength: 255,
+                exists: async candidate => !!(await executeQuerySingle(
+                    'SELECT id FROM blog_posts WHERE slug = ? AND id != ? LIMIT 1',
+                    [candidate, id]
+                ))
+            });
+        }
         
         const cleanData = {
             title: title === undefined ? null : title,
-            slug: slug === undefined ? null : slug,
+            slug: finalSlug,
             excerpt: excerpt === undefined ? null : excerpt,
             content: content === undefined ? null : content,
             featured_image: featured_image === undefined ? null : featured_image,
@@ -395,11 +419,22 @@ const BlogPosts = {
         const tagArray = Array.isArray(tagNames) ? tagNames : (typeof tagNames === 'string' ? tagNames.split(',') : []);
         
         for (const tagName of tagArray) {
-            let tag = await executeQuerySingle('SELECT id FROM tags WHERE name = ?', [tagName.trim()]);
+            const trimmed = String(tagName).trim();
+            if (!trimmed) continue;
+
+            let tag = await executeQuerySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);
             
             if (!tag) {
-                const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
-                const result = await executeQuery("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'blog')", [tagName.trim(), tagSlug]);
+                const tagSlug = await createUniqueSlug({
+                    value: trimmed,
+                    fallback: 'tag',
+                    maxLength: 120,
+                    exists: async candidate => !!(await executeQuerySingle(
+                        'SELECT id FROM tags WHERE slug = ? LIMIT 1',
+                        [candidate]
+                    ))
+                });
+                const result = await executeQuery("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'blog')", [trimmed, tagSlug]);
                 tag = { id: result.insertId };
             }
             

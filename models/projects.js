@@ -1,5 +1,6 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 const CacheUtils = require('../utils/cache');
+const { generateSlug, createUniqueSlug } = require('../utils/slug');
 
 const Projects = {
     /**
@@ -8,12 +9,7 @@ const Projects = {
      * @returns {string} 정규화된 슬러그
      */
     generateSlug(title) {
-        return title
-            .toLowerCase()
-            .replace(/[^a-z0-9가-힣\s-]/g, '') // 한글, 영문, 숫자, 공백, 하이픈만 허용
-            .replace(/\s+/g, '-') // 공백을 하이픈으로 변환
-            .replace(/-+/g, '-') // 연속된 하이픈을 하나로
-            .trim('-'); // 앞뒤 하이픈 제거
+        return generateSlug(title, 'project');
     },
     /**
      * @description 모든 프로젝트를 조회하고 연관된 스킬/태그/이미지 정보를 병합한다.
@@ -401,11 +397,20 @@ const Projects = {
      * @returns {Promise<number>} 신규 프로젝트 ID
      */
     async create(data) {
-        const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        const { title, slug: providedSlug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
         const finalDemoUrl = demo_url || project_url;
         
-        const slug = this.generateSlug(title);
+        const slug = await createUniqueSlug({
+            value: title,
+            providedSlug,
+            fallback: 'project',
+            maxLength: 255,
+            exists: async candidate => !!(await executeQuerySingle(
+                'SELECT id FROM projects WHERE slug = ? LIMIT 1',
+                [candidate]
+            ))
+        });
         
         const sanitizedData = [
             title || null,
@@ -448,34 +453,23 @@ const Projects = {
      * @returns {Promise<Object>} 갱신된 프로젝트 정보
      */
     async update(id, data) {
-        const { title, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        const { title, slug: providedSlug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         
         const finalDemoUrl = demo_url || project_url;
         
-        const slug = title ? this.generateSlug(title) : null;
-        
-        const sanitizedData = [
-            title || null,
-            slug || null,
-            description || null,
-            detailed_description || null,
-            content || null,
-            excerpt || null,
-            meta_description || null,
-            thumbnail_image || null,
-            featured_image || null,
-            demo_url || null,
-            github_url || null,
-            start_date || null,
-            end_date || null,
-            is_ongoing || false,
-            status || 'completed',
-            is_featured || false,
-            is_published || false,
-            display_order || 0,
-            meta_keywords || null,
-            id
-        ];
+        let slug = null;
+        if (providedSlug !== undefined || title !== undefined) {
+            slug = await createUniqueSlug({
+                value: title,
+                providedSlug,
+                fallback: 'project',
+                maxLength: 255,
+                exists: async candidate => !!(await executeQuerySingle(
+                    'SELECT id FROM projects WHERE slug = ? AND id != ? LIMIT 1',
+                    [candidate, id]
+                ))
+            });
+        }
         
         const updateFields = [];
         const updateValues = [];
@@ -483,10 +477,10 @@ const Projects = {
         if (title !== undefined) {
             updateFields.push('title = ?');
             updateValues.push(title);
-            if (slug !== undefined) {
-                updateFields.push('slug = ?');
-                updateValues.push(slug);
-            }
+        }
+        if (providedSlug !== undefined || title !== undefined) {
+            updateFields.push('slug = ?');
+            updateValues.push(slug);
         }
         if (description !== undefined) updateFields.push('description = ?'), updateValues.push(description);
         if (detailed_description !== undefined) updateFields.push('detailed_description = ?'), updateValues.push(detailed_description);
@@ -620,7 +614,15 @@ const Projects = {
             if (!trimmed) continue;
             let tag = await executeQuerySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);
             if (!tag) {
-                const tagSlug = trimmed.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
+                const tagSlug = await createUniqueSlug({
+                    value: trimmed,
+                    fallback: 'tag',
+                    maxLength: 120,
+                    exists: async candidate => !!(await executeQuerySingle(
+                        'SELECT id FROM tags WHERE slug = ? LIMIT 1',
+                        [candidate]
+                    ))
+                });
                 const result = await executeQuery("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'project')", [trimmed, tagSlug]);
                 tag = { id: result.insertId };
             }

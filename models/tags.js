@@ -1,4 +1,5 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
+const { createUniqueSlug } = require('../utils/slug');
 
 const Tags = {
     /**
@@ -71,7 +72,16 @@ const Tags = {
 
     async create(data) {
         const { name, slug, description, color, type = 'general' } = data;
-        const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim('-');
+        const finalSlug = await createUniqueSlug({
+            value: name,
+            providedSlug: slug,
+            fallback: 'tag',
+            maxLength: 120,
+            exists: async candidate => !!(await executeQuerySingle(
+                'SELECT id FROM tags WHERE slug = ? LIMIT 1',
+                [candidate]
+            ))
+        });
         
         const cleanParams = [
             name,
@@ -97,10 +107,24 @@ const Tags = {
      */
     async update(id, data) {
         const { name, slug, description, color, type } = data;
+        let finalSlug = null;
+
+        if (slug !== undefined || name !== undefined) {
+            finalSlug = await createUniqueSlug({
+                value: name,
+                providedSlug: slug,
+                fallback: 'tag',
+                maxLength: 120,
+                exists: async candidate => !!(await executeQuerySingle(
+                    'SELECT id FROM tags WHERE slug = ? AND id != ? LIMIT 1',
+                    [candidate, id]
+                ))
+            });
+        }
         
         const cleanParams = [
             name,
-            slug,
+            finalSlug,
             description === undefined ? null : description,
             color,
             type,
@@ -169,5 +193,4 @@ const Tags = {
 };
 
 module.exports = Tags;
-
 
