@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const Projects = require('../../models/projects');
+const CacheUtils = require('../../utils/cache');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -118,23 +119,52 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
     }
 });
 
-router.post('/projects', authenticateToken, requirePermission('projects.create'), logActivity('create_project'), async (req, res) => {
-    try {
-        const id = await Projects.create(req.body);
-        const newProject = await Projects.getById(id);
+router.post('/projects',
+    authenticateToken,
+    requirePermission('projects.create'),
+    logActivity('create_project'),
+    async (req, res) => {
+        try {
+            const { title, description } = req.body;
 
-        res.status(201).json({
-            success: true,
-            message: '프로젝트가 생성되었습니다.',
-            data: newProject
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+            if (!title || !description) {
+                return res.status(400).json({
+                    success: false,
+                    message: '제목과 설명은 필수입니다.'
+                });
+            }
+
+            const sanitizedData = {};
+            Object.keys(req.body).forEach(key => {
+                if (req.body[key] === undefined) {
+                    sanitizedData[key] = null;
+                } else {
+                    sanitizedData[key] = req.body[key];
+                }
+            });
+
+            verboseDebug('원본 데이터:', req.body);
+            verboseDebug('정규화된 데이터:', sanitizedData);
+            verboseDebug('undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
+
+            const id = await Projects.create(sanitizedData);
+            const newProject = await Projects.getById(id);
+            CacheUtils.invalidateResources('projects');
+
+            res.status(201).json({
+                success: true,
+                message: '프로젝트가 생성되었습니다.',
+                data: newProject
+            });
+        } catch (error) {
+            logger.error('프로젝트 생성 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '프로젝트 생성에 실패했습니다.'
+            });
+        }
     }
-});
+);
 
 /**
  * @swagger
@@ -253,52 +283,6 @@ router.get('/projects/slug/:slug', authenticateToken, requirePermission('project
     }
 });
 
-router.post('/projects',
-    authenticateToken,
-    requirePermission('projects.create'),
-    logActivity('create_project'),
-    async (req, res) => {
-        try {
-            const { title, description } = req.body;
-
-            if (!title || !description) {
-                return res.status(400).json({
-                    success: false,
-                    message: '제목과 설명은 필수입니다.'
-                });
-            }
-
-            const sanitizedData = {};
-            Object.keys(req.body).forEach(key => {
-                if (req.body[key] === undefined) {
-                    sanitizedData[key] = null;
-                } else {
-                    sanitizedData[key] = req.body[key];
-                }
-            });
-
-            verboseDebug('원본 데이터:', req.body);
-            verboseDebug('정규화된 데이터:', sanitizedData);
-            verboseDebug('undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
-
-            const id = await Projects.create(sanitizedData);
-            const newProject = await Projects.getById(id);
-
-            res.status(201).json({
-                success: true,
-                message: '프로젝트가 생성되었습니다.',
-                data: newProject
-            });
-        } catch (error) {
-            logger.error('프로젝트 생성 실패', buildErrorLog(error, req));
-            res.status(500).json({
-                success: false,
-                message: '프로젝트 생성에 실패했습니다.'
-            });
-        }
-    }
-);
-
 router.put('/projects/slug/:slug',
     authenticateToken, 
     requirePermission('projects.update'), 
@@ -393,4 +377,3 @@ router.delete('/projects/slug/:slug',
 );
 
 module.exports = router;
-
