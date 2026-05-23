@@ -60,7 +60,30 @@ router.put('/settings',
     logActivity('update_settings'),
     async (req, res) => {
         try {
-            const { settings } = req.body;
+            const { settings } = req.body || {};
+
+            if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'settings 객체가 필요합니다.'
+                });
+            }
+
+            for (const [key, config] of Object.entries(settings)) {
+                if (!key.trim() || !config || typeof config !== 'object' || Array.isArray(config)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: '각 설정은 유효한 key와 설정 객체를 가져야 합니다.'
+                    });
+                }
+
+                if (!Object.prototype.hasOwnProperty.call(config, 'value')) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `${key} 설정에는 value가 필요합니다.`
+                    });
+                }
+            }
 
             for (const [key, config] of Object.entries(settings)) {
                 await SiteSettings.set(

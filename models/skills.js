@@ -56,15 +56,27 @@ const Skills = {
      * @returns {Promise<any>} 처리 결과
      */
     async createSkill(data) {
-        const { category_id, name, proficiency_level, display_order, is_featured } = data;
+        const {
+            category_id,
+            name,
+            proficiency_level,
+            years_of_experience,
+            icon,
+            color,
+            display_order,
+            is_featured
+        } = data;
         const query = `
-            INSERT INTO skills (category_id, name, proficiency_level, display_order, is_featured)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO skills (category_id, name, proficiency_level, years_of_experience, icon, color, display_order, is_featured)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const result = await executeQuery(query, [
             category_id,
             name,
             proficiency_level ?? 50,
+            years_of_experience ?? null,
+            icon ?? null,
+            color ?? null,
             display_order ?? 0,
             is_featured ?? false
         ]);
@@ -103,6 +115,9 @@ const Skills = {
             category_id: data.category_id,
             name: data.name,
             proficiency_level: data.proficiency_level,
+            years_of_experience: data.years_of_experience,
+            icon: data.icon,
+            color: data.color,
             display_order: data.display_order,
             is_featured: data.is_featured
         };

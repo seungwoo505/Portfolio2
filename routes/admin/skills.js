@@ -204,6 +204,12 @@ router.get('/skills/categories',
  *                 type: integer
  *               proficiency_level:
  *                 type: integer
+ *               years_of_experience:
+ *                 type: number
+ *               icon:
+ *                 type: string
+ *               color:
+ *                 type: string
  *               display_order:
  *                 type: integer
  *               is_featured:
@@ -244,7 +250,7 @@ router.post('/skills',
     logActivity('create_skill'),
     async (req, res) => {
         try {
-            const { name, category_id, proficiency_level, display_order, is_featured } = req.body;
+            const { name, category_id, proficiency_level, years_of_experience, icon, color, display_order, is_featured } = req.body;
 
             if (!name || !category_id) {
                 return res.status(400).json({
@@ -264,11 +270,14 @@ router.post('/skills',
             }
             
             const cleanData = {
-                name: name || '',
-                category_id: category_id || '',
-                proficiency_level: proficiency_level || 50,
-                display_order: display_order || 0,
-                is_featured: is_featured || false
+                name: name ?? '',
+                category_id: category_id ?? '',
+                proficiency_level: proficiency_level ?? 50,
+                years_of_experience: years_of_experience ?? null,
+                icon: icon ?? null,
+                color: color ?? null,
+                display_order: display_order ?? 0,
+                is_featured: is_featured ?? false
             };
             
             const skillId = await Skills.createSkill(cleanData);
@@ -346,7 +355,7 @@ router.put('/skills/:id',
     async (req, res) => {
         try {
             const skillId = req.params.id;
-            const { name, category_id, proficiency_level, display_order, is_featured } = req.body;
+            const { name, category_id, proficiency_level, years_of_experience, icon, color, display_order, is_featured } = req.body;
             
 
             if (!name || !category_id) {
@@ -367,11 +376,14 @@ router.put('/skills/:id',
             }
             
             const cleanData = {
-                name: name || '',
-                category_id: category_id || '',
-                proficiency_level: proficiency_level || 50,
-                display_order: display_order || 0,
-                is_featured: is_featured || false
+                name: name ?? '',
+                category_id: category_id ?? '',
+                proficiency_level: proficiency_level ?? 50,
+                years_of_experience: years_of_experience ?? null,
+                icon: icon ?? null,
+                color: color ?? null,
+                display_order: display_order ?? 0,
+                is_featured: is_featured ?? false
             };
             
             await Skills.updateSkill(skillId, cleanData);
