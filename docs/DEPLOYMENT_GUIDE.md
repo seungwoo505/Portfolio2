@@ -28,6 +28,12 @@ DB_SCHEMA=portfolio_db
 
 # JWT 시크릿 (강력한 랜덤 문자열)
 JWT_SECRET=your-super-secure-jwt-secret-key-min-32-chars
+JWT_REFRESH_SECRET=your-super-secure-refresh-secret-key-min-32-chars
+
+# 요청 제한
+REQUEST_TIMEOUT=3000
+AI_REQUEST_TIMEOUT=15000
+AI_ROUTE_TIMEOUT=14500
 
 # HTTPS 인증서 경로
 HTTPS_KEY=/path/to/ssl/private.key

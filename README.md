@@ -233,6 +233,8 @@ HTTPS_CA=/path/to/ssl/ca-bundle.crt
 
 `TRUST_PROXY`는 리버스 프록시 없이 직접 실행하면 `0`으로 둡니다. Nginx 같은 단일 프록시 뒤에서 운영할 때는 `1`로 설정해야 `req.ip`, 관리자 토큰 IP 검증, rate limit이 실제 클라이언트 IP 기준으로 동작합니다.
 
+`REQUEST_TIMEOUT`은 일반 API 요청 제한이고, `/api/admin/ai/*` 경로는 `AI_REQUEST_TIMEOUT`을 사용합니다. 라우트 내부 AI 호출은 `AI_ROUTE_TIMEOUT` 안에 끝나지 않으면 504로 응답합니다.
+
 ### **선택적 환경 변수**
 
 ```env
@@ -241,6 +243,12 @@ REDIS_SOCKET=/run/synocached.sock
 
 # AI 서비스 (선택사항)
 GEMINI_API_KEY=your_gemini_api_key_here
+AI_REQUEST_TIMEOUT=15000
+AI_ROUTE_TIMEOUT=14500
+AI_CONTENT_MAX_LENGTH=20000
+AI_TECH_TAGS_MAX=30
+AI_TECH_TAG_MAX_LENGTH=80
+AI_MAX_KEYWORDS=20
 
 # 파일 업로드 설정
 UPLOAD_MAX_FILE_SIZE=5242880
@@ -349,7 +357,7 @@ PUT /api/admin/settings         # 설정 업데이트
 
 ### **마이그레이션**
 
-신규 스키마는 `migrations/001_schema.sql` 기준으로 생성합니다. 초기 관리자 계정은 다음 환경 변수를 설정한 뒤 `npm run migrate`로 생성합니다.
+신규 스키마는 `migrations/001_schema.sql`부터 순서대로 적용합니다. 초기 관리자 계정은 다음 환경 변수를 설정한 뒤 `npm run migrate`로 생성합니다.
 
 ```env
 ADMIN_BOOTSTRAP_USERNAME=admin
@@ -377,6 +385,7 @@ SOURCE_DB_SCHEMA=portfolio_old TARGET_DB_SCHEMA=portfolio_new npm run migrate:co
 | `tags`             | 태그          | name, slug, type, usage_count            |
 | `tag_usage`        | 태그 사용처   | tag_id, content_type, content_id         |
 | `admin_users`      | 관리자 계정   | username, password_hash, role            |
+| `admin_sessions`   | 관리자 세션   | session_id, refresh_token_hash, revoked_at |
 | `contact_messages` | 연락처 메시지 | name, email, message, is_read            |
 | `site_settings`    | 사이트 설정   | key, value, type, is_public              |
 
@@ -393,6 +402,7 @@ erDiagram
     blog_posts ||--o{ tag_usage : "tagged_with"
     tags ||--o{ tag_usage : "applied_to"
     admin_users ||--o{ admin_activity_logs : "performs"
+    admin_users ||--o{ admin_sessions : "owns"
 ```
 
 ## 보안 기능
@@ -402,7 +412,7 @@ erDiagram
 - **JWT 기반 인증**: Access Token (30분) + Refresh Token (12시간)
 - **역할 기반 접근 제어**: super_admin, admin, editor
 - **세분화된 권한**: 각 기능별 세밀한 권한 관리
-- **세션 관리**: 토큰 해시화 저장 및 검증
+- **세션 관리**: `admin_sessions`의 세션 ID와 리프레시 토큰 해시를 검증하고 로그아웃 시 세션을 폐기
 
 ### **보안 헤더**
 

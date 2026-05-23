@@ -74,6 +74,12 @@ POST /api/admin/login
 POST /api/admin/logout
 # Headers: Authorization: Bearer <token>
 
+# 액세스 토큰 재발급
+POST /api/admin/refresh
+{
+    "refreshToken": "<refresh-token>"
+}
+
 # 내 정보 조회
 GET /api/admin/me
 # Headers: Authorization: Bearer <token>
@@ -207,9 +213,10 @@ PUT /api/admin/settings
 
 ### **1. JWT 토큰 인증**
 
-- 24시간 만료 토큰
-- 토큰 해시화 저장
-- 세션 기반 토큰 검증
+- Access Token 30분 만료, Refresh Token 12시간 만료
+- `admin_sessions`에 세션 ID와 리프레시 토큰 해시 저장
+- 모든 관리자 요청에서 JWT 서명, 발급 IP, 서버 저장 세션 상태를 함께 검증
+- 로그아웃 시 세션의 `revoked_at`을 기록해 이후 토큰 사용 차단
 
 ### **2. 계정 보안**
 
@@ -233,19 +240,22 @@ PUT /api/admin/settings
 
 ### **1. 서버 설정**
 
-환경 변수에 JWT_SECRET 추가:
+환경 변수에 JWT 시크릿과 초기 관리자 계정 정보를 설정합니다:
 
 ```env
 JWT_SECRET=your-super-secret-jwt-key-here
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-here
+ADMIN_BOOTSTRAP_USERNAME=admin
+ADMIN_BOOTSTRAP_EMAIL=admin@example.com
+ADMIN_BOOTSTRAP_PASSWORD=change-me-before-migration
 ```
 
 ### **2. 데이터베이스 초기화**
 
-관리자 테이블 생성:
+마이그레이션으로 관리자 테이블과 기본 권한을 생성합니다:
 
 ```bash
-# database-admin-schema.sql 실행
-mysql -u user -p portfolio_db < database-admin-schema.sql
+npm run migrate
 
 # 서버 코드에서 사용하는 권한명과 역할 매핑 동기화
 mysql -u user -p portfolio_db < migrations/manual/sync-admin-permissions.sql
