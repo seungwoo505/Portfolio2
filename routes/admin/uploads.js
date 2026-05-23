@@ -3,7 +3,7 @@ const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 const fs = require('fs');
-const { upload, getUploadedImagePath, isSafeUploadedImageFilename } = require('../../utils/upload');
+const { uploadImage, getUploadedImagePath, isSafeUploadedImageFilename } = require('../../utils/upload');
 
 /**
  * @swagger
@@ -53,7 +53,7 @@ const { upload, getUploadedImagePath, isSafeUploadedImageFilename } = require('.
 router.post('/upload/image',
     authenticateToken,
     requirePermission('files.create'),
-    upload.single('image'),
+    uploadImage,
     logActivity('upload_image'),
     async (req, res) => {
         try {
