@@ -101,7 +101,10 @@ const Projects = require('../models/projects');
 const ContactMessages = require('../models/contact-messages');
 const SiteSettings = require('../models/site-settings');
 const Tags = require('../models/tags');
+const Experiences = require('../models/experiences');
+const Interests = require('../models/interests');
 const { executeQuery } = require('../models/db-utils');
+const CacheUtils = require('../utils/cache');
 
 const {
     authenticateToken,
@@ -322,6 +325,40 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
         });
     }
 });
+
+router.post('/blog/posts',
+    authenticateToken,
+    requirePermission('blog.create'),
+    logActivity('create_blog_post'),
+    async (req, res) => {
+        try {
+            const { title, content } = req.body;
+
+            if (!title || !content) {
+                return res.status(400).json({
+                    success: false,
+                    message: '제목과 내용은 필수입니다.'
+                });
+            }
+
+            const id = await BlogPosts.create(req.body);
+            const newPost = await BlogPosts.getById(id);
+            CacheUtils.invalidateResources('blog');
+
+            res.status(201).json({
+                success: true,
+                message: '블로그 포스트가 생성되었습니다.',
+                data: newPost
+            });
+        } catch (error) {
+            logger.error('블로그 포스트 생성 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '블로그 포스트 생성에 실패했습니다.'
+            });
+        }
+    }
+);
 
 /**
  * @swagger
@@ -2611,6 +2648,246 @@ router.get('/logs/export',
             res.status(500).json({
                 success: false,
                 message: '활동 로그 내보내기에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.get('/experiences',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { type } = req.query;
+            const experiences = type
+                ? await Experiences.getByType(type)
+                : await Experiences.getAll();
+
+            res.json({
+                success: true,
+                data: experiences
+            });
+        } catch (error) {
+            logger.error('관리자 경력 목록 조회 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '경력 정보를 가져오는데 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.get('/experiences/timeline',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const timeline = await Experiences.getTimeline();
+            res.json({
+                success: true,
+                data: timeline
+            });
+        } catch (error) {
+            logger.error('관리자 타임라인 조회 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '타임라인 정보를 가져오는데 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.post('/experiences',
+    authenticateToken,
+    requirePermission('experiences.create'),
+    logActivity('create_experience'),
+    async (req, res) => {
+        try {
+            const { type, title } = req.body;
+
+            if (!type || !title) {
+                return res.status(400).json({
+                    success: false,
+                    message: '타입과 제목은 필수입니다.'
+                });
+            }
+
+            const mappedData = {
+                ...req.body,
+                company_or_institution: req.body.company || req.body.company_or_institution
+            };
+
+            const id = await Experiences.create(mappedData);
+            const newExperience = await Experiences.getById(id);
+            CacheUtils.invalidateResources('experiences');
+
+            res.status(201).json({
+                success: true,
+                message: '경력이 추가되었습니다.',
+                data: newExperience
+            });
+        } catch (error) {
+            logger.error('관리자 경력 생성 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '경력 추가에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.put('/experiences/:id',
+    authenticateToken,
+    requirePermission('experiences.update'),
+    logActivity('update_experience'),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { type, title } = req.body;
+
+            if (!type || !title) {
+                return res.status(400).json({
+                    success: false,
+                    message: '타입과 제목은 필수입니다.'
+                });
+            }
+
+            const mappedData = {
+                ...req.body,
+                company_or_institution: req.body.company || req.body.company_or_institution
+            };
+
+            const updatedExperience = await Experiences.update(id, mappedData);
+            CacheUtils.invalidateResources('experiences');
+
+            res.json({
+                success: true,
+                message: '경력이 수정되었습니다.',
+                data: updatedExperience
+            });
+        } catch (error) {
+            logger.error('관리자 경력 수정 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '경력 수정에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.delete('/experiences/:id',
+    authenticateToken,
+    requirePermission('experiences.delete'),
+    logActivity('delete_experience'),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            await Experiences.delete(id);
+            CacheUtils.invalidateResources('experiences');
+
+            res.json({
+                success: true,
+                message: '경력이 삭제되었습니다.'
+            });
+        } catch (error) {
+            logger.error('관리자 경력 삭제 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '경력 삭제에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.get('/interests',
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const { category } = req.query;
+            const interests = category
+                ? await Interests.getByCategory(category)
+                : await Interests.getAll();
+
+            res.json({
+                success: true,
+                data: interests
+            });
+        } catch (error) {
+            logger.error('관리자 관심사 목록 조회 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '관심사 정보를 가져오는데 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.post('/interests',
+    authenticateToken,
+    requirePermission('interests.create'),
+    logActivity('create_interest'),
+    async (req, res) => {
+        try {
+            const interest = await Interests.create(req.body);
+            CacheUtils.invalidateResources('interests');
+
+            res.status(201).json({
+                success: true,
+                message: '관심사가 생성되었습니다.',
+                data: interest
+            });
+        } catch (error) {
+            logger.error('관리자 관심사 생성 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '관심사 생성에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.put('/interests/:id',
+    authenticateToken,
+    requirePermission('interests.update'),
+    logActivity('update_interest'),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            const interest = await Interests.update(id, req.body);
+            CacheUtils.invalidateResources('interests');
+
+            res.json({
+                success: true,
+                message: '관심사가 수정되었습니다.',
+                data: interest
+            });
+        } catch (error) {
+            logger.error('관리자 관심사 수정 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '관심사 수정에 실패했습니다.'
+            });
+        }
+    }
+);
+
+router.delete('/interests/:id',
+    authenticateToken,
+    requirePermission('interests.delete'),
+    logActivity('delete_interest'),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            await Interests.delete(id);
+            CacheUtils.invalidateResources('interests');
+
+            res.json({
+                success: true,
+                message: '관심사가 삭제되었습니다.'
+            });
+        } catch (error) {
+            logger.error('관리자 관심사 삭제 실패', buildErrorLog(error, req));
+            res.status(500).json({
+                success: false,
+                message: '관심사 삭제에 실패했습니다.'
             });
         }
     }
