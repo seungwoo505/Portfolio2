@@ -1,5 +1,5 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const CacheUtils = require('../utils/cache');
 const { createUniqueSlug } = require('../utils/slug');
 
@@ -296,7 +296,7 @@ const BlogPosts = {
      */
     async _create(data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
-        const uuid = uuidv4();
+        const uuid = crypto.randomUUID();
         
         const finalSlug = await createUniqueSlug({
             value: title,

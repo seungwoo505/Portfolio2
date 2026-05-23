@@ -8,7 +8,7 @@
 
 ```bash
 # 주요 의존성 설치 확인
-npm list express mysql2 bcryptjs jsonwebtoken uuid
+npm list express mysql2 bcryptjs jsonwebtoken
 ```
 
 ###  **2. 환경 변수 설정**
