@@ -564,7 +564,9 @@ const BlogPosts = {
         
         CacheUtils.delPattern('blog_posts:*');
         CacheUtils.delPattern('blog_post:slug:*');
+        CacheUtils.delPattern('blog_post_admin:*');
         CacheUtils.delPattern('blog_posts:featured:*');
+        CacheUtils.delPattern('tags:*');
     },
 
     /**
