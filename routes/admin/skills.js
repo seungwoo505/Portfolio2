@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Skills = require('../../models/skills');
+const CacheUtils = require('../../utils/cache');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -84,6 +85,7 @@ router.post('/skills/categories',
             }
 
             const categoryId = await Skills.createCategory(name.trim());
+            CacheUtils.invalidateResources('skills');
 
             res.status(201).json({
                 success: true,
@@ -131,6 +133,7 @@ router.delete('/skills/categories/:id',
             }
 
             await Skills.deleteCategory(categoryId);
+            CacheUtils.invalidateResources('skills');
 
             res.json({
                 success: true,
@@ -271,6 +274,7 @@ router.post('/skills',
             const skillId = await Skills.createSkill(cleanData);
 
             const newSkill = await Skills.getSkillById(skillId);
+            CacheUtils.invalidateResources('skills');
 
             res.status(201).json({
                 success: true,
@@ -373,6 +377,7 @@ router.put('/skills/:id',
             await Skills.updateSkill(skillId, cleanData);
 
             const updatedSkill = await Skills.getSkillById(skillId);
+            CacheUtils.invalidateResources('skills');
 
             res.json({
                 success: true,
@@ -405,6 +410,7 @@ router.delete('/skills/:id',
                 });
             }
             await Skills.deleteSkill(skillId);
+            CacheUtils.invalidateResources('skills');
 
             res.json({
                 success: true,
@@ -496,6 +502,7 @@ router.patch('/skills/:id/featured',
                 });
             }
             await Skills.updateSkill(skillId, { is_featured });
+            CacheUtils.invalidateResources('skills');
 
             res.json({
                 success: true,
@@ -528,6 +535,7 @@ router.patch('/skills/:id/order',
                 });
             }
             await Skills.updateSkill(skillId, { display_order });
+            CacheUtils.invalidateResources('skills');
 
             res.json({
                 success: true,
@@ -545,4 +553,3 @@ router.patch('/skills/:id/order',
 );
 
 module.exports = router;
-

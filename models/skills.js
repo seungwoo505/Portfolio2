@@ -5,6 +5,14 @@ const Skills = {
      * @description 스킬 모델의 전체 목록을 카테고리와 함께 조회한다.
      * @returns {Promise<any>} 처리 결과
      */
+    async getAll() {
+        return await this.getAllWithCategories();
+    },
+
+    /**
+     * @description 스킬 모델의 전체 목록을 카테고리와 함께 조회한다.
+     * @returns {Promise<any>} 처리 결과
+     */
     async getAllWithCategories() {
         return await executeQuery(`
             SELECT s.*, sc.name as category_name 
@@ -53,7 +61,13 @@ const Skills = {
             INSERT INTO skills (category_id, name, proficiency_level, display_order, is_featured)
             VALUES (?, ?, ?, ?, ?)
         `;
-        const result = await executeQuery(query, [category_id, name, proficiency_level, display_order || 0, is_featured || false]);
+        const result = await executeQuery(query, [
+            category_id,
+            name,
+            proficiency_level ?? 50,
+            display_order ?? 0,
+            is_featured ?? false
+        ]);
         return result.insertId;
     },
 
@@ -63,12 +77,16 @@ const Skills = {
      * @returns {Promise<any>} 처리 결과
      */
     async createCategory(data) {
-        const { name, description, display_order } = data;
+        const category = typeof data === 'string' ? { name: data } : data;
+        const { name, description = null, display_order } = category;
+        const finalDisplayOrder = display_order ?? (
+            await executeQuerySingle('SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM skill_categories')
+        ).next_order;
         const query = `
             INSERT INTO skill_categories (name, description, display_order)
             VALUES (?, ?, ?)
         `;
-        const result = await executeQuery(query, [name, description, display_order || 0]);
+        const result = await executeQuery(query, [name, description, finalDisplayOrder]);
         return result.insertId;
     },
 
@@ -79,14 +97,32 @@ const Skills = {
      * @returns {Promise<any>} 처리 결과
      */
     async updateSkill(id, data) {
-        const { category_id, name, proficiency_level, display_order, is_featured } = data;
-        const query = `
-            UPDATE skills 
-            SET category_id = ?, name = ?, proficiency_level = ?, 
-                display_order = ?, is_featured = ?, updated_at = NOW()
-            WHERE id = ?
-        `;
-        await executeQuery(query, [category_id, name, proficiency_level, display_order, is_featured, id]);
+        const updateFields = [];
+        const updateValues = [];
+        const allowedFields = {
+            category_id: data.category_id,
+            name: data.name,
+            proficiency_level: data.proficiency_level,
+            display_order: data.display_order,
+            is_featured: data.is_featured
+        };
+
+        for (const [field, value] of Object.entries(allowedFields)) {
+            if (value !== undefined) {
+                updateFields.push(`${field} = ?`);
+                updateValues.push(value);
+            }
+        }
+
+        if (updateFields.length === 0) {
+            return await this.getSkillById(id);
+        }
+
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(id);
+
+        const query = `UPDATE skills SET ${updateFields.join(', ')} WHERE id = ?`;
+        await executeQuery(query, updateValues);
         return await this.getSkillById(id);
     },
 
@@ -117,20 +153,6 @@ const Skills = {
         return await executeQuerySingle(`
             SELECT * FROM skill_categories WHERE name = ?
         `, [name]);
-    },
-
-    /**
-     * @description 스킬 모델에 카테고리를 생성한다.
-      * @param {*} name 입력값
-     * @returns {Promise<any>} 처리 결과
-     */
-    async createCategory(name) {
-        const query = `
-            INSERT INTO skill_categories (name, display_order)
-            VALUES (?, (SELECT COALESCE(MAX(display_order), 0) + 1 FROM skill_categories sc))
-        `;
-        const result = await executeQuery(query, [name]);
-        return result.insertId;
     },
 
     /**
