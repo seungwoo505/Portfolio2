@@ -12,7 +12,8 @@
     "migrate:ip": "node scripts/run-ip-useragent-migration.js",
     "check": "node scripts/check.js",
     "check:mcp": "npm --prefix mcp run smoke",
-    "test": "npm run check"
+    "test:unit": "node --test tests/*.test.js",
+    "test": "npm run check && npm run test:unit"
   },
   "keywords": [
     "blog",
