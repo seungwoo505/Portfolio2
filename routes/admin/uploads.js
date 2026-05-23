@@ -3,7 +3,7 @@ const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 const fs = require('fs');
-const { upload, getUploadedImagePath } = require('../../utils/upload');
+const { upload, getUploadedImagePath, isSafeUploadedImageFilename } = require('../../utils/upload');
 
 /**
  * @swagger
@@ -105,6 +105,13 @@ router.delete('/upload/image/:filename',
     async (req, res) => {
         try {
             const filename = req.params.filename;
+            if (!isSafeUploadedImageFilename(filename)) {
+                return res.status(400).json({
+                    success: false,
+                    message: '올바르지 않은 이미지 파일명입니다.'
+                });
+            }
+
             const filePath = getUploadedImagePath(filename);
 
             if (!fs.existsSync(filePath)) {

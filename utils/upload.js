@@ -4,6 +4,7 @@ const multer = require('multer');
 
 const uploadImageDir = path.join(__dirname, '..', 'uploads', 'images');
 const uploadMaxFileSize = Number(process.env.UPLOAD_MAX_FILE_SIZE || 5 * 1024 * 1024);
+const uploadedImageFilenamePattern = /^\d+-[a-zA-Z0-9가-힣]+\.(jpe?g|png|gif|webp)$/i;
 
 const ensureUploadImageDir = () => {
     if (!fs.existsSync(uploadImageDir)) {
@@ -58,10 +59,26 @@ const upload = multer({
     }
 });
 
-const getUploadedImagePath = (filename) => path.join(uploadImageDir, filename);
+const isSafeUploadedImageFilename = (filename) => {
+    if (typeof filename !== 'string' || !filename.trim()) {
+        return false;
+    }
+
+    const basename = path.basename(filename);
+    if (basename !== filename || !uploadedImageFilenamePattern.test(basename)) {
+        return false;
+    }
+
+    const uploadRoot = path.resolve(uploadImageDir);
+    const resolvedPath = path.resolve(uploadRoot, basename);
+    return resolvedPath.startsWith(`${uploadRoot}${path.sep}`);
+};
+
+const getUploadedImagePath = (filename) => path.resolve(uploadImageDir, path.basename(filename));
 
 module.exports = {
     upload,
     getUploadedImagePath,
+    isSafeUploadedImageFilename,
     uploadImageDir
 };
