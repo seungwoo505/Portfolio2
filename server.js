@@ -162,10 +162,22 @@ app.use((req, res, next) => {
     res.setHeader('X-Request-Id', req.requestId);
     next();
 });
-const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '2000', 10) || 2000;
+const parsePositiveInt = (value, fallback) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const REQUEST_TIMEOUT = parsePositiveInt(process.env.REQUEST_TIMEOUT, 2000);
+const AI_REQUEST_TIMEOUT = parsePositiveInt(process.env.AI_REQUEST_TIMEOUT, 15000);
+const getRequestTimeout = (req) => (
+    req.originalUrl && req.originalUrl.startsWith('/api/admin/ai')
+        ? AI_REQUEST_TIMEOUT
+        : REQUEST_TIMEOUT
+);
 
 app.use((req, res, next) => {
     let isTimedOut = false;
+    const requestTimeout = getRequestTimeout(req);
     const timeoutId = setTimeout(() => {
         if (!isTimedOut && !res.headersSent) {
             isTimedOut = true;
@@ -175,16 +187,16 @@ app.use((req, res, next) => {
                 url: req.originalUrl,
                 ip: req.ip,
                 userAgent: req.headers['user-agent'],
-                timeout: REQUEST_TIMEOUT
+                timeout: requestTimeout
             });
             
             res.status(408).json({
                 success: false,
                 error: '요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
-                timeout: REQUEST_TIMEOUT
+                timeout: requestTimeout
             });
         }
-    }, REQUEST_TIMEOUT);
+    }, requestTimeout);
     const originalEnd = res.end;
     res.end = function(...args) {
         if (!isTimedOut) {
@@ -667,7 +679,8 @@ logger.info('환경 설정', {
     dbSchema: process.env.DB_SCHEMA || 'portfolio_db',
     corsOrigins: [process.env.LOCALHOST, process.env.MY_HOST].filter(Boolean),
     httpsEnabled: hasHttpsConfig,
-    requestTimeout: `${REQUEST_TIMEOUT}ms`
+    requestTimeout: `${REQUEST_TIMEOUT}ms`,
+    aiRequestTimeout: `${AI_REQUEST_TIMEOUT}ms`
 });
 
 server.listen(port, () => {

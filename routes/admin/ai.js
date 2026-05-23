@@ -6,6 +6,129 @@ const { authenticateToken, requirePermission } = require('../../middleware/auth'
 
 const geminiService = require('../../services/gemini-ai');
 
+const parsePositiveInt = (value, fallback) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const AI_CONTENT_MAX_LENGTH = parsePositiveInt(process.env.AI_CONTENT_MAX_LENGTH, 20000);
+const AI_TECH_TAGS_MAX = parsePositiveInt(process.env.AI_TECH_TAGS_MAX, 30);
+const AI_TECH_TAG_MAX_LENGTH = parsePositiveInt(process.env.AI_TECH_TAG_MAX_LENGTH, 80);
+const AI_MAX_KEYWORDS = parsePositiveInt(process.env.AI_MAX_KEYWORDS, 20);
+const AI_REQUEST_TIMEOUT = parsePositiveInt(process.env.AI_REQUEST_TIMEOUT, 15000);
+const AI_ROUTE_TIMEOUT = parsePositiveInt(process.env.AI_ROUTE_TIMEOUT, Math.max(1000, AI_REQUEST_TIMEOUT - 500));
+
+class AiValidationError extends Error {
+    constructor(message, statusCode = 400) {
+        super(message);
+        this.name = 'AiValidationError';
+        this.statusCode = statusCode;
+    }
+}
+
+const validateContent = (content, emptyMessage) => {
+    if (typeof content !== 'string') {
+        throw new AiValidationError('content는 문자열이어야 합니다.');
+    }
+
+    if (content.trim().length < 1) {
+        throw new AiValidationError(emptyMessage);
+    }
+
+    if (content.length > AI_CONTENT_MAX_LENGTH) {
+        throw new AiValidationError(`content는 최대 ${AI_CONTENT_MAX_LENGTH}자까지 허용됩니다.`, 413);
+    }
+
+    return content;
+};
+
+const normalizeTechTags = (techTags = []) => {
+    if (!Array.isArray(techTags)) {
+        throw new AiValidationError('techTags는 배열이어야 합니다.');
+    }
+
+    if (techTags.length > AI_TECH_TAGS_MAX) {
+        throw new AiValidationError(`techTags는 최대 ${AI_TECH_TAGS_MAX}개까지 허용됩니다.`);
+    }
+
+    return techTags
+        .map((tag) => {
+            if (typeof tag === 'string') {
+                return tag.trim();
+            }
+
+            if (tag && typeof tag.name === 'string') {
+                return tag.name.trim();
+            }
+
+            return '';
+        })
+        .filter(Boolean)
+        .map((tag) => {
+            if (tag.length > AI_TECH_TAG_MAX_LENGTH) {
+                throw new AiValidationError(`techTags 항목은 최대 ${AI_TECH_TAG_MAX_LENGTH}자까지 허용됩니다.`);
+            }
+
+            return tag;
+        });
+};
+
+const normalizeMaxKeywords = (value = 10) => {
+    const parsed = Number.parseInt(value, 10);
+
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > AI_MAX_KEYWORDS) {
+        throw new AiValidationError(`maxKeywords는 1~${AI_MAX_KEYWORDS} 사이의 정수여야 합니다.`);
+    }
+
+    return parsed;
+};
+
+const preprocessContent = (content, logLabel) => (
+    content.replace(/__([^_]+)__/g, (match, projectName) => {
+        verboseDebug(`${logLabel}: ${match} → ${projectName} 프로젝트`);
+        return `${projectName} 프로젝트`;
+    })
+);
+
+const withTimeout = async (promise, label) => {
+    let timeoutId;
+
+    const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+            const error = new Error(`${label} 요청 시간이 초과되었습니다.`);
+            error.code = 'AI_ROUTE_TIMEOUT';
+            reject(error);
+        }, AI_ROUTE_TIMEOUT);
+    });
+
+    try {
+        return await Promise.race([promise, timeout]);
+    } finally {
+        clearTimeout(timeoutId);
+    }
+};
+
+const sendAiError = (res, error, fallbackMessage) => {
+    if (error instanceof AiValidationError) {
+        return res.status(error.statusCode).json({
+            success: false,
+            message: error.message
+        });
+    }
+
+    if (error.code === 'AI_ROUTE_TIMEOUT') {
+        return res.status(504).json({
+            success: false,
+            message: 'AI 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.'
+        });
+    }
+
+    return res.status(500).json({
+        success: false,
+        message: fallbackMessage
+    });
+};
+
 verboseDebug('geminiService 객체 로드됨:', typeof geminiService);
 verboseDebug('geminiService.constructor.name:', geminiService.constructor.name);
 verboseDebug('geminiService.generateSummary 존재 여부:', typeof geminiService.generateSummary);
@@ -57,18 +180,9 @@ router.post('/ai/summarize',
     async (req, res) => {
         try {
             const { content, includeKeywords = false, techTags = [] } = req.body;
-
-            if (!content || content.trim().length < 1) {
-                return res.status(400).json({
-                    success: false,
-                    message: '요약할 내용이 없습니다.'
-                });
-            }
-
-            const preprocessedContent = content.replace(/__([^_]+)__/g, (match, projectName) => {
-                verboseDebug(` 백엔드 전처리: ${match} → ${projectName} 프로젝트`);
-                return `${projectName} 프로젝트`;
-            });
+            const validatedContent = validateContent(content, '요약할 내용이 없습니다.');
+            const normalizedTechTags = normalizeTechTags(techTags);
+            const preprocessedContent = preprocessContent(validatedContent, '백엔드 전처리');
 
             verboseDebug('원본 콘텐츠:', content);
             verboseDebug('전처리된 콘텐츠:', preprocessedContent);
@@ -76,7 +190,10 @@ router.post('/ai/summarize',
             let result;
 
             if (includeKeywords) {
-                result = await geminiService.generateSummaryAndKeywords(preprocessedContent, techTags);
+                result = await withTimeout(
+                    geminiService.generateSummaryAndKeywords(preprocessedContent, normalizedTechTags),
+                    'AI 요약/키워드 생성'
+                );
 
                 res.json({
                     success: true,
@@ -84,21 +201,24 @@ router.post('/ai/summarize',
                         summary: result.summary,
                         keywords: result.keywords,
                         keywordsString: result.keywordsString,
-                        originalLength: content.length,
+                        originalLength: validatedContent.length,
                         summaryLength: result.summary.length
                     },
                     message: 'Gemini AI로 요약과 키워드가 생성되었습니다.'
                 });
             } else {
-                verboseDebug('AI 요약 생성 시작 - content 길이:', content.length);
-                verboseDebug('techTags:', techTags);
+                verboseDebug('AI 요약 생성 시작 - content 길이:', validatedContent.length);
+                verboseDebug('techTags:', normalizedTechTags);
                 verboseDebug('geminiService.generateSummary 호출 시작');
                 verboseDebug('generateSummary 메서드 타입:', typeof geminiService.generateSummary);
                 verboseDebug('generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
 
                 let summary;
                 try {
-                    summary = await geminiService.generateSummary(preprocessedContent, 160, techTags);
+                    summary = await withTimeout(
+                        geminiService.generateSummary(preprocessedContent, 160, normalizedTechTags),
+                        'AI 요약 생성'
+                    );
                     verboseDebug('generateSummary 호출 성공');
                 } catch (error) {
                     logger.error('AI 요약 생성 호출 실패', buildErrorLog(error, req));
@@ -112,7 +232,7 @@ router.post('/ai/summarize',
                     success: true,
                     data: {
                         summary: summary,
-                        originalLength: content.length,
+                        originalLength: validatedContent.length,
                         summaryLength: summary.length
                     },
                     message: 'Gemini AI로 요약이 생성되었습니다.'
@@ -121,10 +241,7 @@ router.post('/ai/summarize',
 
         } catch (error) {
             logger.error('Gemini AI 요약 생성 실패', buildErrorLog(error, req));
-            res.status(500).json({
-                success: false,
-                message: 'AI 요약 생성에 실패했습니다.'
-            });
+            sendAiError(res, error, 'AI 요약 생성에 실패했습니다.');
         }
     }
 );
@@ -169,27 +286,22 @@ router.post('/ai/keywords',
     async (req, res) => {
         try {
             const { content, maxKeywords = 10, techTags = [] } = req.body;
+            const validatedContent = validateContent(content, '키워드를 추출할 내용이 없습니다.');
+            const normalizedMaxKeywords = normalizeMaxKeywords(maxKeywords);
+            const normalizedTechTags = normalizeTechTags(techTags);
+            const preprocessedContent = preprocessContent(validatedContent, '키워드 추출 전처리');
 
-            if (!content || content.trim().length < 1) {
-                return res.status(400).json({
-                    success: false,
-                    message: '키워드를 추출할 내용이 없습니다.'
-                });
-            }
-
-            const preprocessedContent = content.replace(/__([^_]+)__/g, (match, projectName) => {
-                verboseDebug(` 키워드 추출 전처리: ${match} → ${projectName} 프로젝트`);
-                return `${projectName} 프로젝트`;
-            });
-
-            const keywords = await geminiService.extractKeywords(preprocessedContent, maxKeywords, techTags);
+            const keywords = await withTimeout(
+                geminiService.extractKeywords(preprocessedContent, normalizedMaxKeywords, normalizedTechTags),
+                'AI 키워드 추출'
+            );
 
             res.json({
                 success: true,
                 data: {
                     keywords: keywords,
                     keywordsString: keywords.join(', '),
-                    originalLength: content.length,
+                    originalLength: validatedContent.length,
                     keywordCount: keywords.length
                 },
                 message: 'Gemini AI로 키워드가 추출되었습니다.'
@@ -197,13 +309,9 @@ router.post('/ai/keywords',
 
         } catch (error) {
             logger.error('Gemini AI 키워드 추출 실패', buildErrorLog(error, req));
-            res.status(500).json({
-                success: false,
-                message: 'AI 키워드 추출에 실패했습니다.'
-            });
+            sendAiError(res, error, 'AI 키워드 추출에 실패했습니다.');
         }
     }
 );
 
 module.exports = router;
-
