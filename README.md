@@ -220,6 +220,7 @@ DB_SCHEMA=portfolio_db
 # JWT 설정 (보안상 매우 중요!)
 JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
 JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
+ADMIN_SESSION_RETAIN_DAYS=7
 
 # CORS 설정
 LOCALHOST=http://localhost:3000
@@ -234,6 +235,8 @@ HTTPS_CA=/path/to/ssl/ca-bundle.crt
 `TRUST_PROXY`는 리버스 프록시 없이 직접 실행하면 `0`으로 둡니다. Nginx 같은 단일 프록시 뒤에서 운영할 때는 `1`로 설정해야 `req.ip`, 관리자 토큰 IP 검증, rate limit이 실제 클라이언트 IP 기준으로 동작합니다.
 
 `REQUEST_TIMEOUT`은 일반 API 요청 제한이고, `/api/admin/ai/*` 경로는 `AI_REQUEST_TIMEOUT`을 사용합니다. 라우트 내부 AI 호출은 `AI_ROUTE_TIMEOUT` 안에 끝나지 않으면 504로 응답합니다.
+
+만료되었거나 오래 전에 폐기된 관리자 세션은 `npm run sessions:cleanup`으로 정리합니다. `ADMIN_SESSION_RETAIN_DAYS`는 폐기된 세션을 며칠 보관할지 지정합니다.
 
 ### **선택적 환경 변수**
 

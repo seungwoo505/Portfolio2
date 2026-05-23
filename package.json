@@ -10,6 +10,7 @@
     "migrate": "node scripts/setup-database.js",
     "migrate:content": "node migrations/content-migration.js",
     "migrate:ip": "node scripts/run-ip-useragent-migration.js",
+    "sessions:cleanup": "node scripts/cleanup-admin-sessions.js",
     "check": "node scripts/check.js",
     "check:mcp": "npm --prefix mcp run smoke",
     "test:unit": "node --test tests/*.test.js",

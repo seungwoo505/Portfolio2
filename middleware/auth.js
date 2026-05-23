@@ -72,7 +72,7 @@ const authenticateToken = async (req, res, next) => {
                         });
                     }
 
-                    await AdminUsers.verifyRefreshSession(refreshToken, refreshDecoded);
+                    const newRefreshToken = await AdminUsers.rotateRefreshSession(refreshToken, refreshDecoded, user, clientIP);
 
                     const newToken = AdminUsers.generateToken(user, clientIP, refreshDecoded.sid);
                     
@@ -84,6 +84,7 @@ const authenticateToken = async (req, res, next) => {
                     };
 
                     res.setHeader('X-New-Token', newToken);
+                    res.setHeader('X-New-Refresh-Token', newRefreshToken);
                     
                     logger.info('토큰 자동 재발급 성공', { 
                         userId: user.id, 

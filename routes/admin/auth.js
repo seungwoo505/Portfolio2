@@ -217,6 +217,9 @@ router.post('/logout', authenticateToken, async (req, res) => {
  *                     token:
  *                       type: string
  *                       example: "eyJhbGciOiJIUzI1NiIs..."
+ *                     refreshToken:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIs..."
  *       400:
  *         description: Refresh Token 누락
  *         content:
@@ -259,7 +262,7 @@ router.post('/refresh', async (req, res) => {
             });
         }
 
-        await AdminUsers.verifyRefreshSession(refreshToken, decoded);
+        const newRefreshToken = await AdminUsers.rotateRefreshSession(refreshToken, decoded, user, clientIP);
 
         const newToken = AdminUsers.generateToken(user, clientIP, decoded.sid);
 
@@ -267,7 +270,8 @@ router.post('/refresh', async (req, res) => {
             success: true,
             message: '토큰이 재발급되었습니다.',
             data: {
-                token: newToken
+                token: newToken,
+                refreshToken: newRefreshToken
             }
         });
     } catch (error) {
@@ -408,7 +412,7 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
             });
         }
 
-        await AdminUsers.changePassword(req.admin.id, oldPassword, newPassword);
+        await AdminUsers.changePassword(req.admin.id, oldPassword, newPassword, req.admin.sessionId);
 
         res.json({
             success: true,

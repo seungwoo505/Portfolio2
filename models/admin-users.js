@@ -107,6 +107,7 @@ const AdminUsers = {
                 type: 'refresh', // 토큰 타입 구분
                 sid: sessionId,
                 ip: ipAddress,
+                jti: crypto.randomUUID(),
                 iat: Math.floor(Date.now() / 1000)
             },
             process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
@@ -247,6 +248,35 @@ const AdminUsers = {
     },
 
     /**
+     * @description 리프레시 토큰을 검증한 뒤 새 토큰으로 회전한다.
+      * @param {*} refreshToken 입력값
+      * @param {*} decoded 입력값
+      * @param {*} user 입력값
+      * @param {*} ipAddress 입력값
+     * @returns {Promise<string>} 처리 결과
+     */
+    async rotateRefreshSession(refreshToken, decoded, user, ipAddress) {
+        await this.verifyRefreshSession(refreshToken, decoded);
+
+        const newRefreshToken = this.generateRefreshToken(user, ipAddress, decoded.sid);
+
+        await executeQuery(`
+            UPDATE admin_sessions
+            SET refresh_token_hash = ?,
+                expires_at = ?,
+                last_used_at = NOW()
+            WHERE session_id = ?
+                AND revoked_at IS NULL
+        `, [
+            this.hashToken(newRefreshToken),
+            this.getRefreshTokenExpiresAt(),
+            decoded.sid
+        ]);
+
+        return newRefreshToken;
+    },
+
+    /**
      * @description 관리자 세션을 폐기한다.
       * @param {*} sessionId 입력값
      * @returns {Promise<any>} 처리 결과
@@ -261,6 +291,48 @@ const AdminUsers = {
             SET revoked_at = COALESCE(revoked_at, NOW())
             WHERE session_id = ?
         `, [sessionId]);
+    },
+
+    /**
+     * @description 관리자 사용자의 활성 세션을 폐기한다.
+      * @param {*} adminId 입력값
+      * @param {*} exceptSessionId 입력값
+     * @returns {Promise<any>} 처리 결과
+     */
+    async revokeUserSessions(adminId, exceptSessionId = null) {
+        const params = [adminId];
+        let query = `
+            UPDATE admin_sessions
+            SET revoked_at = COALESCE(revoked_at, NOW())
+            WHERE admin_id = ?
+                AND revoked_at IS NULL
+        `;
+
+        if (exceptSessionId) {
+            query += ` AND session_id != ?`;
+            params.push(exceptSessionId);
+        }
+
+        await executeQuery(query, params);
+    },
+
+    /**
+     * @description 만료되었거나 오래 전에 폐기된 관리자 세션을 정리한다.
+      * @param {*} revokedRetentionDays 입력값
+     * @returns {Promise<number>} 삭제된 세션 수
+     */
+    async cleanupExpiredSessions(revokedRetentionDays = 7) {
+        const retentionDays = Number.parseInt(revokedRetentionDays, 10);
+        const safeRetentionDays = Number.isInteger(retentionDays) && retentionDays >= 0 ? retentionDays : 7;
+        const revokedBefore = new Date(Date.now() - safeRetentionDays * 24 * 60 * 60 * 1000);
+
+        const result = await executeQuery(`
+            DELETE FROM admin_sessions
+            WHERE expires_at < NOW()
+                OR (revoked_at IS NOT NULL AND revoked_at < ?)
+        `, [revokedBefore]);
+
+        return result.affectedRows || 0;
     },
 
     /**
@@ -392,7 +464,7 @@ const AdminUsers = {
       * @param {*} newPassword 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async changePassword(id, oldPassword, newPassword) {
+    async changePassword(id, oldPassword, newPassword, currentSessionId = null) {
         const user = await executeQuerySingle(`
             SELECT password_hash FROM admin_users WHERE id = ?
         `, [id]);
@@ -413,6 +485,8 @@ const AdminUsers = {
             SET password_hash = ?, updated_at = NOW()
             WHERE id = ?
         `, [newPasswordHash, id]);
+
+        await this.revokeUserSessions(id, currentSessionId);
 
     },
 

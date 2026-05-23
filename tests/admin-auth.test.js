@@ -59,6 +59,16 @@ const createAdminUsersFixture = async () => {
                 return { insertId: sessions.length };
             }
 
+            if (sql.includes('update admin_sessions') && sql.includes('refresh_token_hash')) {
+                const session = sessions.find((item) => item.session_id === params[2]);
+                if (session) {
+                    session.refresh_token_hash = params[0];
+                    session.expires_at = params[1];
+                    session.last_used_at = new Date();
+                }
+                return { affectedRows: session ? 1 : 0 };
+            }
+
             if (sql.includes('update admin_sessions') && sql.includes('last_used_at')) {
                 const session = sessions.find((item) => item.session_id === params[0]);
                 if (session) {
@@ -67,12 +77,44 @@ const createAdminUsersFixture = async () => {
                 return { affectedRows: session ? 1 : 0 };
             }
 
+            if (sql.includes('update admin_sessions') && sql.includes('admin_id = ?')) {
+                const adminId = params[0];
+                const exceptSessionId = params[1];
+                let affectedRows = 0;
+                sessions.forEach((session) => {
+                    if (
+                        Number(session.admin_id) === Number(adminId)
+                        && !session.revoked_at
+                        && (!exceptSessionId || session.session_id !== exceptSessionId)
+                    ) {
+                        session.revoked_at = new Date();
+                        affectedRows += 1;
+                    }
+                });
+                return { affectedRows };
+            }
+
             if (sql.includes('update admin_sessions') && sql.includes('revoked_at')) {
                 const session = sessions.find((item) => item.session_id === params[0]);
                 if (session) {
                     session.revoked_at = new Date();
                 }
                 return { affectedRows: session ? 1 : 0 };
+            }
+
+            if (sql.includes('delete from admin_sessions')) {
+                const now = new Date();
+                const revokedBefore = params[0];
+                const beforeCount = sessions.length;
+                for (let index = sessions.length - 1; index >= 0; index -= 1) {
+                    if (
+                        sessions[index].expires_at < now
+                        || (sessions[index].revoked_at && sessions[index].revoked_at < revokedBefore)
+                    ) {
+                        sessions.splice(index, 1);
+                    }
+                }
+                return { affectedRows: beforeCount - sessions.length };
             }
 
             return { affectedRows: 1 };
@@ -175,6 +217,24 @@ test('AdminUsers.verifyRefreshSession checks the stored hash and marks usage', a
     );
 });
 
+test('AdminUsers.rotateRefreshSession replaces the stored refresh token hash', async () => {
+    const { AdminUsers, sessions } = await createAdminUsersFixture();
+
+    const { user, refreshToken } = await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'unit-agent');
+    const decoded = AdminUsers.verifyRefreshToken(refreshToken);
+    const newRefreshToken = await AdminUsers.rotateRefreshSession(refreshToken, decoded, user, '127.0.0.1');
+
+    assert.notEqual(newRefreshToken, refreshToken);
+    assert.equal(sessions[0].refresh_token_hash, AdminUsers.hashToken(newRefreshToken));
+    assert.notEqual(sessions[0].refresh_token_hash, AdminUsers.hashToken(refreshToken));
+    assert.equal(AdminUsers.verifyRefreshToken(newRefreshToken).sid, decoded.sid);
+
+    await assert.rejects(
+        () => AdminUsers.verifyRefreshSession(refreshToken, decoded),
+        /Refresh Token 세션/
+    );
+});
+
 test('AdminUsers.logout revokes the active session', async () => {
     const { AdminUsers, sessions } = await createAdminUsersFixture();
 
@@ -189,6 +249,47 @@ test('AdminUsers.logout revokes the active session', async () => {
         () => AdminUsers.assertActiveSession(decoded.sid, decoded.id),
         /세션이 만료되었거나 로그아웃/
     );
+});
+
+test('AdminUsers.changePassword revokes other active sessions for the admin', async () => {
+    const { AdminUsers, sessions } = await createAdminUsersFixture();
+
+    const firstLogin = await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'first-agent');
+    const secondLogin = await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'second-agent');
+    const currentSessionId = AdminUsers.verifyToken(firstLogin.token).sid;
+    const otherSessionId = AdminUsers.verifyToken(secondLogin.token).sid;
+
+    await AdminUsers.changePassword(1, 'correct-password', 'new-password', currentSessionId);
+
+    assert.equal(sessions.find((session) => session.session_id === currentSessionId).revoked_at, null);
+    assert.ok(sessions.find((session) => session.session_id === otherSessionId).revoked_at instanceof Date);
+});
+
+test('AdminUsers.cleanupExpiredSessions removes expired and old revoked sessions', async () => {
+    const { AdminUsers, sessions } = await createAdminUsersFixture();
+
+    await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'active-agent');
+    sessions.push({
+        session_id: 'expired-session',
+        admin_id: 1,
+        refresh_token_hash: 'expired',
+        expires_at: new Date(Date.now() - 1000),
+        revoked_at: null
+    });
+    sessions.push({
+        session_id: 'old-revoked-session',
+        admin_id: 1,
+        refresh_token_hash: 'old-revoked',
+        expires_at: new Date(Date.now() + 100000),
+        revoked_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+    });
+
+    const deletedCount = await AdminUsers.cleanupExpiredSessions(7);
+
+    assert.equal(deletedCount, 2);
+    assert.equal(sessions.some((session) => session.session_id === 'expired-session'), false);
+    assert.equal(sessions.some((session) => session.session_id === 'old-revoked-session'), false);
+    assert.equal(sessions.length, 1);
 });
 
 test('authenticateToken accepts an access token only when its session is active', async () => {
@@ -257,10 +358,13 @@ test('authenticateToken refreshes an expired access token with a valid refresh s
             role: 'admin',
             is_active: 1
         }),
-        verifyRefreshSession: async (refreshToken, decoded) => {
+        rotateRefreshSession: async (refreshToken, decoded, user, ipAddress) => {
             verifiedRefreshSession = true;
             assert.equal(refreshToken, 'refresh-token');
             assert.equal(decoded.sid, 'session-2');
+            assert.equal(user.id, 1);
+            assert.equal(ipAddress, '127.0.0.1');
+            return 'new-refresh-token';
         },
         generateToken: (user, ipAddress, sessionId) => {
             assert.equal(user.id, 1);
@@ -288,5 +392,6 @@ test('authenticateToken refreshes an expired access token with a valid refresh s
     assert.equal(verifiedRefreshSession, true);
     assert.equal(nextCalled, true);
     assert.equal(res.headers['X-New-Token'], 'new-access-token');
+    assert.equal(res.headers['X-New-Refresh-Token'], 'new-refresh-token');
     assert.equal(req.admin.sessionId, 'session-2');
 });
