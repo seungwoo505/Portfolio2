@@ -82,11 +82,54 @@ const checkRouteModelMethods = () => {
     }
 };
 
+const checkRoutePermissionsSeeded = () => {
+    const routeFiles = collectJsFiles('routes');
+    const routePermissionPattern = /requirePermission\(['"]([^'"]+)['"]\)/g;
+    const routePermissions = new Set();
+
+    for (const routeFile of routeFiles) {
+        const content = fs.readFileSync(path.join(rootDir, routeFile), 'utf8');
+        for (const match of content.matchAll(routePermissionPattern)) {
+            routePermissions.add(match[1]);
+        }
+    }
+
+    const seedContent = fs.readFileSync(path.join(rootDir, 'migrations', '002_seed_admin.js'), 'utf8');
+    const seedPermissions = new Set(
+        [...seedContent.matchAll(/\[['"]([^'"]+)['"],\s*['"][^'"]+['"],\s*['"][^'"]+['"],/g)]
+            .map((match) => match[1])
+    );
+
+    const manualSyncPath = path.join(rootDir, 'migrations', 'manual', 'sync-admin-permissions.sql');
+    const manualSyncContent = fs.existsSync(manualSyncPath) ? fs.readFileSync(manualSyncPath, 'utf8') : '';
+    const manualSyncPermissions = new Set(
+        [...manualSyncContent.matchAll(/\(['"]([^'"]+)['"],\s*['"][^'"]+['"],\s*['"][^'"]+['"],/g)]
+            .map((match) => match[1])
+    );
+
+    const missingFromSeed = [...routePermissions].filter((permission) => !seedPermissions.has(permission));
+    const missingFromManualSync = [...routePermissions].filter((permission) => !manualSyncPermissions.has(permission));
+    const failures = [];
+
+    if (missingFromSeed.length > 0) {
+        failures.push(`missing from migrations/002_seed_admin.js: ${missingFromSeed.join(', ')}`);
+    }
+
+    if (missingFromManualSync.length > 0) {
+        failures.push(`missing from migrations/manual/sync-admin-permissions.sql: ${missingFromManualSync.join(', ')}`);
+    }
+
+    if (failures.length > 0) {
+        throw new Error(`route permission seed check failed:\n${failures.join('\n')}`);
+    }
+};
+
 for (const file of syntaxCheckFiles) {
     run(['-c', file], `syntax check ${file}`);
 }
 
 run(['-e', "require('./routes/admin'); console.log('admin routes import ok')"], 'admin route import');
 checkRouteModelMethods();
+checkRoutePermissionsSeeded();
 
 console.log(`server check passed (${syntaxCheckFiles.length} files)`);

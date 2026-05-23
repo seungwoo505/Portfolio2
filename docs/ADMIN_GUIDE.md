@@ -28,26 +28,31 @@
 - `blog.create` - 블로그 포스트 생성
 - `blog.read` - 블로그 포스트 조회 (비공개 포함)
 - `blog.update` - 블로그 포스트 수정
+- `blog.edit` - 블로그 포스트 편집 기능
 - `blog.delete` - 블로그 포스트 삭제
 - `blog.publish` - 블로그 포스트 발행/발행취소
 
 #### 프로젝트 권한
 
 - `projects.create` - 프로젝트 생성
+- `projects.read` - 프로젝트 조회
 - `projects.update` - 프로젝트 수정
 - `projects.delete` - 프로젝트 삭제
 
 #### 기타 권한
 
 - `contacts.read` - 연락처 메시지 조회
+- `contacts.update` - 연락처 메시지 상태 변경
+- `settings.read` - 사이트 설정 조회
 - `settings.update` - 사이트 설정 수정
 - `dashboard.read` - 대시보드 접근
 - `logs.read` - 관리자 활동 로그 조회
+- `files.create` - 업로드 파일 생성
 - `files.delete` - 업로드 파일 삭제
 - `personal_info.update` - 개인 정보 수정
 - `social_links.create` - 소셜 링크 생성
-- `experiences.create/update/delete` - 경력 생성/수정/삭제
-- `interests.create/update/delete` - 관심사 생성/수정/삭제
+- `experiences.read/create/update/delete` - 경력 조회/생성/수정/삭제
+- `interests.read/create/update/delete` - 관심사 조회/생성/수정/삭제
 
 ##  **API 엔드포인트**
 

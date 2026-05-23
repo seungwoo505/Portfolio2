@@ -5,7 +5,9 @@ const permissions = [
     ['blog.create', 'blog', 'create', '블로그 생성'],
     ['blog.read', 'blog', 'read', '블로그 조회'],
     ['blog.update', 'blog', 'update', '블로그 수정'],
+    ['blog.edit', 'blog', 'edit', '블로그 편집'],
     ['blog.delete', 'blog', 'delete', '블로그 삭제'],
+    ['blog.publish', 'blog', 'publish', '블로그 발행 상태 변경'],
     ['projects.create', 'projects', 'create', '프로젝트 생성'],
     ['projects.read', 'projects', 'read', '프로젝트 조회'],
     ['projects.update', 'projects', 'update', '프로젝트 수정'],
@@ -20,14 +22,19 @@ const permissions = [
     ['tags.update', 'tags', 'update', '태그 수정'],
     ['tags.delete', 'tags', 'delete', '태그 삭제'],
     ['contacts.read', 'contacts', 'read', '문의 조회'],
+    ['contacts.update', 'contacts', 'update', '문의 수정'],
     ['contacts.delete', 'contacts', 'delete', '문의 삭제'],
     ['settings.read', 'settings', 'read', '설정 조회'],
     ['settings.update', 'settings', 'update', '설정 수정'],
     ['users.manage', 'users', 'manage', '관리자 계정 관리'],
     ['logs.read', 'logs', 'read', '활동 로그 조회'],
+    ['files.create', 'files', 'create', '업로드 파일 생성'],
+    ['files.delete', 'files', 'delete', '업로드 파일 삭제'],
+    ['experiences.read', 'experiences', 'read', '경력 조회'],
     ['experiences.create', 'experiences', 'create', '경력 생성'],
     ['experiences.update', 'experiences', 'update', '경력 수정'],
     ['experiences.delete', 'experiences', 'delete', '경력 삭제'],
+    ['interests.read', 'interests', 'read', '관심사 조회'],
     ['interests.create', 'interests', 'create', '관심사 생성'],
     ['interests.update', 'interests', 'update', '관심사 수정'],
     ['interests.delete', 'interests', 'delete', '관심사 삭제']
@@ -42,9 +49,13 @@ const rolePermissions = {
         'blog.create',
         'blog.read',
         'blog.update',
+        'blog.edit',
+        'blog.publish',
         'projects.read',
         'tags.read',
-        'skills.read'
+        'skills.read',
+        'experiences.read',
+        'interests.read'
     ]
 };
 

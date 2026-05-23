@@ -52,6 +52,7 @@ const { upload, getUploadedImagePath } = require('../../utils/upload');
  */
 router.post('/upload/image',
     authenticateToken,
+    requirePermission('files.create'),
     upload.single('image'),
     logActivity('upload_image'),
     async (req, res) => {

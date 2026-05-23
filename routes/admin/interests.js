@@ -7,6 +7,7 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
 
 router.get('/interests',
     authenticateToken,
+    requirePermission('interests.read'),
     async (req, res) => {
         try {
             const { category } = req.query;
@@ -102,4 +103,3 @@ router.delete('/interests/:id',
 );
 
 module.exports = router;
-

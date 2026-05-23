@@ -7,6 +7,7 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
 
 router.get('/experiences',
     authenticateToken,
+    requirePermission('experiences.read'),
     async (req, res) => {
         try {
             const { type } = req.query;
@@ -30,6 +31,7 @@ router.get('/experiences',
 
 router.get('/experiences/timeline',
     authenticateToken,
+    requirePermission('experiences.read'),
     async (req, res) => {
         try {
             const timeline = await Experiences.getTimeline();
@@ -150,4 +152,3 @@ router.delete('/experiences/:id',
 );
 
 module.exports = router;
-
