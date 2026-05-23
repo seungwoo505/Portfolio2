@@ -1,6 +1,22 @@
-const { executeQuery, executeQuerySingle } = require('./db-utils');
+const {
+    executeQuery,
+    executeQuerySingle,
+    executeConnectionQuery,
+    executeConnectionQuerySingle,
+    executeTransaction
+} = require('./db-utils');
 const CacheUtils = require('../utils/cache');
 const { generateSlug, createUniqueSlug } = require('../utils/slug');
+
+const createQueryContext = (connection) => ({
+    query: (query, params = []) => executeConnectionQuery(connection, query, params),
+    querySingle: (query, params = []) => executeConnectionQuerySingle(connection, query, params)
+});
+
+const defaultQueryContext = {
+    query: executeQuery,
+    querySingle: executeQuerySingle
+};
 
 const Projects = {
     /**
@@ -401,49 +417,54 @@ const Projects = {
         
         const finalDemoUrl = demo_url || project_url;
         
-        const slug = await createUniqueSlug({
-            value: title,
-            providedSlug,
-            fallback: 'project',
-            maxLength: 255,
-            exists: async candidate => !!(await executeQuerySingle(
-                'SELECT id FROM projects WHERE slug = ? LIMIT 1',
-                [candidate]
-            ))
+        return await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            const slug = await createUniqueSlug({
+                value: title,
+                providedSlug,
+                fallback: 'project',
+                maxLength: 255,
+                exists: async candidate => !!(await db.querySingle(
+                    'SELECT id FROM projects WHERE slug = ? LIMIT 1',
+                    [candidate]
+                ))
+            });
+
+            const sanitizedData = [
+                title || null,
+                slug || null,
+                description || null,
+                detailed_description || null,
+                content || null,
+                excerpt || null,
+                meta_description || null,
+                thumbnail_image || null,
+                featured_image || null,
+                finalDemoUrl || null,
+                github_url || null,
+                start_date || null,
+                end_date || null,
+                is_ongoing || false,
+                status || 'completed',
+                is_featured || false,
+                is_published || false,
+                display_order || 0,
+                meta_keywords || null
+            ];
+
+            const query = `
+                INSERT INTO projects (title, slug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            const result = await db.query(query, sanitizedData);
+            const projectId = result.insertId;
+
+            if (tags && Array.isArray(tags) && tags.length > 0) {
+                await this.updateTags(projectId, tags, db);
+            }
+
+            return projectId;
         });
-        
-        const sanitizedData = [
-            title || null,
-            slug || null,
-            description || null,
-            detailed_description || null,
-            content || null,
-            excerpt || null,
-            meta_description || null,
-            thumbnail_image || null,
-            featured_image || null,
-            finalDemoUrl || null,
-            github_url || null,
-            start_date || null,
-            end_date || null,
-            is_ongoing || false,
-            status || 'completed',
-            is_featured || false,
-            is_published || false,
-            display_order || 0,
-            meta_keywords || null
-        ];
-        
-        const query = `
-            INSERT INTO projects (title, slug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const result = await executeQuery(query, sanitizedData);
-        const projectId = result.insertId;
-        if (tags && Array.isArray(tags) && tags.length > 0) {
-            await this.updateTags(projectId, tags);
-        }
-        return projectId;
     },
 
     /**
@@ -457,64 +478,68 @@ const Projects = {
         
         const finalDemoUrl = demo_url || project_url;
         
-        let slug = null;
-        if (providedSlug !== undefined || title !== undefined) {
-            slug = await createUniqueSlug({
-                value: title,
-                providedSlug,
-                fallback: 'project',
-                maxLength: 255,
-                exists: async candidate => !!(await executeQuerySingle(
-                    'SELECT id FROM projects WHERE slug = ? AND id != ? LIMIT 1',
-                    [candidate, id]
-                ))
-            });
-        }
-        
-        const updateFields = [];
-        const updateValues = [];
-        
-        if (title !== undefined) {
-            updateFields.push('title = ?');
-            updateValues.push(title);
-        }
-        if (providedSlug !== undefined || title !== undefined) {
-            updateFields.push('slug = ?');
-            updateValues.push(slug);
-        }
-        if (description !== undefined) updateFields.push('description = ?'), updateValues.push(description);
-        if (detailed_description !== undefined) updateFields.push('detailed_description = ?'), updateValues.push(detailed_description);
-        if (content !== undefined) updateFields.push('content = ?'), updateValues.push(content);
-        if (excerpt !== undefined) updateFields.push('excerpt = ?'), updateValues.push(excerpt);
-        if (meta_description !== undefined) updateFields.push('meta_description = ?'), updateValues.push(meta_description);
-        if (thumbnail_image !== undefined) updateFields.push('thumbnail_image = ?'), updateValues.push(thumbnail_image);
-        if (featured_image !== undefined) updateFields.push('featured_image = ?'), updateValues.push(featured_image);
-        if (finalDemoUrl !== undefined) updateFields.push('demo_url = ?'), updateValues.push(finalDemoUrl);
-        if (github_url !== undefined) updateFields.push('github_url = ?'), updateValues.push(github_url);
-        if (start_date !== undefined) updateFields.push('start_date = ?'), updateValues.push(start_date);
-        if (end_date !== undefined) updateFields.push('end_date = ?'), updateValues.push(end_date);
-        if (is_ongoing !== undefined) updateFields.push('is_ongoing = ?'), updateValues.push(is_ongoing);
-        if (status !== undefined) updateFields.push('status = ?'), updateValues.push(status);
-        if (is_featured !== undefined) {
-            updateFields.push('is_featured = ?'), updateValues.push(is_featured);
-        }
-        if (is_published !== undefined) updateFields.push('is_published = ?'), updateValues.push(is_published);
-        if (display_order !== undefined) updateFields.push('display_order = ?'), updateValues.push(display_order);
-        if (meta_keywords !== undefined) updateFields.push('meta_keywords = ?'), updateValues.push(meta_keywords);
-        
-        updateFields.push('updated_at = NOW()');
-        
-        if (updateFields.length === 0) {
-            return await this.getById(id);
-        }
-        
-        const query = `UPDATE projects SET ${updateFields.join(', ')} WHERE id = ?`;
-        updateValues.push(id);
-        
-        await executeQuery(query, updateValues);
-        if (tags) {
-            await this.updateTags(id, tags);
-        }
+        await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            let slug = null;
+
+            if (providedSlug !== undefined || title !== undefined) {
+                slug = await createUniqueSlug({
+                    value: title,
+                    providedSlug,
+                    fallback: 'project',
+                    maxLength: 255,
+                    exists: async candidate => !!(await db.querySingle(
+                        'SELECT id FROM projects WHERE slug = ? AND id != ? LIMIT 1',
+                        [candidate, id]
+                    ))
+                });
+            }
+
+            const updateFields = [];
+            const updateValues = [];
+
+            if (title !== undefined) {
+                updateFields.push('title = ?');
+                updateValues.push(title);
+            }
+            if (providedSlug !== undefined || title !== undefined) {
+                updateFields.push('slug = ?');
+                updateValues.push(slug);
+            }
+            if (description !== undefined) updateFields.push('description = ?'), updateValues.push(description);
+            if (detailed_description !== undefined) updateFields.push('detailed_description = ?'), updateValues.push(detailed_description);
+            if (content !== undefined) updateFields.push('content = ?'), updateValues.push(content);
+            if (excerpt !== undefined) updateFields.push('excerpt = ?'), updateValues.push(excerpt);
+            if (meta_description !== undefined) updateFields.push('meta_description = ?'), updateValues.push(meta_description);
+            if (thumbnail_image !== undefined) updateFields.push('thumbnail_image = ?'), updateValues.push(thumbnail_image);
+            if (featured_image !== undefined) updateFields.push('featured_image = ?'), updateValues.push(featured_image);
+            if (finalDemoUrl !== undefined) updateFields.push('demo_url = ?'), updateValues.push(finalDemoUrl);
+            if (github_url !== undefined) updateFields.push('github_url = ?'), updateValues.push(github_url);
+            if (start_date !== undefined) updateFields.push('start_date = ?'), updateValues.push(start_date);
+            if (end_date !== undefined) updateFields.push('end_date = ?'), updateValues.push(end_date);
+            if (is_ongoing !== undefined) updateFields.push('is_ongoing = ?'), updateValues.push(is_ongoing);
+            if (status !== undefined) updateFields.push('status = ?'), updateValues.push(status);
+            if (is_featured !== undefined) {
+                updateFields.push('is_featured = ?'), updateValues.push(is_featured);
+            }
+            if (is_published !== undefined) updateFields.push('is_published = ?'), updateValues.push(is_published);
+            if (display_order !== undefined) updateFields.push('display_order = ?'), updateValues.push(display_order);
+            if (meta_keywords !== undefined) updateFields.push('meta_keywords = ?'), updateValues.push(meta_keywords);
+
+            if (updateFields.length > 0) {
+                updateFields.push('updated_at = NOW()');
+
+                const query = `UPDATE projects SET ${updateFields.join(', ')} WHERE id = ?`;
+                updateValues.push(id);
+
+                await db.query(query, updateValues);
+            }
+
+            if (tags) {
+                await this.updateTags(id, tags, db);
+            }
+        });
+
         return await this.getById(id);
     },
 
@@ -524,11 +549,15 @@ const Projects = {
      * @returns {Promise<void>}
      */
     async delete(id) {
-        await executeQuery('DELETE FROM project_skills WHERE project_id = ?', [id]);
-        await executeQuery('DELETE FROM project_images WHERE project_id = ?', [id]);
-        await executeQuery("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [id]);
-        await executeQuery('DELETE FROM projects WHERE id = ?', [id]);
-        await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
+        await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+
+            await db.query('DELETE FROM project_skills WHERE project_id = ?', [id]);
+            await db.query('DELETE FROM project_images WHERE project_id = ?', [id]);
+            await db.query("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [id]);
+            await db.query('DELETE FROM projects WHERE id = ?', [id]);
+            await db.query('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
+        });
     },
 
     /**
@@ -606,29 +635,29 @@ const Projects = {
      * @param {Array<string>} tagNames 태그 이름 목록
      * @returns {Promise<void>}
      */
-    async updateTags(projectId, tagNames) {
-        await executeQuery("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [projectId]);
+    async updateTags(projectId, tagNames, db = defaultQueryContext) {
+        await db.query("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [projectId]);
         
         for (const tagName of tagNames) {
             const trimmed = String(tagName).trim();
             if (!trimmed) continue;
-            let tag = await executeQuerySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);
+            let tag = await db.querySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);
             if (!tag) {
                 const tagSlug = await createUniqueSlug({
                     value: trimmed,
                     fallback: 'tag',
                     maxLength: 120,
-                    exists: async candidate => !!(await executeQuerySingle(
+                    exists: async candidate => !!(await db.querySingle(
                         'SELECT id FROM tags WHERE slug = ? LIMIT 1',
                         [candidate]
                     ))
                 });
-                const result = await executeQuery("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'project')", [trimmed, tagSlug]);
+                const result = await db.query("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'project')", [trimmed, tagSlug]);
                 tag = { id: result.insertId };
             }
-            await executeQuery("INSERT IGNORE INTO tag_usage (tag_id, content_type, content_id) VALUES (?, 'project', ?)", [tag.id, projectId]);
+            await db.query("INSERT IGNORE INTO tag_usage (tag_id, content_type, content_id) VALUES (?, 'project', ?)", [tag.id, projectId]);
         }
-        await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
+        await db.query('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     }
 };
 

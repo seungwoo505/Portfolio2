@@ -1,7 +1,23 @@
-const { executeQuery, executeQuerySingle } = require('./db-utils');
+const {
+    executeQuery,
+    executeQuerySingle,
+    executeConnectionQuery,
+    executeConnectionQuerySingle,
+    executeTransaction
+} = require('./db-utils');
 const crypto = require('crypto');
 const CacheUtils = require('../utils/cache');
 const { createUniqueSlug } = require('../utils/slug');
+
+const createQueryContext = (connection) => ({
+    query: (query, params = []) => executeConnectionQuery(connection, query, params),
+    querySingle: (query, params = []) => executeConnectionQuerySingle(connection, query, params)
+});
+
+const defaultQueryContext = {
+    query: executeQuery,
+    querySingle: executeQuerySingle
+};
 
 const BlogPosts = {
     /**
@@ -297,33 +313,36 @@ const BlogPosts = {
     async _create(data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         const uuid = crypto.randomUUID();
-        
-        const finalSlug = await createUniqueSlug({
-            value: title,
-            providedSlug: slug,
-            fallback: 'post',
-            maxLength: 255,
-            exists: async candidate => !!(await executeQuerySingle(
-                'SELECT id FROM blog_posts WHERE slug = ? LIMIT 1',
-                [candidate]
-            ))
+
+        return await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            const finalSlug = await createUniqueSlug({
+                value: title,
+                providedSlug: slug,
+                fallback: 'post',
+                maxLength: 255,
+                exists: async candidate => !!(await db.querySingle(
+                    'SELECT id FROM blog_posts WHERE slug = ? LIMIT 1',
+                    [candidate]
+                ))
+            });
+
+            const reading_time = Math.ceil(content.split(' ').length / 200);
+
+            const query = `
+                INSERT INTO blog_posts (uuid, title, slug, excerpt, content, featured_image, is_published, is_featured, reading_time, meta_title, meta_description, meta_keywords, published_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            const published_at = is_published ? new Date() : null;
+            const result = await db.query(query, [uuid, title, finalSlug, excerpt, content, featured_image, is_published || false, is_featured || false, reading_time, meta_title, meta_description, meta_keywords, published_at]);
+
+            if (tags && tags.length > 0) {
+                await this.updateTags(result.insertId, tags, db);
+            }
+
+            return result.insertId;
         });
-        
-        const reading_time = Math.ceil(content.split(' ').length / 200);
-        
-        const query = `
-            INSERT INTO blog_posts (uuid, title, slug, excerpt, content, featured_image, is_published, is_featured, reading_time, meta_title, meta_description, meta_keywords, published_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        
-        const published_at = is_published ? new Date() : null;
-        const result = await executeQuery(query, [uuid, title, finalSlug, excerpt, content, featured_image, is_published || false, is_featured || false, reading_time, meta_title, meta_description, meta_keywords, published_at]);
-        
-        if (tags && tags.length > 0) {
-            await this.updateTags(result.insertId, tags);
-        }
-        
-        return result.insertId;
     },
 
     /**
@@ -334,64 +353,68 @@ const BlogPosts = {
      */
     async _update(id, data) {
         const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
-        let finalSlug = null;
-        
-        if (slug !== undefined || title !== undefined) {
-            finalSlug = await createUniqueSlug({
-                value: title,
-                providedSlug: slug,
-                fallback: 'post',
-                maxLength: 255,
-                exists: async candidate => !!(await executeQuerySingle(
-                    'SELECT id FROM blog_posts WHERE slug = ? AND id != ? LIMIT 1',
-                    [candidate, id]
-                ))
-            });
-        }
-        
-        const cleanData = {
-            title: title === undefined ? null : title,
-            slug: finalSlug,
-            excerpt: excerpt === undefined ? null : excerpt,
-            content: content === undefined ? null : content,
-            featured_image: featured_image === undefined ? null : featured_image,
-            is_published: is_published === undefined ? null : is_published,
-            is_featured: is_featured === undefined ? null : is_featured,
-            meta_title: meta_title === undefined ? null : meta_title,
-            meta_description: meta_description === undefined ? null : meta_description,
-            meta_keywords: meta_keywords === undefined ? null : meta_keywords
-        };
-        
-        const reading_time = cleanData.content ? Math.ceil(cleanData.content.split(' ').length / 200) : null;
-        
-        let query = `
-            UPDATE blog_posts 
-            SET title = COALESCE(?, title), 
-                slug = COALESCE(?, slug), 
-                excerpt = COALESCE(?, excerpt), 
-                content = COALESCE(?, content), 
-                featured_image = COALESCE(?, featured_image), 
-                is_published = COALESCE(?, is_published), 
-                is_featured = COALESCE(?, is_featured), 
-                meta_title = COALESCE(?, meta_title), 
-                meta_description = COALESCE(?, meta_description),
-                meta_keywords = COALESCE(?, meta_keywords),
-                reading_time = COALESCE(?, reading_time),
-                updated_at = NOW()
-        `;
-        
-        if (is_published !== undefined) {
-            query += `, published_at = ${is_published ? 'NOW()' : 'NULL'}`;
-        }
-        
-        query += ` WHERE id = ?`;
-        
-        await executeQuery(query, [cleanData.title, cleanData.slug, cleanData.excerpt, cleanData.content, cleanData.featured_image, cleanData.is_published, cleanData.is_featured, cleanData.meta_title, cleanData.meta_description, cleanData.meta_keywords, reading_time, id]);
-        
-        if (tags) {
-            await this.updateTags(id, tags);
-        }
-        
+
+        await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            let finalSlug = null;
+
+            if (slug !== undefined || title !== undefined) {
+                finalSlug = await createUniqueSlug({
+                    value: title,
+                    providedSlug: slug,
+                    fallback: 'post',
+                    maxLength: 255,
+                    exists: async candidate => !!(await db.querySingle(
+                        'SELECT id FROM blog_posts WHERE slug = ? AND id != ? LIMIT 1',
+                        [candidate, id]
+                    ))
+                });
+            }
+
+            const cleanData = {
+                title: title === undefined ? null : title,
+                slug: finalSlug,
+                excerpt: excerpt === undefined ? null : excerpt,
+                content: content === undefined ? null : content,
+                featured_image: featured_image === undefined ? null : featured_image,
+                is_published: is_published === undefined ? null : is_published,
+                is_featured: is_featured === undefined ? null : is_featured,
+                meta_title: meta_title === undefined ? null : meta_title,
+                meta_description: meta_description === undefined ? null : meta_description,
+                meta_keywords: meta_keywords === undefined ? null : meta_keywords
+            };
+
+            const reading_time = cleanData.content ? Math.ceil(cleanData.content.split(' ').length / 200) : null;
+
+            let query = `
+                UPDATE blog_posts
+                SET title = COALESCE(?, title),
+                    slug = COALESCE(?, slug),
+                    excerpt = COALESCE(?, excerpt),
+                    content = COALESCE(?, content),
+                    featured_image = COALESCE(?, featured_image),
+                    is_published = COALESCE(?, is_published),
+                    is_featured = COALESCE(?, is_featured),
+                    meta_title = COALESCE(?, meta_title),
+                    meta_description = COALESCE(?, meta_description),
+                    meta_keywords = COALESCE(?, meta_keywords),
+                    reading_time = COALESCE(?, reading_time),
+                    updated_at = NOW()
+            `;
+
+            if (is_published !== undefined) {
+                query += `, published_at = ${is_published ? 'NOW()' : 'NULL'}`;
+            }
+
+            query += ` WHERE id = ?`;
+
+            await db.query(query, [cleanData.title, cleanData.slug, cleanData.excerpt, cleanData.content, cleanData.featured_image, cleanData.is_published, cleanData.is_featured, cleanData.meta_title, cleanData.meta_description, cleanData.meta_keywords, reading_time, id]);
+
+            if (tags) {
+                await this.updateTags(id, tags, db);
+            }
+        });
+
         return await this.getById(id);
     },
 
@@ -401,10 +424,13 @@ const BlogPosts = {
      * @returns {Promise<void>}
      */
     async _delete(id) {
-        await executeQuery("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [id]);
-        await executeQuery('DELETE FROM blog_posts WHERE id = ?', [id]);
-        
-        await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
+        await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+
+            await db.query("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [id]);
+            await db.query('DELETE FROM blog_posts WHERE id = ?', [id]);
+            await db.query('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
+        });
     },
 
     /**
@@ -413,8 +439,8 @@ const BlogPosts = {
      * @param {Array<string>} tagNames 태그 이름 목록
      * @returns {Promise<void>}
      */
-    async updateTags(postId, tagNames) {
-        await executeQuery("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [postId]);
+    async updateTags(postId, tagNames, db = defaultQueryContext) {
+        await db.query("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [postId]);
         
         const tagArray = Array.isArray(tagNames) ? tagNames : (typeof tagNames === 'string' ? tagNames.split(',') : []);
         
@@ -422,26 +448,26 @@ const BlogPosts = {
             const trimmed = String(tagName).trim();
             if (!trimmed) continue;
 
-            let tag = await executeQuerySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);
+            let tag = await db.querySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);
             
             if (!tag) {
                 const tagSlug = await createUniqueSlug({
                     value: trimmed,
                     fallback: 'tag',
                     maxLength: 120,
-                    exists: async candidate => !!(await executeQuerySingle(
+                    exists: async candidate => !!(await db.querySingle(
                         'SELECT id FROM tags WHERE slug = ? LIMIT 1',
                         [candidate]
                     ))
                 });
-                const result = await executeQuery("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'blog')", [trimmed, tagSlug]);
+                const result = await db.query("INSERT INTO tags (name, slug, type) VALUES (?, ?, 'blog')", [trimmed, tagSlug]);
                 tag = { id: result.insertId };
             }
             
-            await executeQuery("INSERT IGNORE INTO tag_usage (tag_id, content_type, content_id) VALUES (?, 'blog_post', ?)", [tag.id, postId]);
+            await db.query("INSERT IGNORE INTO tag_usage (tag_id, content_type, content_id) VALUES (?, 'blog_post', ?)", [tag.id, postId]);
         }
         
-        await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
+        await db.query('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
     /**

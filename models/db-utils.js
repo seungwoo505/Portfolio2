@@ -78,6 +78,16 @@ const executeQuerySingle = async (query, params = [], options = {}) => {
     return results[0] || null;
 };
 
+const executeConnectionQuery = async (connection, query, params = []) => {
+    const [results] = await connection.execute(query, params);
+    return results;
+};
+
+const executeConnectionQuerySingle = async (connection, query, params = []) => {
+    const results = await executeConnectionQuery(connection, query, params);
+    return results[0] || null;
+};
+
 const executeBatch = async (queries) => {
     const start = Date.now();
     const results = [];
@@ -130,6 +140,8 @@ const executeTransaction = async (callback) => {
 module.exports = {
     executeQuery,
     executeQuerySingle,
+    executeConnectionQuery,
+    executeConnectionQuerySingle,
     executeBatch,
     executeTransaction
 };
