@@ -14,6 +14,24 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
+const parseTrustProxy = (value) => {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (!normalized || ['0', 'false', 'off', 'no'].includes(normalized)) {
+        return false;
+    }
+    if (['1', 'true', 'on', 'yes'].includes(normalized)) {
+        return 1;
+    }
+
+    const numericValue = Number(normalized);
+    if (Number.isInteger(numericValue) && numericValue >= 0) {
+        return numericValue;
+    }
+
+    return value;
+};
+const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
+app.set('trust proxy', trustProxy);
 const cors = require("cors");
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');

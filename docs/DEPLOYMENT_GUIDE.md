@@ -17,6 +17,7 @@ npm list express mysql2 bcryptjs jsonwebtoken uuid
 # .env 파일 생성
 NODE_ENV=production
 PORT=3001
+TRUST_PROXY=1
 
 # 데이터베이스 설정
 DB_HOST=your-db-host
@@ -37,6 +38,8 @@ HTTPS_CA=/path/to/ssl/ca-bundle.crt
 LOCALHOST=http://localhost:3000
 MY_HOST=https://yourdomain.com
 ```
+
+Nginx 리버스 프록시 뒤에서 운영할 때는 `TRUST_PROXY=1`을 설정하세요. 이 값이 없으면 관리자 토큰 IP 검증과 rate limit이 실제 클라이언트가 아니라 프록시 IP를 기준으로 동작할 수 있습니다.
 
 ###  **3. 보안 설정**
 
