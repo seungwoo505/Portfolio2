@@ -154,6 +154,17 @@ test('Projects.create writes the project and tags inside one transaction connect
     assert.equal(fixture.operations.some((operation) => operation.sql.startsWith('pool:')), false);
 });
 
+test('Projects.getAll binds pagination values instead of interpolating them', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.getAll(25, 50);
+
+    const listQuery = fixture.operations.find((operation) => operation.sql.startsWith('pool:select p.*'));
+    assert.ok(listQuery);
+    assert.equal(listQuery.sql.includes('limit ? offset ?'), true);
+    assert.deepEqual(listQuery.params, [25, 50]);
+});
+
 test('Projects.delete removes child rows and recalculates tag counts in one transaction', async () => {
     const fixture = createModelFixture(['models', 'projects.js']);
 

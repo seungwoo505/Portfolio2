@@ -35,6 +35,7 @@ const Projects = {
      */
     async getAll(limit = null, offset = 0) {
         return await (async () => {
+            const queryParams = [];
             let query = `
                 SELECT p.*, 
                        GROUP_CONCAT(DISTINCT s.name ORDER BY s.name ASC) as skills,
@@ -51,10 +52,11 @@ const Projects = {
             `;
             
             if (limit) {
-                query += ` LIMIT ${limit} OFFSET ${offset}`;
+                query += ` LIMIT ? OFFSET ?`;
+                queryParams.push(limit, offset);
             }
             
-            const projects = await executeQuery(query);
+            const projects = await executeQuery(query, queryParams);
             
             const mappedProjects = projects.map(project => ({
                 ...project,

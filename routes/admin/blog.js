@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const BlogPosts = require('../../models/blog-posts');
 const CacheUtils = require('../../utils/cache');
+const { parsePagination } = require('../../utils/pagination');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -44,21 +45,19 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
  */
 router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
-        const { limit, page } = req.query;
-        const limitValue = Array.isArray(limit) ? limit[0] : limit;
-        const pageValue = Array.isArray(page) ? page[0] : page;
-        const pageLimit = limitValue ? parseInt(limitValue, 10) || 20 : 20;
-        const currentPage = pageValue ? parseInt(pageValue, 10) || 1 : 1;
-        const offset = (currentPage - 1) * pageLimit;
+        const { limit, page, offset } = parsePagination(req.query, {
+            defaultLimit: 20,
+            maxLimit: 100
+        });
 
-        const posts = await BlogPosts.getAll(pageLimit, offset, false);
+        const posts = await BlogPosts.getAll(limit, offset, false);
 
         res.json({
             success: true,
             data: posts,
             pagination: {
-                page: currentPage,
-                limit: pageLimit,
+                page,
+                limit,
                 total: posts.length
             }
         });
