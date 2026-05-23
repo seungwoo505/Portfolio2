@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const SiteSettings = require('../../models/site-settings');
+const CacheUtils = require('../../utils/cache');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -70,6 +71,7 @@ router.put('/settings',
                     config.description
                 );
             }
+            CacheUtils.invalidateResources('settings');
 
             res.json({
                 success: true,
@@ -85,4 +87,3 @@ router.put('/settings',
 );
 
 module.exports = router;
-

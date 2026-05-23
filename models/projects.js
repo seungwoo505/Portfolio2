@@ -534,6 +534,7 @@ const Projects = {
         await executeQuery('DELETE FROM project_images WHERE project_id = ?', [id]);
         await executeQuery("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [id]);
         await executeQuery('DELETE FROM projects WHERE id = ?', [id]);
+        await executeQuery('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
     },
 
     /**

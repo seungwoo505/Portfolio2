@@ -149,7 +149,7 @@ router.post('/projects',
 
             const id = await Projects.create(sanitizedData);
             const newProject = await Projects.getById(id);
-            CacheUtils.invalidateResources('projects');
+            CacheUtils.invalidateResources('projects', 'tags');
 
             res.status(201).json({
                 success: true,
@@ -324,6 +324,7 @@ router.put('/projects/slug/:slug',
             try {
                 const updatedProject = await Projects.update(existingProject.id, sanitizedData);
                 verboseDebug('Projects.update 성공:', updatedProject);
+                CacheUtils.invalidateResources('projects', 'tags');
 
                 res.json({
                     success: true,
@@ -361,6 +362,7 @@ router.delete('/projects/slug/:slug',
             }
 
             await Projects.delete(project.id);
+            CacheUtils.invalidateResources('projects', 'tags');
 
             res.json({
                 success: true,

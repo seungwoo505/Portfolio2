@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Tags = require('../../models/tags');
+const CacheUtils = require('../../utils/cache');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -79,6 +80,7 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
         }
         const id = await Tags.create({ name, slug, description, color, type });
         const created = await Tags.getById(id);
+        CacheUtils.invalidateResources('tags', 'projects', 'blog');
         res.status(201).json({ success: true, message: '태그가 생성되었습니다.', data: created });
     } catch (error) {
         res.status(500).json({ success: false, message: '태그 생성에 실패했습니다.' });
@@ -131,6 +133,7 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
 router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), logActivity('update_tag'), async (req, res) => {
     try {
         const updated = await Tags.update(req.params.id, req.body);
+        CacheUtils.invalidateResources('tags', 'projects', 'blog');
         res.json({ success: true, message: '태그가 업데이트되었습니다.', data: updated });
     } catch (error) {
         res.status(500).json({ success: false, message: '태그 업데이트에 실패했습니다.' });
@@ -140,6 +143,7 @@ router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), log
 router.delete('/tags/:id', authenticateToken, requirePermission('tags.delete'), logActivity('delete_tag'), async (req, res) => {
     try {
         await Tags.delete(req.params.id);
+        CacheUtils.invalidateResources('tags', 'projects', 'blog');
         res.json({ success: true, message: '태그가 삭제되었습니다.' });
     } catch (error) {
         res.status(500).json({ success: false, message: '태그 삭제에 실패했습니다.' });
@@ -147,4 +151,3 @@ router.delete('/tags/:id', authenticateToken, requirePermission('tags.delete'), 
 });
 
 module.exports = router;
-
