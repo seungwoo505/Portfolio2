@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const ActivityLogs = require('../../models/activity-logs');
+const { escapeCsvField } = require('../../utils/csv');
 const { authenticateToken, requirePermission } = require('../../middleware/auth');
 
 router.get('/logs',
@@ -159,8 +160,8 @@ router.get('/logs/export',
             ]);
 
             const csvContent = [
-                csvHeaders.join(','),
-                ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+                csvHeaders.map(escapeCsvField).join(','),
+                ...csvData.map(row => row.map(escapeCsvField).join(','))
             ].join('\n');
 
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -181,4 +182,3 @@ router.get('/logs/export',
 );
 
 module.exports = router;
-
