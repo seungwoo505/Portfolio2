@@ -209,6 +209,9 @@ NODE_ENV=development
 PORT=3001
 TRUST_PROXY=0
 REQUEST_TIMEOUT=3000
+LOG_LEVEL=info
+ENABLE_VERBOSE_LOGS=false
+SLOW_REQUEST_MS=1000
 
 # 데이터베이스 설정
 DB_HOST=localhost
@@ -236,6 +239,8 @@ HTTPS_CA=/path/to/ssl/ca-bundle.crt
 
 `REQUEST_TIMEOUT`은 일반 API 요청 제한이고, `/api/admin/ai/*` 경로는 `AI_REQUEST_TIMEOUT`을 사용합니다. 라우트 내부 AI 호출은 `AI_ROUTE_TIMEOUT` 안에 끝나지 않으면 504로 응답합니다.
 
+운영 환경에서는 `ENABLE_VERBOSE_LOGS=false`를 유지하면 상세 디버그 로그가 출력되지 않습니다. `SLOW_REQUEST_MS`는 지정한 밀리초보다 오래 걸린 요청만 느린 요청 로그로 남깁니다.
+
 만료되었거나 오래 전에 폐기된 관리자 세션은 `npm run sessions:cleanup`으로 정리합니다. `ADMIN_SESSION_RETAIN_DAYS`는 폐기된 세션을 며칠 보관할지 지정합니다.
 
 ### **선택적 환경 변수**
@@ -243,6 +248,12 @@ HTTPS_CA=/path/to/ssl/ca-bundle.crt
 ```env
 # Redis 캐싱 (선택사항)
 REDIS_SOCKET=/run/synocached.sock
+REDIS_RETRY_DELAY_MS=30000
+
+# 공개 API 캐시
+PUBLIC_CACHE_TTL_SECONDS=300
+PUBLIC_HTTP_MAX_AGE_SECONDS=60
+PUBLIC_HTTP_STALE_SECONDS=300
 
 # AI 서비스 (선택사항)
 GEMINI_API_KEY=your_gemini_api_key_here
