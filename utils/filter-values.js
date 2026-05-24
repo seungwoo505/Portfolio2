@@ -28,6 +28,22 @@ const toStringArray = (value) => {
     return stringValue ? [stringValue] : [];
 };
 
+const toCsvStringArray = (value) => {
+    if (Array.isArray(value)) {
+        return value.flatMap(toCsvStringArray);
+    }
+
+    const stringValue = toStringValue(value).trim();
+    if (!stringValue) {
+        return [];
+    }
+
+    return stringValue
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+};
+
 const toBooleanOrNull = (value) => {
     const firstValue = firstQueryValue(value);
     if (firstValue === true || firstValue === false) {
@@ -57,6 +73,7 @@ module.exports = {
     firstQueryValue,
     toBooleanOrNull,
     toChoice,
+    toCsvStringArray,
     toStringArray,
     toStringValue
 };

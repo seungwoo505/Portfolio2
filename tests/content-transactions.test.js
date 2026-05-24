@@ -241,6 +241,22 @@ test('Projects.update can explicitly clear demo_url through project_url', async 
     assert.deepEqual(updateQuery.params, [null, 20]);
 });
 
+test('Projects.update normalizes string tags and can clear all tags', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.update(20, { tags: 'backend, node' });
+
+    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'project'"), true);
+    const tagSelects = fixture.operations.filter((operation) => operation.sql.includes('select id from tags where name = ?'));
+    assert.deepEqual(tagSelects.map((operation) => operation.params), [['backend'], ['node']]);
+
+    fixture.operations.length = 0;
+    await fixture.model.update(20, { tags: null });
+
+    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'project'"), true);
+    assert.equal(hasOperation(fixture.operations, 'insert ignore into tag_usage'), false);
+});
+
 test('Experiences.update can explicitly clear nullable fields', async () => {
     const fixture = createModelFixture(['models', 'experiences.js']);
 

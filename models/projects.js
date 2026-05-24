@@ -7,7 +7,7 @@ const {
 } = require('./db-utils');
 const CacheUtils = require('../utils/cache');
 const { generateSlug, createUniqueSlug } = require('../utils/slug');
-const { toBooleanOrNull, toChoice, toStringArray, toStringValue } = require('../utils/filter-values');
+const { toBooleanOrNull, toChoice, toCsvStringArray, toStringArray, toStringValue } = require('../utils/filter-values');
 
 const createQueryContext = (connection) => ({
     query: (query, params = []) => executeConnectionQuery(connection, query, params),
@@ -475,8 +475,9 @@ const Projects = {
             const result = await db.query(query, sanitizedData);
             const projectId = result.insertId;
 
-            if (tags && Array.isArray(tags) && tags.length > 0) {
-                await this.updateTags(projectId, tags, db);
+            const normalizedTags = toCsvStringArray(tags);
+            if (normalizedTags.length > 0) {
+                await this.updateTags(projectId, normalizedTags, db);
             }
 
             return projectId;
@@ -553,7 +554,7 @@ const Projects = {
                 await db.query(query, updateValues);
             }
 
-            if (tags) {
+            if (hasOwn(data, 'tags')) {
                 await this.updateTags(id, tags, db);
             }
         });
@@ -655,8 +656,9 @@ const Projects = {
      */
     async updateTags(projectId, tagNames, db = defaultQueryContext) {
         await db.query("DELETE FROM tag_usage WHERE content_type = 'project' AND content_id = ?", [projectId]);
+        const tagArray = toCsvStringArray(tagNames);
         
-        for (const tagName of tagNames) {
+        for (const tagName of tagArray) {
             const trimmed = String(tagName).trim();
             if (!trimmed) continue;
             let tag = await db.querySingle('SELECT id FROM tags WHERE name = ?', [trimmed]);

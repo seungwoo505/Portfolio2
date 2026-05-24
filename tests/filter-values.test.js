@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
     toBooleanOrNull,
     toChoice,
+    toCsvStringArray,
     toStringArray,
     toStringValue
 } = require('../utils/filter-values');
@@ -11,6 +12,7 @@ const {
 test('filter value helpers normalize array query values', () => {
     assert.equal(toStringValue(['desc', 'asc']), 'desc');
     assert.deepEqual(toStringArray(['node', ['mysql'], '', null]), ['node', 'mysql']);
+    assert.deepEqual(toCsvStringArray(['node, mysql', ['redis'], '', null]), ['node', 'mysql', 'redis']);
 });
 
 test('filter value helpers normalize booleans and choices', () => {
