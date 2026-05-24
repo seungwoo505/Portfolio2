@@ -9,6 +9,10 @@ const { getPasswordPolicyError } = require('../../utils/admin-validation');
 
 const genericLoginFailureMessage = '사용자명 또는 비밀번호가 올바르지 않습니다.';
 const genericRefreshFailureMessage = 'Refresh Token이 유효하지 않거나 만료되었습니다.';
+const passwordChangeClientErrors = new Set([
+    '사용자를 찾을 수 없습니다.',
+    '기존 비밀번호가 올바르지 않습니다.'
+]);
 
 /**
  * @swagger
@@ -440,9 +444,17 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
             message: '비밀번호가 변경되었습니다.'
         });
     } catch (error) {
-        res.status(400).json({
+        if (passwordChangeClientErrors.has(error.message)) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        logger.error('비밀번호 변경 실패', buildErrorLog(error, req));
+        return res.status(500).json({
             success: false,
-            message: error.message
+            message: '비밀번호 변경 중 오류가 발생했습니다.'
         });
     }
 });
