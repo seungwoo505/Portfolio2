@@ -4,6 +4,8 @@
  *   get:
  *     summary: 시스템 모니터링 대시보드
  *     tags: [Monitoring]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: 모니터링 데이터 조회 성공
@@ -50,6 +52,8 @@
  *   post:
  *     summary: 캐시 초기화
  *     tags: [Monitoring]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -93,6 +97,8 @@
  *   get:
  *     summary: 시스템 메트릭 조회
  *     tags: [Monitoring]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: 메트릭 조회 성공
