@@ -78,10 +78,7 @@ INSERT INTO admin_permissions (name, resource, action, description) VALUES
 ('interests.create', 'interests', 'create', '관심사 생성'),
 ('interests.update', 'interests', 'update', '관심사 수정'),
 ('interests.delete', 'interests', 'delete', '관심사 삭제'),
-('users.create', 'users', 'create', '관리자 계정 생성'),
-('users.read', 'users', 'read', '관리자 계정 조회'),
-('users.update', 'users', 'update', '관리자 계정 수정'),
-('users.delete', 'users', 'delete', '관리자 계정 삭제')
+('users.manage', 'users', 'manage', '관리자 계정 관리')
 ON DUPLICATE KEY UPDATE
     resource = VALUES(resource),
     action = VALUES(action),
@@ -93,35 +90,26 @@ SELECT 'super_admin', id FROM admin_permissions;
 INSERT IGNORE INTO admin_role_permissions (role, permission_id)
 SELECT 'admin', id
 FROM admin_permissions
-WHERE resource <> 'users';
+WHERE name NOT IN ('users.manage', 'logs.read');
 
 INSERT IGNORE INTO admin_role_permissions (role, permission_id)
 SELECT 'editor', id
 FROM admin_permissions
 WHERE name IN (
+    'dashboard.read',
     'blog.create',
     'blog.read',
     'blog.update',
     'blog.edit',
     'blog.publish',
-    'projects.create',
     'projects.read',
-    'projects.update',
-    'skills.create',
-    'skills.read',
-    'skills.update',
-    'tags.create',
     'tags.read',
-    'tags.update',
+    'skills.read',
     'personal_info.read',
     'personal_info.update',
     'social_links.read',
     'social_links.create',
     'social_links.update',
     'experiences.read',
-    'experiences.create',
-    'experiences.update',
-    'interests.read',
-    'interests.create',
-    'interests.update'
+    'interests.read'
 );

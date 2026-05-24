@@ -119,5 +119,7 @@ async function up(connection, logger) {
 }
 
 module.exports = {
-    up
+    up,
+    permissions,
+    rolePermissions
 };
