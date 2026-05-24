@@ -50,7 +50,13 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
             maxLimit: 100
         });
 
-        const posts = await BlogPosts.getAll(limit, offset, false);
+        const [posts, total] = await Promise.all([
+            BlogPosts.getAll(limit, offset, false),
+            BlogPosts.getCountWithFilters({
+                status: 'all',
+                published_only: false
+            })
+        ]);
 
         res.json({
             success: true,
@@ -58,7 +64,8 @@ router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), asy
             pagination: {
                 page,
                 limit,
-                total: posts.length
+                total,
+                totalPages: Math.ceil(total / limit)
             }
         });
     } catch (error) {

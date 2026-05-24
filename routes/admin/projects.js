@@ -100,10 +100,24 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
         const featured = toBooleanOrNull(req.query.featured);
 
         let projects;
+        let total;
         if (featured === true) {
-            projects = await Projects.getFeatured(pagination.limit, pagination.offset);
+            [projects, total] = await Promise.all([
+                Projects.getFeatured(pagination.limit, pagination.offset),
+                Projects.getCountWithFilters({
+                    featured: true,
+                    status: 'published',
+                    published_only: true
+                })
+            ]);
         } else {
-            projects = await Projects.getAll(pagination.limit, pagination.offset);
+            [projects, total] = await Promise.all([
+                Projects.getAll(pagination.limit, pagination.offset),
+                Projects.getCountWithFilters({
+                    status: 'all',
+                    published_only: false
+                })
+            ]);
         }
 
         res.json({
@@ -112,7 +126,8 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
             pagination: {
                 page: pagination.page,
                 limit: pagination.limit,
-                total: projects.length
+                total,
+                totalPages: Math.ceil(total / pagination.limit)
             }
         });
     } catch (error) {
