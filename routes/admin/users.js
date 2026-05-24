@@ -266,6 +266,18 @@ router.get('/users/:id', ...superAdminOnly, async (req, res) => {
  *                 data:
  *                   type: object
  *                   additionalProperties: true
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 관리자 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 서버 오류
  *         content:

@@ -95,6 +95,10 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
  *     responses:
  *       200:
  *         description: 읽음 처리 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       404:
+ *         description: 메시지 없음
  *       500:
  *         description: 서버 오류
  * /api/admin/contacts/{id}:
@@ -114,6 +118,8 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
  *         description: 메시지 삭제 성공
  *       400:
  *         description: 잘못된 요청
+ *       404:
+ *         description: 메시지 없음
  *       500:
  *         description: 서버 오류
  */

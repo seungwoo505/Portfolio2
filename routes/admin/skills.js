@@ -167,6 +167,8 @@ const normalizeSkillPayload = (body = {}, { requireRequired = false } = {}) => {
  *         description: 삭제 성공
  *       400:
  *         description: 잘못된 요청
+ *       404:
+ *         description: 카테고리 없음
  *       500:
  *         description: 서버 오류
  */
@@ -434,6 +436,8 @@ router.post('/skills',
  *         description: 기술 수정 성공
  *       400:
  *         description: 잘못된 요청
+ *       404:
+ *         description: 기술 스택 없음
  *       500:
  *         description: 서버 오류
  *   delete:
@@ -452,6 +456,8 @@ router.post('/skills',
  *         description: 기술 삭제 성공
  *       400:
  *         description: 잘못된 요청
+ *       404:
+ *         description: 기술 스택 없음
  *       500:
  *         description: 서버 오류
  */
@@ -597,6 +603,8 @@ router.delete('/skills/:id',
  *         description: 상태 변경 성공
  *       400:
  *         description: 잘못된 요청
+ *       404:
+ *         description: 기술 스택 없음
  *       500:
  *         description: 서버 오류
  * /api/admin/skills/{id}/order:
@@ -625,6 +633,8 @@ router.delete('/skills/:id',
  *         description: 순서 변경 성공
  *       400:
  *         description: 잘못된 요청
+ *       404:
+ *         description: 기술 스택 없음
  *       500:
  *         description: 서버 오류
  */

@@ -126,6 +126,10 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
  *     responses:
  *       200:
  *         description: 태그 수정 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       404:
+ *         description: 태그 없음
  *       500:
  *         description: 서버 오류
  *   delete:
@@ -142,6 +146,10 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
  *     responses:
  *       200:
  *         description: 태그 삭제 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       404:
+ *         description: 태그 없음
  *       500:
  *         description: 서버 오류
  */
