@@ -143,7 +143,11 @@ const router = express.Router();
 const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 const redisCache = require('../utils/redis-cache');
+const { toStringValue } = require('../utils/filter-values');
+const { getPlainBody } = require('../utils/request-body');
 const { adminOnly } = require('../middleware/auth');
+
+const allowedCacheClearTypes = new Set(['memory', 'redis', 'all']);
 
 const buildErrorLog = (error, req, extra = {}) => ({
     error: error?.message,
@@ -199,8 +203,15 @@ router.get('/dashboard', ...adminOnly, async (req, res) => {
 
 router.post('/cache/clear', ...adminOnly, async (req, res) => {
     try {
-        const { type } = req.body;
+        const type = toStringValue(getPlainBody(req).type).trim().toLowerCase();
         
+        if (!allowedCacheClearTypes.has(type)) {
+            return res.status(400).json({
+                success: false,
+                error: '유효하지 않은 캐시 타입입니다. (memory, redis, all)'
+            });
+        }
+
         if (type === 'memory') {
             CacheUtils.flush();
             logger.info('메모리 캐시가 초기화되었습니다');
@@ -211,11 +222,6 @@ router.post('/cache/clear', ...adminOnly, async (req, res) => {
             CacheUtils.flush();
             await redisCache.flush();
             logger.info('모든 캐시가 초기화되었습니다');
-        } else {
-            return res.status(400).json({
-                success: false,
-                error: '유효하지 않은 캐시 타입입니다. (memory, redis, all)'
-            });
         }
 
         res.json({
