@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const logger = require('../log');
 
@@ -19,6 +20,10 @@ const { toBooleanOrNull, toCsvStringArray, toStringValue } = require('../utils/f
 const PUBLIC_CACHE_TTL_SECONDS = Number(process.env.PUBLIC_CACHE_TTL_SECONDS || 300);
 const PUBLIC_HTTP_MAX_AGE_SECONDS = Number(process.env.PUBLIC_HTTP_MAX_AGE_SECONDS || 60);
 const PUBLIC_HTTP_STALE_SECONDS = Number(process.env.PUBLIC_HTTP_STALE_SECONDS || 300);
+const PUBLIC_VIEW_DEDUPE_TTL_SECONDS = clampInteger(process.env.PUBLIC_VIEW_DEDUPE_TTL_SECONDS, {
+    fallback: 300,
+    max: 86400
+});
 
 const CONTACT_FIELD_LIMITS = {
     name: 120,
@@ -103,6 +108,34 @@ const cacheKey = (prefix, ...parts) => CacheUtils.generateKey(prefix, 'public', 
 const cached = async (key, loader, ttl = PUBLIC_CACHE_TTL_SECONDS) => (
     CacheUtils.cacheApiResponse(key, loader, ttl)
 );
+
+const hashCachePart = (value) => (
+    crypto.createHash('sha256').update(String(value || 'unknown')).digest('hex').slice(0, 16)
+);
+
+const getClientFingerprint = (req) => hashCachePart([
+    req.ip,
+    req.headers['user-agent'] || ''
+].join('|'));
+
+const getViewDedupeKey = (resourceType, slug, req) => cacheKey(
+    'view_dedupe',
+    resourceType,
+    slug,
+    getClientFingerprint(req)
+);
+
+const incrementViewOnce = async ({ resourceType, slug, req, increment, invalidate }) => {
+    const dedupeKey = getViewDedupeKey(resourceType, slug, req);
+    if (CacheUtils.get(dedupeKey)) {
+        return false;
+    }
+
+    await increment();
+    CacheUtils.set(dedupeKey, true, PUBLIC_VIEW_DEDUPE_TTL_SECONDS);
+    invalidate();
+    return true;
+};
 
 const buildProjectFilters = (query) => {
     const { limit, page, offset } = parsePagination(query, {
@@ -299,9 +332,16 @@ router.post('/projects/:slug/view', async (req, res) => {
             return notFound(res, '프로젝트를 찾을 수 없습니다.');
         }
 
-        await Projects.incrementView(project.id);
-        CacheUtils.del(cacheKey('project', 'slug', req.params.slug));
-        CacheUtils.delPattern('projects:public:');
+        await incrementViewOnce({
+            resourceType: 'project',
+            slug: req.params.slug,
+            req,
+            increment: () => Projects.incrementView(project.id),
+            invalidate: () => {
+                CacheUtils.del(cacheKey('project', 'slug', req.params.slug));
+                CacheUtils.delPattern('projects:public:');
+            }
+        });
 
         res.setHeader('Cache-Control', 'no-store');
         return res.json({
@@ -387,9 +427,16 @@ router.post('/posts/:slug/view', async (req, res) => {
             return notFound(res, '블로그 글을 찾을 수 없습니다.');
         }
 
-        await BlogPosts.incrementView(post.id);
-        CacheUtils.del(cacheKey('blog_post', 'slug', req.params.slug));
-        CacheUtils.delPattern('blog_posts:public:');
+        await incrementViewOnce({
+            resourceType: 'post',
+            slug: req.params.slug,
+            req,
+            increment: () => BlogPosts.incrementView(post.id),
+            invalidate: () => {
+                CacheUtils.del(cacheKey('blog_post', 'slug', req.params.slug));
+                CacheUtils.delPattern('blog_posts:public:');
+            }
+        });
 
         res.setHeader('Cache-Control', 'no-store');
         return res.json({
