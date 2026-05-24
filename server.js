@@ -319,8 +319,8 @@ const swaggerSpec = swaggerJsdoc({
                 - **Logs**: 시스템 활동 로그
             `,
             contact: {
-                name: "API Support",
-                email: "support@portfolio.com"
+                name: "GitHub Issues",
+                url: "https://github.com/seungwoo505/Portfolio2/issues"
             },
             license: {
                 name: "MIT",
