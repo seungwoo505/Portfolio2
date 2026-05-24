@@ -5,6 +5,7 @@ const BlogPosts = require('../../models/blog-posts');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
 const { toBooleanOrNull } = require('../../utils/filter-values');
+const { parseSlugParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -134,6 +135,8 @@ router.post('/blog/posts',
  *     responses:
  *       200:
  *         description: 포스트 조회 성공
+ *       400:
+ *         description: 잘못된 slug
  *       404:
  *         description: 포스트 없음
  *         content:
@@ -161,6 +164,8 @@ router.post('/blog/posts',
  *     responses:
  *       200:
  *         description: 포스트 수정 성공
+ *       400:
+ *         description: 잘못된 요청 또는 slug
  *       404:
  *         description: 포스트 없음
  *   delete:
@@ -177,12 +182,22 @@ router.post('/blog/posts',
  *     responses:
  *       200:
  *         description: 포스트 삭제 성공
+ *       400:
+ *         description: 잘못된 slug
  *       404:
  *         description: 포스트 없음
  */
 router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
-        const post = await BlogPosts.getBySlugAdmin(req.params.slug);
+        const postSlug = parseSlugParam(req.params.slug);
+        if (!postSlug) {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 slug가 필요합니다.'
+            });
+        }
+
+        const post = await BlogPosts.getBySlugAdmin(postSlug);
 
         if (!post) {
             return res.status(404).json({
@@ -210,7 +225,13 @@ router.put('/blog/posts/slug/:slug',
     logActivity('update_blog_post'),
     async (req, res) => {
         try {
-            const postSlug = req.params.slug;
+            const postSlug = parseSlugParam(req.params.slug);
+            if (!postSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 slug가 필요합니다.'
+                });
+            }
             const body = trimStringFields(getPlainBody(req), ['title', 'content']);
 
             if (Object.keys(body).length === 0) {
@@ -279,6 +300,8 @@ router.put('/blog/posts/slug/:slug',
  *     responses:
  *       200:
  *         description: 발행 상태 변경 성공
+ *       400:
+ *         description: 잘못된 요청 또는 slug
  *       404:
  *         description: 포스트 없음
  */
@@ -295,7 +318,13 @@ router.put('/blog/posts/slug/:slug/publish',
                     message: '발행 상태는 boolean 값이어야 합니다.'
                 });
             }
-            const postSlug = req.params.slug;
+            const postSlug = parseSlugParam(req.params.slug);
+            if (!postSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 slug가 필요합니다.'
+                });
+            }
 
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
             if (!existingPost) {
@@ -350,6 +379,8 @@ router.put('/blog/posts/slug/:slug/publish',
  *     responses:
  *       200:
  *         description: 추천 상태 변경 성공
+ *       400:
+ *         description: 잘못된 요청 또는 slug
  *       404:
  *         description: 포스트 없음
  */
@@ -366,7 +397,13 @@ router.put('/blog/posts/slug/:slug/featured',
                     message: '추천 상태는 boolean 값이어야 합니다.'
                 });
             }
-            const postSlug = req.params.slug;
+            const postSlug = parseSlugParam(req.params.slug);
+            if (!postSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 slug가 필요합니다.'
+                });
+            }
 
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
             if (!existingPost) {
@@ -401,7 +438,13 @@ router.delete('/blog/posts/slug/:slug',
     logActivity('delete_blog_post'),
     async (req, res) => {
         try {
-            const postSlug = req.params.slug;
+            const postSlug = parseSlugParam(req.params.slug);
+            if (!postSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 slug가 필요합니다.'
+                });
+            }
 
             const post = await BlogPosts.getBySlugAdmin(postSlug);
             if (!post) {

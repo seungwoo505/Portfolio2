@@ -5,6 +5,7 @@ const Projects = require('../../models/projects');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
 const { toOptionalBoolean } = require('../../utils/filter-values');
+const { parseSlugParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -71,6 +72,12 @@ const normalizeUndefinedFields = (body) => {
  *                       type: integer
  *                     total:
  *                       type: integer
+ *       400:
+ *         description: 잘못된 query 값
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 서버 오류
  *   post:
@@ -227,6 +234,12 @@ router.post('/projects',
  *                 data:
  *                   type: object
  *                   additionalProperties: true
+ *       400:
+ *         description: 잘못된 slug
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 프로젝트 없음
  *         content:
@@ -266,6 +279,12 @@ router.post('/projects',
  *                 data:
  *                   type: object
  *                   additionalProperties: true
+ *       400:
+ *         description: 잘못된 요청 또는 slug
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 프로젝트 없음
  *         content:
@@ -286,6 +305,12 @@ router.post('/projects',
  *     responses:
  *       200:
  *         description: 프로젝트 삭제 성공
+ *       400:
+ *         description: 잘못된 slug
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 프로젝트 없음
  *         content:
@@ -295,7 +320,15 @@ router.post('/projects',
  */
 router.get('/projects/slug/:slug', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
-        const project = await Projects.getBySlug(req.params.slug);
+        const projectSlug = parseSlugParam(req.params.slug);
+        if (!projectSlug) {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 slug가 필요합니다.'
+            });
+        }
+
+        const project = await Projects.getBySlug(projectSlug);
 
         if (!project) {
             return res.status(404).json({
@@ -323,7 +356,13 @@ router.put('/projects/slug/:slug',
     logActivity('update_project'),
     async (req, res) => {
         try {
-            const projectSlug = req.params.slug;
+            const projectSlug = parseSlugParam(req.params.slug);
+            if (!projectSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 slug가 필요합니다.'
+                });
+            }
             const body = trimStringFields(getPlainBody(req), ['title', 'description']);
             verboseDebug('projectSlug:', projectSlug);
 
@@ -393,7 +432,13 @@ router.delete('/projects/slug/:slug',
     logActivity('delete_project'),
     async (req, res) => {
         try {
-            const projectSlug = req.params.slug;
+            const projectSlug = parseSlugParam(req.params.slug);
+            if (!projectSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 slug가 필요합니다.'
+                });
+            }
 
             const project = await Projects.getBySlug(projectSlug);
             if (!project) {

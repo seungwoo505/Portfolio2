@@ -586,19 +586,10 @@ const BlogPosts = {
 
     /**
      * @description 블로그 관련 캐시 키를 무효화한다.
-     * @param {?number} [postId=null] 특정 글 ID가 있다면 해당 캐시만 무효화
      * @returns {void}
      */
-    invalidateCache(postId = null) {
-        if (postId) {
-            CacheUtils.delPattern(`blog_post:${postId}:*`);
-        }
-        
-        CacheUtils.delPattern('blog_posts:*');
-        CacheUtils.delPattern('blog_post:slug:*');
-        CacheUtils.delPattern('blog_post_admin:*');
-        CacheUtils.delPattern('blog_posts:featured:*');
-        CacheUtils.delPattern('tags:*');
+    invalidateCache() {
+        CacheUtils.invalidateResources('blog', 'tags');
     },
 
     /**

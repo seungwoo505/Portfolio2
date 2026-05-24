@@ -1,3 +1,5 @@
+const { isValidSlug } = require('./slug');
+
 const firstParamValue = (value) => (Array.isArray(value) ? value[0] : value);
 
 const parsePositiveIntegerParam = (value) => {
@@ -20,6 +22,18 @@ const parsePositiveIntegerParam = (value) => {
     return Number.isSafeInteger(parsedValue) ? parsedValue : null;
 };
 
+const parseSlugParam = (value) => {
+    const rawValue = firstParamValue(value);
+
+    if (typeof rawValue !== 'string') {
+        return null;
+    }
+
+    const slug = rawValue.trim();
+    return isValidSlug(slug) ? slug : null;
+};
+
 module.exports = {
-    parsePositiveIntegerParam
+    parsePositiveIntegerParam,
+    parseSlugParam
 };

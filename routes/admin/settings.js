@@ -35,6 +35,8 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
  *     responses:
  *       200:
  *         description: 설정 업데이트 성공
+ *       400:
+ *         description: 잘못된 요청
  *       500:
  *         description: 서버 오류
  */
