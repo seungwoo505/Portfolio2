@@ -17,9 +17,18 @@ const CacheUtils = require('../utils/cache');
 const { clampInteger, parsePagination } = require('../utils/pagination');
 const { toBooleanOrNull, toCsvStringArray, toStringValue } = require('../utils/filter-values');
 
-const PUBLIC_CACHE_TTL_SECONDS = Number(process.env.PUBLIC_CACHE_TTL_SECONDS || 300);
-const PUBLIC_HTTP_MAX_AGE_SECONDS = Number(process.env.PUBLIC_HTTP_MAX_AGE_SECONDS || 60);
-const PUBLIC_HTTP_STALE_SECONDS = Number(process.env.PUBLIC_HTTP_STALE_SECONDS || 300);
+const PUBLIC_CACHE_TTL_SECONDS = clampInteger(process.env.PUBLIC_CACHE_TTL_SECONDS, {
+    fallback: 300,
+    max: 86400
+});
+const PUBLIC_HTTP_MAX_AGE_SECONDS = clampInteger(process.env.PUBLIC_HTTP_MAX_AGE_SECONDS, {
+    fallback: 60,
+    max: 86400
+});
+const PUBLIC_HTTP_STALE_SECONDS = clampInteger(process.env.PUBLIC_HTTP_STALE_SECONDS, {
+    fallback: 300,
+    max: 604800
+});
 const PUBLIC_VIEW_DEDUPE_TTL_SECONDS = clampInteger(process.env.PUBLIC_VIEW_DEDUPE_TTL_SECONDS, {
     fallback: 300,
     max: 86400
