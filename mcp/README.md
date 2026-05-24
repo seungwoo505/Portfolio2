@@ -19,7 +19,7 @@ npm start
 다른 API 주소를 쓰려면 환경 변수를 지정합니다.
 
 ```bash
-PORTFOLIO_API_BASE_URL=https://example.com/api npm start
+PORTFOLIO_API_BASE_URL=https://your-domain.com/api npm start
 ```
 
 ## 제공 도구
