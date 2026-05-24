@@ -73,7 +73,7 @@ const normalizeUserUpdateBody = (body) => {
  *               email:
  *                 type: string
  *                 format: email
- *                 example: "admin@example.com"
+ *                 example: "admin@company.com"
  *               password:
  *                 type: string
  *                 example: "StrongPass!123"

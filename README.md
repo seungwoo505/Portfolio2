@@ -221,8 +221,8 @@ DB_PASSWORD=your_password
 DB_SCHEMA=portfolio_db
 
 # JWT 설정 (보안상 매우 중요!)
-JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
-JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
+JWT_SECRET=generate_a_64_character_random_access_secret
+JWT_REFRESH_SECRET=generate_a_different_64_character_random_refresh_secret
 ADMIN_SESSION_RETAIN_DAYS=7
 
 # CORS 설정
@@ -386,8 +386,8 @@ PUT /api/admin/settings         # 설정 업데이트
 
 ```env
 ADMIN_BOOTSTRAP_USERNAME=admin
-ADMIN_BOOTSTRAP_EMAIL=admin@example.com
-ADMIN_BOOTSTRAP_PASSWORD=strong-random-bootstrap-password
+ADMIN_BOOTSTRAP_EMAIL=admin@company.com
+ADMIN_BOOTSTRAP_PASSWORD=StrongBootstrapPass!2026
 ```
 
 기존 DB에서 신규 DB로 콘텐츠만 이전할 때는 기존 DB와 신규 DB를 분리해서 지정합니다.

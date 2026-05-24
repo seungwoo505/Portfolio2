@@ -18,7 +18,7 @@
  *           example: "admin"
  *         password:
  *           type: string
- *           example: "password123"
+ *           example: "StrongAdminPass!2026"
  *     LoginResponse:
  *       type: object
  *       properties:

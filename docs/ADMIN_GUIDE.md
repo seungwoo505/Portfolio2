@@ -87,8 +87,8 @@ GET /api/admin/me
 # 비밀번호 변경
 PUT /api/admin/password
 {
-    "oldPassword": "current_password",
-    "newPassword": "new_password"
+    "oldPassword": "CurrentStrongPass!2026",
+    "newPassword": "NewStrongPass!2026"
 }
 ```
 
@@ -102,8 +102,8 @@ GET /api/admin/users
 POST /api/admin/users
 {
     "username": "newadmin",
-    "email": "admin@example.com",
-    "password": "password123",
+    "email": "admin@company.com",
+    "password": "StrongAdminPass!2026",
     "full_name": "관리자 이름",
     "role": "admin"
 }
@@ -243,11 +243,11 @@ PUT /api/admin/settings
 환경 변수에 JWT 시크릿과 초기 관리자 계정 정보를 설정합니다:
 
 ```env
-JWT_SECRET=your-super-secret-jwt-key-here
-JWT_REFRESH_SECRET=your-super-secret-refresh-key-here
+JWT_SECRET=generate-a-64-character-random-access-secret
+JWT_REFRESH_SECRET=generate-a-different-64-character-random-refresh-secret
 ADMIN_BOOTSTRAP_USERNAME=admin
-ADMIN_BOOTSTRAP_EMAIL=admin@example.com
-ADMIN_BOOTSTRAP_PASSWORD=strong-random-bootstrap-password
+ADMIN_BOOTSTRAP_EMAIL=admin@company.com
+ADMIN_BOOTSTRAP_PASSWORD=StrongBootstrapPass!2026
 ```
 
 ### **2. 데이터베이스 초기화**
