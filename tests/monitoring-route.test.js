@@ -84,7 +84,8 @@ test('monitoring cache clear rejects missing cache type before flushing', async 
     });
 
     assert.equal(status, 400);
-    assert.equal(body.error, '유효하지 않은 캐시 타입입니다. (memory, redis, all)');
+    assert.equal(body.message, '유효하지 않은 캐시 타입입니다. (memory, redis, all)');
+    assert.equal(Object.prototype.hasOwnProperty.call(body, 'error'), false);
     assert.deepEqual(cacheFlushes, []);
     assert.deepEqual(redisFlushes, []);
 });

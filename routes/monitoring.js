@@ -202,7 +202,7 @@ router.get('/dashboard', ...adminOnly, async (req, res) => {
         logger.error('모니터링 대시보드 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
-            error: '모니터링 데이터를 가져오는데 실패했습니다.'
+            message: '모니터링 데이터를 가져오는데 실패했습니다.'
         });
     }
 });
@@ -214,7 +214,7 @@ router.post('/cache/clear', ...adminOnly, async (req, res) => {
         if (!allowedCacheClearTypes.has(type)) {
             return res.status(400).json({
                 success: false,
-                error: '유효하지 않은 캐시 타입입니다. (memory, redis, all)'
+                message: '유효하지 않은 캐시 타입입니다. (memory, redis, all)'
             });
         }
 
@@ -238,7 +238,7 @@ router.post('/cache/clear', ...adminOnly, async (req, res) => {
         logger.error('캐시 초기화 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
-            error: '캐시 초기화에 실패했습니다.'
+            message: '캐시 초기화에 실패했습니다.'
         });
     }
 });
@@ -277,7 +277,7 @@ router.get('/metrics', ...adminOnly, async (req, res) => {
         logger.error('메트릭 조회 실패', buildErrorLog(error, req));
         res.status(500).json({
             success: false,
-            error: '메트릭을 가져오는데 실패했습니다.'
+            message: '메트릭을 가져오는데 실패했습니다.'
         });
     }
 });
