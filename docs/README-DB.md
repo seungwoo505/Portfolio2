@@ -62,10 +62,12 @@ DB_SCHEMA=portfolio_db
 PORT=3001
 NODE_ENV=development
 
-# HTTPS 인증서 (운영환경)
-HTTPS_KEY=/path/to/private-key.pem
-HTTPS_CERT=/path/to/certificate.pem
-HTTPS_CA=/path/to/ca-bundle.pem
+# HTTPS 인증서
+# 개발 환경에서는 비워두면 HTTP로 실행됩니다.
+# 운영 환경에서는 실제 인증서 경로를 설정해야 합니다.
+HTTPS_KEY=
+HTTPS_CERT=
+HTTPS_CA=
 
 # CORS 설정
 LOCALHOST=http://localhost:3000
