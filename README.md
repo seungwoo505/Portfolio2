@@ -528,8 +528,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    location /uploads {
-        alias /var/www/portfolio-server/uploads;
+    location /uploads/images/ {
+        alias /var/www/portfolio-server/uploads/images/;
         expires 1y;
     }
 }

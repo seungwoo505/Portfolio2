@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
+const path = require("path");
 const express = require("express");
 const expressWs = require("express-ws");
 const cookieParser = require("cookie-parser");
@@ -254,7 +255,12 @@ app.use(helmet({
     xssFilter: true,
     referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads/images', express.static(path.join(__dirname, 'uploads', 'images'), {
+    dotfiles: 'deny',
+    immutable: true,
+    index: false,
+    maxAge: '1y'
+}));
 const normalizeServerUrl = (url) => {
     if (!url) return url;
     return url.replace(/\/+$/, '').replace(/\/api$/i, '');

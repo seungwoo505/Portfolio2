@@ -232,8 +232,8 @@ server {
     }
 
     # 정적 파일 직접 서빙
-    location /uploads {
-        alias /var/www/portfolio-server/uploads;
+    location /uploads/images/ {
+        alias /var/www/portfolio-server/uploads/images/;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
