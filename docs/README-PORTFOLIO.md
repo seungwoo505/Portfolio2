@@ -51,8 +51,10 @@
 ### 1. 저장소 클론
 
 ```bash
-git clone <repository-url>
+mkdir Portfolio2
 cd Portfolio2
+git clone https://github.com/seungwoo505/Portfolio2.git portfolio-server
+git clone https://github.com/seungwoo505/portfolio-next.git portfolio-next
 ```
 
 ### 2. 백엔드 실행

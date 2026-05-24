@@ -163,7 +163,7 @@ portfolio-server/
 ### **1. 저장소 클론**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/seungwoo505/Portfolio2.git portfolio-server
 cd portfolio-server
 ```
 
@@ -609,25 +609,19 @@ curl https://localhost:3001/health
 
 ## 기여하기
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. 작업 브랜치를 생성합니다. (`git checkout -b feature/my-change`)
+2. 변경 사항을 커밋합니다. (`git commit -m 'feat: 변경 내용 요약'`)
+3. 원격 브랜치로 push합니다. (`git push origin feature/my-change`)
+4. GitHub에서 Pull Request를 생성합니다.
 
 ## 라이선스
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참고하세요.
+이 프로젝트는 `package.json`의 `license` 필드 기준으로 MIT 라이선스를 사용합니다.
 
 ## 지원
 
-- **이메일**: support@portfolio.com
-- **이슈 트래커**: GitHub Issues
-- **문서**: [Wiki](https://github.com/your-repo/wiki)
-
----
-
-**⭐ 이 프로젝트가 도움이 되었다면 스타를 눌러주세요!**
+- **이슈 트래커**: <https://github.com/seungwoo505/Portfolio2/issues>
+- **운영/배포 문서**: [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
 
 ---
 
