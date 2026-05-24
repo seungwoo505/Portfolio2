@@ -9,6 +9,19 @@ const generateSlug = (value, fallback = 'item') => {
     return slug || fallback;
 };
 
+const isValidSlug = (value, { maxLength = 255 } = {}) => {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    const slug = value.trim();
+    return (
+        slug.length > 0
+        && slug.length <= maxLength
+        && /^[a-z0-9가-힣]+(?:-[a-z0-9가-힣]+)*$/.test(slug)
+    );
+};
+
 const truncateSlug = (slug, maxLength) => (
     slug.length > maxLength
         ? slug.slice(0, maxLength).replace(/-+$/g, '')
@@ -48,5 +61,6 @@ const createUniqueSlug = async ({
 
 module.exports = {
     generateSlug,
+    isValidSlug,
     createUniqueSlug
 };

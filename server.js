@@ -399,6 +399,10 @@ const swaggerSpec = swaggerJsdoc({
         },
         tags: [
             {
+                name: 'Public',
+                description: '인증 없이 사용하는 공개 API'
+            },
+            {
                 name: 'Blog',
                 description: '블로그 포스트 관련 API'
             },
@@ -499,6 +503,7 @@ const swaggerSpec = swaggerJsdoc({
             {
                 name: '공개 API',
                 tags: [
+                    'Public',
                     'Blog',
                     'Projects',
                     'Profile',
