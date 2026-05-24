@@ -151,7 +151,7 @@ const createAdminUsersFixture = async () => {
     return { AdminUsers, sessions, queryCalls };
 };
 
-const loadAuthMiddleware = (AdminUsers) => {
+const loadAuthMiddleware = (AdminUsers, logger = createNoopLogger()) => {
     clearRootModules([
         ['middleware', 'auth.js'],
         ['models', 'admin-users.js'],
@@ -161,7 +161,7 @@ const loadAuthMiddleware = (AdminUsers) => {
 
     stubRootModule(['models', 'admin-users.js'], AdminUsers);
     stubRootModule(['models', 'admin-activity-logs.js'], {});
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.js'], logger);
 
     return require(resolveFromRoot(['middleware', 'auth.js']));
 };
@@ -411,4 +411,40 @@ test('authenticateToken refreshes an expired access token with a valid refresh s
     assert.equal(res.headers['X-New-Token'], 'new-access-token');
     assert.equal(res.headers['X-New-Refresh-Token'], 'new-refresh-token');
     assert.equal(req.admin.sessionId, 'session-2');
+});
+
+test('requirePermission hides internal permission lookup errors from responses', async () => {
+    const logCalls = [];
+    const { requirePermission } = loadAuthMiddleware({
+        hasPermission: async () => {
+            throw new Error('database permission lookup failed');
+        }
+    }, {
+        error: (...args) => logCalls.push(args),
+        warn: () => {},
+        info: () => {}
+    });
+
+    const req = {
+        requestId: 'req-permission-error',
+        admin: {
+            id: 7,
+            username: 'editor',
+            role: 'editor'
+        }
+    };
+    const res = createResponse();
+    let nextCalled = false;
+
+    await requirePermission('projects.create')(req, res, () => {
+        nextCalled = true;
+    });
+
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.success, false);
+    assert.equal(res.body.message, '권한 확인 중 오류가 발생했습니다.');
+    assert.equal(Object.prototype.hasOwnProperty.call(res.body, 'error'), false);
+    assert.equal(nextCalled, false);
+    assert.equal(logCalls.length, 1);
+    assert.equal(logCalls[0][0], '권한 확인 실패');
 });

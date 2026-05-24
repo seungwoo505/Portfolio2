@@ -151,10 +151,17 @@ const requirePermission = (permissionName) => {
 
             next();
         } catch (error) {
+            logger.error('권한 확인 실패', {
+                requestId: req.requestId,
+                adminId: req.admin?.id,
+                permission: permissionName,
+                error: error.message,
+                stack: error.stack
+            });
+
             return res.status(500).json({
                 success: false,
-                message: '권한 확인 중 오류가 발생했습니다.',
-                error: error.message
+                message: '권한 확인 중 오류가 발생했습니다.'
             });
         }
     };
