@@ -39,6 +39,10 @@ const CONTACT_FIELD_LABELS = {
 };
 const CONTACT_RECENT_WINDOW_HOURS = clampInteger(process.env.CONTACT_RECENT_WINDOW_HOURS, { fallback: 1, max: 24 });
 const CONTACT_RECENT_IP_MAX = clampInteger(process.env.CONTACT_RECENT_IP_MAX, { fallback: 3, max: 50 });
+const CONTACT_DUPLICATE_TTL_SECONDS = clampInteger(process.env.CONTACT_DUPLICATE_TTL_SECONDS, {
+    fallback: 300,
+    max: 86400
+});
 
 const normalizeContactField = (value) => String(value ?? '').trim();
 
@@ -123,6 +127,15 @@ const getViewDedupeKey = (resourceType, slug, req) => cacheKey(
     resourceType,
     slug,
     getClientFingerprint(req)
+);
+
+const getContactDuplicateKey = ({ email, message, req }) => cacheKey(
+    'contact_duplicate',
+    hashCachePart([
+        email,
+        message,
+        getClientFingerprint(req)
+    ].join('|'))
 );
 
 const incrementViewOnce = async ({ resourceType, slug, req, increment, invalidate }) => {
@@ -245,6 +258,15 @@ router.post('/contact', async (req, res) => {
             });
         }
 
+        const duplicateKey = getContactDuplicateKey({ email, message, req });
+        if (CacheUtils.get(duplicateKey)) {
+            res.setHeader('Cache-Control', 'no-store');
+            return res.status(409).json({
+                success: false,
+                message: '같은 문의가 이미 접수되었습니다.'
+            });
+        }
+
         const id = await ContactMessages.create({
             name,
             email,
@@ -253,6 +275,7 @@ router.post('/contact', async (req, res) => {
             ip_address: req.ip,
             user_agent: req.headers['user-agent']
         });
+        CacheUtils.set(duplicateKey, true, CONTACT_DUPLICATE_TTL_SECONDS);
 
         res.setHeader('Cache-Control', 'no-store');
         return res.status(201).json({
