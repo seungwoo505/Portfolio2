@@ -92,7 +92,7 @@ router.post('/upload/image',
             logger.error('이미지 업로드 실패', buildErrorLog(error, req));
             res.status(500).json({
                 success: false,
-                message: error.message || '이미지 업로드에 실패했습니다.'
+                message: '이미지 업로드에 실패했습니다.'
             });
         }
     }

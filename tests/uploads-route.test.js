@@ -34,7 +34,7 @@ const requestJson = async (router, pathName, { method = 'GET' } = {}) => {
     }
 };
 
-const loadUploadsRoute = (filePath) => {
+const loadUploadsRoute = (filePath, options = {}) => {
     clearRootModules([
         ['routes', 'admin', 'uploads.js'],
         ['routes', 'admin', 'common.js'],
@@ -49,7 +49,7 @@ const loadUploadsRoute = (filePath) => {
         buildErrorLog: (error) => ({ error: error.message })
     });
     stubRootModule(['utils', 'upload.js'], {
-        uploadImage: (_req, _res, next) => next(),
+        uploadImage: options.uploadImage || ((_req, _res, next) => next()),
         getUploadedImagePath: () => filePath,
         isSafeUploadedImageFilename: () => true
     });
@@ -64,6 +64,31 @@ const loadUploadsRoute = (filePath) => {
 
     return require(resolveFromRoot(['routes', 'admin', 'uploads.js']));
 };
+
+test('admin upload create hides unexpected internal errors', async () => {
+    const router = loadUploadsRoute(null, {
+        uploadImage: (req, _res, next) => {
+            req.file = {
+                originalname: 'profile.png',
+                get filename() {
+                    throw new Error('internal upload path leaked');
+                },
+                size: 10,
+                mimetype: 'image/png',
+                path: '/tmp/profile.png'
+            };
+            next();
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/upload/image', {
+        method: 'POST'
+    });
+
+    assert.equal(status, 500);
+    assert.equal(body.message, '이미지 업로드에 실패했습니다.');
+    assert.equal(Object.prototype.hasOwnProperty.call(body, 'error'), false);
+});
 
 test('admin upload delete removes an existing image asynchronously', async () => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'portfolio-upload-route-'));
