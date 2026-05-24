@@ -369,10 +369,10 @@ router.get('/me', authenticateToken, async (req, res) => {
  *             properties:
  *               oldPassword:
  *                 type: string
- *                 example: "oldPass123!"
+ *                 example: "CurrentStrongPass!2026"
  *               newPassword:
  *                 type: string
- *                 example: "newPass456!"
+ *                 example: "NewStrongPass!2026"
  *     responses:
  *       200:
  *         description: 비밀번호 변경 성공
