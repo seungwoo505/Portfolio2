@@ -3,6 +3,29 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const AdminUsers = require('../../models/admin-users');
 const { logActivity, superAdminOnly } = require('../../middleware/auth');
+const { toBooleanOrNull } = require('../../utils/filter-values');
+const {
+    getPlainBody,
+    hasInvalidProvidedStringFields,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
+const {
+    getPasswordPolicyError,
+    isValidAdminRole,
+    isValidEmail
+} = require('../../utils/admin-validation');
+
+const userStringFields = ['username', 'email', 'full_name', 'role'];
+const normalizeUserUpdateBody = (body) => {
+    const normalizedBody = trimStringFields(body, userStringFields);
+
+    if (Object.prototype.hasOwnProperty.call(normalizedBody, 'is_active')) {
+        normalizedBody.is_active = toBooleanOrNull(normalizedBody.is_active);
+    }
+
+    return normalizedBody;
+};
 
 /**
  * @swagger
@@ -101,12 +124,36 @@ router.get('/users', ...superAdminOnly, async (req, res) => {
 
 router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req, res) => {
     try {
-        const { username, email, password, full_name, role } = req.body;
+        const body = trimStringFields(getPlainBody(req), userStringFields);
+        const { username, email, password, full_name } = body;
+        const role = body.role || 'admin';
 
-        if (!username || !email || !password) {
+        if (!hasRequiredStringFields({ username, email, password }, ['username', 'email', 'password'])) {
             return res.status(400).json({
                 success: false,
                 message: '사용자명, 이메일, 비밀번호는 필수입니다.'
+            });
+        }
+
+        if (!isValidEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: '올바른 이메일 형식이 아닙니다.'
+            });
+        }
+
+        if (!isValidAdminRole(role)) {
+            return res.status(400).json({
+                success: false,
+                message: '관리자 역할이 올바르지 않습니다.'
+            });
+        }
+
+        const passwordPolicyError = getPasswordPolicyError(password);
+        if (passwordPolicyError) {
+            return res.status(400).json({
+                success: false,
+                message: passwordPolicyError
             });
         }
 
@@ -239,7 +286,44 @@ router.get('/users/:id', ...superAdminOnly, async (req, res) => {
  */
 router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req, res) => {
     try {
-        const updatedUser = await AdminUsers.update(req.params.id, req.body);
+        const body = normalizeUserUpdateBody(getPlainBody(req));
+
+        if (Object.keys(body).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '수정할 관리자 정보가 필요합니다.'
+            });
+        }
+
+        if (hasInvalidProvidedStringFields(body, ['username', 'email', 'role'])) {
+            return res.status(400).json({
+                success: false,
+                message: '사용자명, 이메일, 역할은 비어 있을 수 없습니다.'
+            });
+        }
+
+        if (body.email && !isValidEmail(body.email)) {
+            return res.status(400).json({
+                success: false,
+                message: '올바른 이메일 형식이 아닙니다.'
+            });
+        }
+
+        if (body.role && !isValidAdminRole(body.role)) {
+            return res.status(400).json({
+                success: false,
+                message: '관리자 역할이 올바르지 않습니다.'
+            });
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, 'is_active') && body.is_active === null) {
+            return res.status(400).json({
+                success: false,
+                message: '활성 상태는 boolean 값이어야 합니다.'
+            });
+        }
+
+        const updatedUser = await AdminUsers.update(req.params.id, body);
 
         res.json({
             success: true,
@@ -297,4 +381,3 @@ router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), asyn
 });
 
 module.exports = router;
-

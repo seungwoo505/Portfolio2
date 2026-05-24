@@ -4,6 +4,10 @@ const { logger, buildErrorLog } = require('./common');
 const AdminUsers = require('../../models/admin-users');
 const AdminActivityLogs = require('../../models/admin-activity-logs');
 const { authenticateToken, logActivity } = require('../../middleware/auth');
+const { getPlainBody, hasRequiredStringFields, trimStringFields } = require('../../utils/request-body');
+const { getPasswordPolicyError } = require('../../utils/admin-validation');
+
+const genericLoginFailureMessage = '사용자명 또는 비밀번호가 올바르지 않습니다.';
 
 /**
  * @swagger
@@ -39,10 +43,12 @@ const { authenticateToken, logActivity } = require('../../middleware/auth');
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
+    const body = trimStringFields(getPlainBody(req), ['username']);
+    const username = body.username;
+    const password = body.password;
 
-        if (!username || !password) {
+    try {
+        if (!hasRequiredStringFields({ username, password }, ['username', 'password'])) {
             return res.status(400).json({
                 success: false,
                 message: '사용자명과 비밀번호를 입력해주세요.'
@@ -86,13 +92,13 @@ router.post('/login', async (req, res) => {
             'admin_login_failed',
             'auth',
             null,
-            `${req.body.username} 로그인 실패`,
+            `${username || 'unknown'} 로그인 실패`,
             req.ip,
             req.headers['user-agent']
         );
 
         logger.activity('관리자 로그인 실패', {
-            username: req.body.username,
+            username,
             ip: req.ip,
             userAgent: req.headers['user-agent'],
             error: error.message,
@@ -100,12 +106,12 @@ router.post('/login', async (req, res) => {
         });
 
         logger.warn('관리자 로그인 실패', buildErrorLog(error, req, {
-            username: req.body.username
+            username
         }));
 
         res.status(401).json({
             success: false,
-            message: error.message
+            message: genericLoginFailureMessage
         });
     }
 });
@@ -235,9 +241,9 @@ router.post('/logout', authenticateToken, async (req, res) => {
  */
 router.post('/refresh', async (req, res) => {
     try {
-        const { refreshToken } = req.body;
+        const { refreshToken } = getPlainBody(req);
 
-        if (!refreshToken) {
+        if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
             return res.status(400).json({
                 success: false,
                 message: 'Refresh Token이 필요합니다.'
@@ -396,19 +402,20 @@ router.get('/me', authenticateToken, async (req, res) => {
  */
 router.put('/password', authenticateToken, logActivity('change_password'), async (req, res) => {
     try {
-        const { oldPassword, newPassword } = req.body;
+        const { oldPassword, newPassword } = getPlainBody(req);
 
-        if (!oldPassword || !newPassword) {
+        if (!hasRequiredStringFields({ oldPassword, newPassword }, ['oldPassword', 'newPassword'])) {
             return res.status(400).json({
                 success: false,
                 message: '기존 비밀번호와 새 비밀번호를 입력해주세요.'
             });
         }
 
-        if (newPassword.length < 6) {
+        const passwordPolicyError = getPasswordPolicyError(newPassword);
+        if (passwordPolicyError) {
             return res.status(400).json({
                 success: false,
-                message: '새 비밀번호는 최소 6자 이상이어야 합니다.'
+                message: passwordPolicyError
             });
         }
 
