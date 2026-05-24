@@ -8,7 +8,7 @@ const {
     stubRootModule
 } = require('./helpers/module-loader');
 
-const createRedisCacheFixture = ({ connectError = null } = {}) => {
+const createRedisCacheFixture = ({ connectError = null, infoError = null } = {}) => {
     clearRootModules([
         ['utils', 'redis-cache.js'],
         ['log.js']
@@ -44,7 +44,12 @@ const createRedisCacheFixture = ({ connectError = null } = {}) => {
         del: async () => 1,
         keys: async () => ['cache:a'],
         flushAll: async () => 'OK',
-        info: async () => 'used_memory:1',
+        info: async () => {
+            if (infoError) {
+                throw infoError;
+            }
+            return 'used_memory:1';
+        },
         dbSize: async () => 1,
         quit: async () => {
             client.isOpen = false;
@@ -121,4 +126,15 @@ test('RedisCache retry delay falls back for invalid environment values', () => {
         }
         clearRootModules([['utils', 'redis-cache.js']]);
     }
+});
+
+test('RedisCache getStats hides internal Redis errors', async () => {
+    const fixture = createRedisCacheFixture({
+        infoError: new Error('ERR unknown command info')
+    });
+
+    const stats = await fixture.redisCache.getStats();
+
+    assert.deepEqual(stats, { connected: false });
+    assert.equal(Object.prototype.hasOwnProperty.call(stats, 'error'), false);
 });

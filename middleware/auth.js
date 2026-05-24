@@ -142,10 +142,15 @@ const requirePermission = (permissionName) => {
             const hasPermission = await AdminUsers.hasPermission(req.admin.id, permissionName);
             
             if (!hasPermission) {
+                logger.warn('권한 인가 실패', {
+                    requestId: req.requestId,
+                    adminId: req.admin.id,
+                    permission: permissionName
+                });
+
                 return res.status(403).json({
                     success: false,
-                    message: '권한이 부족합니다.',
-                    required_permission: permissionName
+                    message: '권한이 부족합니다.'
                 });
             }
 

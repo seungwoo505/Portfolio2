@@ -252,7 +252,7 @@ router.get('/metrics', ...adminOnly, async (req, res) => {
         const dbResponseTime = Date.now() - startTime;
         
         const redisStartTime = Date.now();
-        const redisTest = await redisCache.get('test');
+        await redisCache.get('test');
         const redisResponseTime = Date.now() - redisStartTime;
         
         const metrics = {

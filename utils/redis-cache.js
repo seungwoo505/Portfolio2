@@ -207,7 +207,7 @@ class RedisCache {
             };
         } catch (error) {
             logger.error('Redis 통계 조회 오류', { error: error.message });
-            return { connected: false, error: error.message };
+            return { connected: false };
         }
     }
 

@@ -449,6 +449,40 @@ test('requirePermission hides internal permission lookup errors from responses',
     assert.equal(logCalls[0][0], '권한 확인 실패');
 });
 
+test('requirePermission hides permission name from forbidden responses', async () => {
+    const logCalls = [];
+    const { requirePermission } = loadAuthMiddleware({
+        hasPermission: async () => false
+    }, {
+        error: () => {},
+        warn: (...args) => logCalls.push(args),
+        info: () => {}
+    });
+
+    const req = {
+        requestId: 'req-permission-denied',
+        admin: {
+            id: 8,
+            username: 'editor',
+            role: 'editor'
+        }
+    };
+    const res = createResponse();
+    let nextCalled = false;
+
+    await requirePermission('projects.create')(req, res, () => {
+        nextCalled = true;
+    });
+
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.body.success, false);
+    assert.equal(res.body.message, '권한이 부족합니다.');
+    assert.equal(Object.prototype.hasOwnProperty.call(res.body, 'required_permission'), false);
+    assert.equal(nextCalled, false);
+    assert.equal(logCalls.length, 1);
+    assert.equal(logCalls[0][0], '권한 인가 실패');
+});
+
 test('requireRole hides role details from forbidden responses', () => {
     const { requireRole } = loadAuthMiddleware({});
     const req = {
