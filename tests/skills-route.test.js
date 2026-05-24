@@ -127,3 +127,41 @@ test('admin skills update only writes provided fields', async () => {
     assert.equal(status, 200);
     assert.deepEqual(updatedPayloads, [{ proficiency_level: 70 }]);
 });
+
+test('admin skills featured toggle normalizes boolean-like strings', async () => {
+    const updatedPayloads = [];
+    const router = loadSkillsRoute({
+        updateSkill: async (_id, payload) => {
+            updatedPayloads.push(payload);
+        }
+    });
+
+    const { status } = await requestJson(router, '/skills/9/featured', {
+        method: 'PATCH',
+        body: {
+            is_featured: 'false'
+        }
+    });
+
+    assert.equal(status, 200);
+    assert.deepEqual(updatedPayloads, [{ is_featured: false }]);
+});
+
+test('admin skills order update normalizes numeric strings', async () => {
+    const updatedPayloads = [];
+    const router = loadSkillsRoute({
+        updateSkill: async (_id, payload) => {
+            updatedPayloads.push(payload);
+        }
+    });
+
+    const { status } = await requestJson(router, '/skills/9/order', {
+        method: 'PATCH',
+        body: {
+            display_order: '7'
+        }
+    });
+
+    assert.equal(status, 200);
+    assert.deepEqual(updatedPayloads, [{ display_order: 7 }]);
+});

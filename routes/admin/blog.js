@@ -4,6 +4,7 @@ const { logger, buildErrorLog } = require('./common');
 const BlogPosts = require('../../models/blog-posts');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
+const { toBooleanOrNull } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -266,7 +267,13 @@ router.put('/blog/posts/slug/:slug/publish',
     logActivity('publish_blog_post'),
     async (req, res) => {
         try {
-            const { is_published } = req.body;
+            const isPublished = toBooleanOrNull(req.body?.is_published);
+            if (isPublished === null) {
+                return res.status(400).json({
+                    success: false,
+                    message: '발행 상태는 boolean 값이어야 합니다.'
+                });
+            }
             const postSlug = req.params.slug;
 
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
@@ -278,12 +285,12 @@ router.put('/blog/posts/slug/:slug/publish',
             }
 
             const updatedPost = await BlogPosts.update(existingPost.id, {
-                is_published: is_published
+                is_published: isPublished
             });
 
             res.json({
                 success: true,
-                message: is_published ? '포스트가 발행되었습니다.' : '포스트 발행이 취소되었습니다.',
+                message: isPublished ? '포스트가 발행되었습니다.' : '포스트 발행이 취소되었습니다.',
                 data: updatedPost
             });
         } catch (error) {
@@ -331,7 +338,13 @@ router.put('/blog/posts/slug/:slug/featured',
     logActivity('feature_blog_post'),
     async (req, res) => {
         try {
-            const { is_featured } = req.body;
+            const isFeatured = toBooleanOrNull(req.body?.is_featured);
+            if (isFeatured === null) {
+                return res.status(400).json({
+                    success: false,
+                    message: '추천 상태는 boolean 값이어야 합니다.'
+                });
+            }
             const postSlug = req.params.slug;
 
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
@@ -343,12 +356,12 @@ router.put('/blog/posts/slug/:slug/featured',
             }
 
             const updatedPost = await BlogPosts.update(existingPost.id, {
-                is_featured: is_featured
+                is_featured: isFeatured
             });
 
             res.json({
                 success: true,
-                message: is_featured ? '포스트가 추천되었습니다.' : '포스트 추천이 해제되었습니다.',
+                message: isFeatured ? '포스트가 추천되었습니다.' : '포스트 추천이 해제되었습니다.',
                 data: updatedPost
             });
         } catch (error) {

@@ -611,20 +611,20 @@ router.patch('/skills/:id/featured',
     async (req, res) => {
         try {
             const skillId = req.params.id;
-            const { is_featured } = req.body;
+            const isFeatured = toBooleanOrNull(req.body?.is_featured);
 
-            if (typeof is_featured !== 'boolean') {
+            if (isFeatured === null) {
                 return res.status(400).json({
                     success: false,
                     message: '추천 상태는 boolean 값이어야 합니다.'
                 });
             }
-            await Skills.updateSkill(skillId, { is_featured });
+            await Skills.updateSkill(skillId, { is_featured: isFeatured });
             CacheUtils.invalidateResources('skills');
 
             res.json({
                 success: true,
-                message: `기술 스택이 ${is_featured ? '추천' : '일반'} 상태로 변경되었습니다.`
+                message: `기술 스택이 ${isFeatured ? '추천' : '일반'} 상태로 변경되었습니다.`
             });
 
         } catch (error) {
@@ -644,15 +644,15 @@ router.patch('/skills/:id/order',
     async (req, res) => {
         try {
             const skillId = req.params.id;
-            const { display_order } = req.body;
+            const displayOrder = parseNumber(req.body?.display_order, { integer: true, min: 0 });
 
-            if (typeof display_order !== 'number' || display_order < 0) {
+            if (displayOrder === undefined || displayOrder === null) {
                 return res.status(400).json({
                     success: false,
                     message: '표시 순서는 0 이상의 숫자여야 합니다.'
                 });
             }
-            await Skills.updateSkill(skillId, { display_order });
+            await Skills.updateSkill(skillId, { display_order: displayOrder });
             CacheUtils.invalidateResources('skills');
 
             res.json({
