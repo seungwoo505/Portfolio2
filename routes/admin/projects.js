@@ -4,6 +4,7 @@ const { logger, verboseDebug, buildErrorLog } = require('./common');
 const Projects = require('../../models/projects');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
+const { toBooleanOrNull } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -92,14 +93,14 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
  */
 router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req, res) => {
     try {
-        const { featured } = req.query;
         const pagination = parsePagination(req.query, {
             defaultLimit: 20,
             maxLimit: 100
         });
+        const featured = toBooleanOrNull(req.query.featured);
 
         let projects;
-        if (featured === 'true') {
+        if (featured === true) {
             projects = await Projects.getFeatured(pagination.limit, pagination.offset);
         } else {
             projects = await Projects.getAll(pagination.limit, pagination.offset);

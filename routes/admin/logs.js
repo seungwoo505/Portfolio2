@@ -4,31 +4,29 @@ const { logger, buildErrorLog } = require('./common');
 const ActivityLogs = require('../../models/activity-logs');
 const { escapeCsvField } = require('../../utils/csv');
 const { parsePagination } = require('../../utils/pagination');
+const { toChoice, toStringValue } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission } = require('../../middleware/auth');
+
+const normalizeLogFilters = (query = {}) => ({
+    search: toStringValue(query.search),
+    user: toStringValue(query.user, 'all').trim() || 'all',
+    action: toStringValue(query.action, 'all').trim() || 'all',
+    resource_type: toStringValue(query.resource_type, 'all').trim() || 'all',
+    date_filter: toChoice(query.date_filter, ['all', 'today', 'yesterday', 'week', 'month'], 'all')
+});
 
 router.get('/logs',
     authenticateToken,
     requirePermission('logs.read'),
     async (req, res) => {
         try {
-            const {
-                search = '',
-                user = 'all',
-                action = 'all',
-                resource_type = 'all',
-                date_filter = 'all'
-            } = req.query;
             const pagination = parsePagination(req.query, {
                 defaultLimit: 50,
                 maxLimit: 1000
             });
 
             const filters = {
-                search,
-                user,
-                action,
-                resource_type,
-                date_filter,
+                ...normalizeLogFilters(req.query),
                 limit: pagination.limit,
                 offset: pagination.offset
             };
@@ -124,20 +122,8 @@ router.get('/logs/export',
     requirePermission('logs.read'),
     async (req, res) => {
         try {
-            const {
-                search = '',
-                user = 'all',
-                action = 'all',
-                resource_type = 'all',
-                date_filter = 'all'
-            } = req.query;
-
             const filters = {
-                search,
-                user,
-                action,
-                resource_type,
-                date_filter,
+                ...normalizeLogFilters(req.query),
                 page: 1,
                 limit: 10000 // 최대 10,000개 로그 내보내기
             };

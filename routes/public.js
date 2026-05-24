@@ -13,38 +13,12 @@ const Experiences = require('../models/experiences');
 const Interests = require('../models/interests');
 const SiteSettings = require('../models/site-settings');
 const CacheUtils = require('../utils/cache');
+const { clampInteger, parsePagination } = require('../utils/pagination');
+const { toBooleanOrNull, toCsvStringArray, toStringValue } = require('../utils/filter-values');
 
 const PUBLIC_CACHE_TTL_SECONDS = Number(process.env.PUBLIC_CACHE_TTL_SECONDS || 300);
 const PUBLIC_HTTP_MAX_AGE_SECONDS = Number(process.env.PUBLIC_HTTP_MAX_AGE_SECONDS || 60);
 const PUBLIC_HTTP_STALE_SECONDS = Number(process.env.PUBLIC_HTTP_STALE_SECONDS || 300);
-
-const clampNumber = (value, { min = 1, max = 50, fallback = 10 } = {}) => {
-    const parsed = Number.parseInt(value, 10);
-    if (!Number.isFinite(parsed)) {
-        return fallback;
-    }
-    return Math.min(Math.max(parsed, min), max);
-};
-
-const parseBoolean = (value) => {
-    if (value === undefined || value === null || value === '') {
-        return null;
-    }
-    return value === true || value === 'true' || value === '1';
-};
-
-const parseCsv = (value) => {
-    if (!value) {
-        return [];
-    }
-    if (Array.isArray(value)) {
-        return value.flatMap(parseCsv);
-    }
-    return String(value)
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
-};
 
 const CONTACT_FIELD_LIMITS = {
     name: 120,
@@ -58,15 +32,8 @@ const CONTACT_FIELD_LABELS = {
     subject: '제목',
     message: '메시지'
 };
-const getPositiveInteger = (value, fallback, max = 100) => {
-    const parsed = Number.parseInt(value, 10);
-    if (!Number.isFinite(parsed) || parsed < 1) {
-        return fallback;
-    }
-    return Math.min(parsed, max);
-};
-const CONTACT_RECENT_WINDOW_HOURS = getPositiveInteger(process.env.CONTACT_RECENT_WINDOW_HOURS, 1, 24);
-const CONTACT_RECENT_IP_MAX = getPositiveInteger(process.env.CONTACT_RECENT_IP_MAX, 3, 50);
+const CONTACT_RECENT_WINDOW_HOURS = clampInteger(process.env.CONTACT_RECENT_WINDOW_HOURS, { fallback: 1, max: 24 });
+const CONTACT_RECENT_IP_MAX = clampInteger(process.env.CONTACT_RECENT_IP_MAX, { fallback: 3, max: 50 });
 
 const normalizeContactField = (value) => String(value ?? '').trim();
 
@@ -138,38 +105,42 @@ const cached = async (key, loader, ttl = PUBLIC_CACHE_TTL_SECONDS) => (
 );
 
 const buildProjectFilters = (query) => {
-    const limit = clampNumber(query.limit, { max: 50, fallback: 10 });
-    const page = clampNumber(query.page, { max: 10000, fallback: 1 });
+    const { limit, page, offset } = parsePagination(query, {
+        defaultLimit: 10,
+        maxLimit: 50
+    });
 
     return {
         limit,
         page,
-        offset: (page - 1) * limit,
-        search: query.search || '',
-        tags: parseCsv(query.tags),
-        skills: parseCsv(query.skills),
-        featured: parseBoolean(query.featured),
+        offset,
+        search: toStringValue(query.search),
+        tags: toCsvStringArray(query.tags),
+        skills: toCsvStringArray(query.skills),
+        featured: toBooleanOrNull(query.featured),
         status: 'published',
-        sort: query.sort || 'display_order',
-        order: query.order || 'asc',
+        sort: toStringValue(query.sort, 'display_order'),
+        order: toStringValue(query.order, 'asc'),
         published_only: true
     };
 };
 
 const buildPostFilters = (query) => {
-    const limit = clampNumber(query.limit, { max: 50, fallback: 10 });
-    const page = clampNumber(query.page, { max: 10000, fallback: 1 });
+    const { limit, page, offset } = parsePagination(query, {
+        defaultLimit: 10,
+        maxLimit: 50
+    });
 
     return {
         limit,
         page,
-        offset: (page - 1) * limit,
-        search: query.search || '',
-        tags: parseCsv(query.tags),
-        featured: parseBoolean(query.featured),
+        offset,
+        search: toStringValue(query.search),
+        tags: toCsvStringArray(query.tags),
+        featured: toBooleanOrNull(query.featured),
         status: 'published',
-        sort: query.sort || 'published_at',
-        order: query.order || 'desc',
+        sort: toStringValue(query.sort, 'published_at'),
+        order: toStringValue(query.order, 'desc'),
         published_only: true
     };
 };
@@ -446,9 +417,12 @@ router.get('/posts/:slug', async (req, res) => {
 
 router.get('/tags', async (req, res) => {
     try {
-        const limit = clampNumber(req.query.limit, { max: 100, fallback: 20 });
-        const type = req.query.type || null;
-        const popular = parseBoolean(req.query.popular);
+        const { limit } = parsePagination(req.query, {
+            defaultLimit: 20,
+            maxLimit: 100
+        });
+        const type = toStringValue(req.query.type).trim() || null;
+        const popular = toBooleanOrNull(req.query.popular);
         const key = cacheKey('tags', stableStringify({ limit, type, popular }));
         const data = await cached(key, () => (
             popular ? Tags.getPopular(limit, { type }) : Tags.getAll({ type })
@@ -462,7 +436,7 @@ router.get('/tags', async (req, res) => {
 
 router.get('/experiences', async (req, res) => {
     try {
-        const type = req.query.type || null;
+        const type = toStringValue(req.query.type).trim() || null;
         const key = cacheKey('experiences', stableStringify({ type }));
         const data = await cached(key, () => (
             type ? Experiences.getByType(type) : Experiences.getAll()
@@ -485,7 +459,7 @@ router.get('/experiences/timeline', async (req, res) => {
 
 router.get('/interests', async (req, res) => {
     try {
-        const category = req.query.category || null;
+        const category = toStringValue(req.query.category).trim() || null;
         const key = cacheKey('interests', stableStringify({ category }));
         const data = await cached(key, () => (
             category ? Interests.getByCategory(category) : Interests.getAll()

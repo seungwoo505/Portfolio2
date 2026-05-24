@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Tags = require('../../models/tags');
 const CacheUtils = require('../../utils/cache');
+const { toBooleanOrNull, toStringValue } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -59,9 +60,10 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
  */
 router.get('/tags', authenticateToken, requirePermission('tags.read'), async (req, res) => {
     try {
-        const { type, popular } = req.query;
+        const type = toStringValue(req.query.type).trim() || null;
+        const popular = toBooleanOrNull(req.query.popular);
         let tags;
-        if (popular === 'true') {
+        if (popular === true) {
             tags = await Tags.getPopular(50, { type });
         } else {
             tags = await Tags.getAll({ type });

@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const ContactMessages = require('../../models/contact-messages');
 const { parsePagination } = require('../../utils/pagination');
+const { toBooleanOrNull } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -37,12 +38,11 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
  */
 router.get('/contacts', authenticateToken, requirePermission('contacts.read'), async (req, res) => {
     try {
-        const { unread } = req.query;
         const { limit, page, offset } = parsePagination(req.query, {
             defaultLimit: 50,
             maxLimit: 1000
         });
-        const unreadOnly = unread === true || unread === 'true';
+        const unreadOnly = toBooleanOrNull(req.query.unread) === true;
 
         const [messages, total] = await Promise.all([
             unreadOnly
