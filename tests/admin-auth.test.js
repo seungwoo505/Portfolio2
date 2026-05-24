@@ -448,3 +448,51 @@ test('requirePermission hides internal permission lookup errors from responses',
     assert.equal(logCalls.length, 1);
     assert.equal(logCalls[0][0], '권한 확인 실패');
 });
+
+test('requireRole hides role details from forbidden responses', () => {
+    const { requireRole } = loadAuthMiddleware({});
+    const req = {
+        requestId: 'req-role-denied',
+        admin: {
+            id: 9,
+            username: 'editor',
+            role: 'editor'
+        }
+    };
+    const res = createResponse();
+    let nextCalled = false;
+
+    requireRole('super_admin')(req, res, () => {
+        nextCalled = true;
+    });
+
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.body.success, false);
+    assert.equal(res.body.message, '접근 권한이 부족합니다.');
+    assert.equal(Object.prototype.hasOwnProperty.call(res.body, 'required_roles'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(res.body, 'current_role'), false);
+    assert.equal(nextCalled, false);
+});
+
+test('restrictToIPs hides rejected client IP from responses', () => {
+    const { restrictToIPs } = loadAuthMiddleware({});
+    const req = {
+        requestId: 'req-ip-denied',
+        ip: '203.0.113.10',
+        connection: {
+            remoteAddress: '203.0.113.10'
+        }
+    };
+    const res = createResponse();
+    let nextCalled = false;
+
+    restrictToIPs(['127.0.0.1'])(req, res, () => {
+        nextCalled = true;
+    });
+
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.body.success, false);
+    assert.equal(res.body.message, '허용되지 않은 IP 주소입니다.');
+    assert.equal(Object.prototype.hasOwnProperty.call(res.body, 'ip'), false);
+    assert.equal(nextCalled, false);
+});

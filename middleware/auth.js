@@ -184,11 +184,16 @@ const requireRole = (roles) => {
         const allowedRoles = Array.isArray(roles) ? roles : [roles];
         
         if (!allowedRoles.includes(req.admin.role)) {
+            logger.warn('역할 인가 실패', {
+                requestId: req.requestId,
+                adminId: req.admin.id,
+                currentRole: req.admin.role,
+                requiredRoles: allowedRoles
+            });
+
             return res.status(403).json({
                 success: false,
-                message: '접근 권한이 부족합니다.',
-                required_roles: allowedRoles,
-                current_role: req.admin.role
+                message: '접근 권한이 부족합니다.'
             });
         }
 
@@ -390,10 +395,14 @@ const restrictToIPs = (allowedIPs) => {
         const clientIP = req.ip || req.connection.remoteAddress;
         
         if (!allowedIPs.includes(clientIP)) {
+            logger.warn('IP 접근 차단', {
+                requestId: req.requestId,
+                ip: clientIP
+            });
+
             return res.status(403).json({
                 success: false,
-                message: '허용되지 않은 IP 주소입니다.',
-                ip: clientIP
+                message: '허용되지 않은 IP 주소입니다.'
             });
         }
 
