@@ -66,8 +66,8 @@
 # 관리자 로그인
 POST /api/admin/login
 {
-    "username": "admin",
-    "password": "admin123"
+    "username": "<관리자 사용자명>",
+    "password": "<관리자 비밀번호>"
 }
 
 # 로그아웃
@@ -247,7 +247,7 @@ JWT_SECRET=your-super-secret-jwt-key-here
 JWT_REFRESH_SECRET=your-super-secret-refresh-key-here
 ADMIN_BOOTSTRAP_USERNAME=admin
 ADMIN_BOOTSTRAP_EMAIL=admin@example.com
-ADMIN_BOOTSTRAP_PASSWORD=change-me-before-migration
+ADMIN_BOOTSTRAP_PASSWORD=strong-random-bootstrap-password
 ```
 
 ### **2. 데이터베이스 초기화**
@@ -267,13 +267,13 @@ mysql -u user -p portfolio_db < migrations/manual/sync-admin-permissions.sql
 npm install bcryptjs jsonwebtoken
 ```
 
-### **4. 기본 관리자 계정**
+### **4. 초기 관리자 계정**
 
-- **사용자명**: `admin`
-- **비밀번호**: `admin123`
-- **역할**: `super_admin`
+초기 `super_admin` 계정은 마이그레이션 실행 시 `ADMIN_BOOTSTRAP_USERNAME`, `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD` 환경 변수로 생성됩니다.
 
- **보안 주의**: 실제 배포 전에 기본 패스워드를 반드시 변경하세요!
+- 기본 계정/기본 비밀번호는 제공하지 않습니다.
+- `ADMIN_BOOTSTRAP_PASSWORD`는 운영에서 추측 불가능한 12자 이상의 값으로 설정해야 합니다.
+- 운영 서버 최초 로그인 후 비밀번호를 다시 변경하고, 불필요한 bootstrap 환경 변수는 제거하는 것을 권장합니다.
 
 ##  **프론트엔드 연동**
 

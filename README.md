@@ -109,7 +109,7 @@
 portfolio-server/
 ├──  server.js                    # 메인 서버 파일
 ├──  package.json                 # 프로젝트 설정 및 의존성
-├──  env.example                  # 환경 변수 예시 파일
+├──  .env.example                 # 환경 변수 예시 파일
 ├──  db.js                        # 데이터베이스 연결 설정
 ├──  log.js                       # 로깅 설정
 │
@@ -376,7 +376,7 @@ PUT /api/admin/settings         # 설정 업데이트
 ```env
 ADMIN_BOOTSTRAP_USERNAME=admin
 ADMIN_BOOTSTRAP_EMAIL=admin@example.com
-ADMIN_BOOTSTRAP_PASSWORD=change_me
+ADMIN_BOOTSTRAP_PASSWORD=strong-random-bootstrap-password
 ```
 
 기존 DB에서 신규 DB로 콘텐츠만 이전할 때는 기존 DB와 신규 DB를 분리해서 지정합니다.
