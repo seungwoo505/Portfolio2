@@ -235,6 +235,8 @@ HTTPS_CERT=/path/to/ssl/certificate.crt
 HTTPS_CA=/path/to/ssl/ca-bundle.crt
 ```
 
+`.env.example`은 개발용 예시 파일입니다. `NODE_ENV=production`에서는 `change_me`, `example.com`, `your-*` 같은 placeholder 값, 32자 미만 JWT secret, 동일한 access/refresh secret, 짧은 bootstrap password가 서버 시작 단계에서 차단됩니다.
+
 `TRUST_PROXY`는 리버스 프록시 없이 직접 실행하면 `0`으로 둡니다. Nginx 같은 단일 프록시 뒤에서 운영할 때는 `1`로 설정해야 `req.ip`, 관리자 토큰 IP 검증, rate limit이 실제 클라이언트 IP 기준으로 동작합니다.
 
 `REQUEST_TIMEOUT`은 일반 API 요청 제한이고, `/api/admin/ai/*` 경로는 `AI_REQUEST_TIMEOUT`을 사용합니다. 라우트 내부 AI 호출은 `AI_ROUTE_TIMEOUT` 안에 끝나지 않으면 504로 응답합니다.

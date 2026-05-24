@@ -45,6 +45,8 @@ LOCALHOST=http://localhost:3000
 MY_HOST=https://yourdomain.com
 ```
 
+위 값은 형식을 보여주는 예시입니다. 운영 환경에서는 `your-*`, `change_me`, `example.com` 같은 placeholder 값을 그대로 사용할 수 없으며, 서버가 시작 단계에서 이를 차단합니다.
+
 Nginx 리버스 프록시 뒤에서 운영할 때는 `TRUST_PROXY=1`을 설정하세요. 이 값이 없으면 관리자 토큰 IP 검증과 rate limit이 실제 클라이언트가 아니라 프록시 IP를 기준으로 동작할 수 있습니다.
 
 ###  **3. 보안 설정**
