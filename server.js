@@ -12,6 +12,7 @@ const compression = require("compression");
 const logger = require("./log");
 const { getRetryAfterSeconds } = require('./utils/rate-limit');
 const { validateProductionEnv } = require('./utils/env-validation');
+const { buildErrorResponse } = require('./utils/error-response');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -617,6 +618,9 @@ app.use((req, res) => {
     });
 });
 app.use((error, req, res, next) => {
+    const errorResponse = buildErrorResponse(error, {
+        nodeEnv: process.env.NODE_ENV
+    });
     const errorInfo = {
         message: error.message,
         stack: error.stack,
@@ -626,20 +630,15 @@ app.use((error, req, res, next) => {
         ip: req.ip,
         userAgent: req.headers['user-agent'],
         body: req.method !== 'GET' ? logger.redact(req.body) : undefined,
-        statusCode: error.status || 500
+        statusCode: errorResponse.statusCode
     };
-    if (error.status >= 400 && error.status < 500) {
+    if (errorResponse.isClientError) {
         logger.warn('클라이언트 오류', errorInfo);
     } else {
         logger.error('서버 오류', errorInfo);
     }
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
-    res.status(error.status || 500).json({
-        success: false,
-        message: error.message || '서버 내부 오류가 발생했습니다.',
-        ...(isDevelopment && { stack: error.stack })
-    });
+
+    res.status(errorResponse.statusCode).json(errorResponse.body);
 });
 
 const hasHttpsConfig = !!(process.env.HTTPS_KEY && process.env.HTTPS_CERT);
