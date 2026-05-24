@@ -26,6 +26,9 @@ const normalizeUserUpdateBody = (body) => {
 
     return normalizedBody;
 };
+const userCreateClientErrors = new Set([
+    '이미 존재하는 사용자명 또는 이메일입니다.'
+]);
 
 /**
  * @swagger
@@ -173,9 +176,21 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
             data: newUser
         });
     } catch (error) {
-        res.status(400).json({
+        if (userCreateClientErrors.has(error.message)) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        logger.error('관리자 생성 실패', buildErrorLog(error, req, {
+            username: req.body?.username,
+            email: req.body?.email
+        }));
+
+        return res.status(500).json({
             success: false,
-            message: error.message
+            message: '관리자 생성에 실패했습니다.'
         });
     }
 });
