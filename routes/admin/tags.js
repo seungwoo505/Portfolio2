@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Tags = require('../../models/tags');
 const CacheUtils = require('../../utils/cache');
-const { toBooleanOrNull, toStringValue } = require('../../utils/filter-values');
+const { toOptionalBoolean, toStringValue } = require('../../utils/filter-values');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -69,9 +70,12 @@ const tagStringFields = ['name', 'slug', 'description', 'color', 'type'];
 router.get('/tags', authenticateToken, requirePermission('tags.read'), async (req, res) => {
     try {
         const type = toStringValue(req.query.type).trim() || null;
-        const popular = toBooleanOrNull(req.query.popular);
+        const popular = toOptionalBoolean(req.query.popular);
+        if (!popular.isValid) {
+            return res.status(400).json({ success: false, message: 'popular 값은 boolean이어야 합니다.' });
+        }
         let tags;
-        if (popular === true) {
+        if (popular.value === true) {
             tags = await Tags.getPopular(50, { type });
         } else {
             tags = await Tags.getAll({ type });
@@ -143,6 +147,11 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
  */
 router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), logActivity('update_tag'), async (req, res) => {
     try {
+        const tagId = parsePositiveIntegerParam(req.params.id);
+        if (!tagId) {
+            return res.status(400).json({ success: false, message: '유효한 태그 ID가 필요합니다.' });
+        }
+
         const body = trimStringFields(getPlainBody(req), tagStringFields);
 
         if (Object.keys(body).length === 0) {
@@ -153,7 +162,12 @@ router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), log
             return res.status(400).json({ success: false, message: '태그 이름은 비어 있을 수 없습니다.' });
         }
 
-        const updated = await Tags.update(req.params.id, body);
+        const existing = await Tags.getById(tagId);
+        if (!existing) {
+            return res.status(404).json({ success: false, message: '태그를 찾을 수 없습니다.' });
+        }
+
+        const updated = await Tags.update(tagId, body);
         CacheUtils.invalidateResources('tags', 'projects', 'blog');
         res.json({ success: true, message: '태그가 업데이트되었습니다.', data: updated });
     } catch (error) {
@@ -163,7 +177,17 @@ router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), log
 
 router.delete('/tags/:id', authenticateToken, requirePermission('tags.delete'), logActivity('delete_tag'), async (req, res) => {
     try {
-        await Tags.delete(req.params.id);
+        const tagId = parsePositiveIntegerParam(req.params.id);
+        if (!tagId) {
+            return res.status(400).json({ success: false, message: '유효한 태그 ID가 필요합니다.' });
+        }
+
+        const existing = await Tags.getById(tagId);
+        if (!existing) {
+            return res.status(404).json({ success: false, message: '태그를 찾을 수 없습니다.' });
+        }
+
+        await Tags.delete(tagId);
         CacheUtils.invalidateResources('tags', 'projects', 'blog');
         res.json({ success: true, message: '태그가 삭제되었습니다.' });
     } catch (error) {

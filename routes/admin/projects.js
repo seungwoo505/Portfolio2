@@ -4,7 +4,7 @@ const { logger, verboseDebug, buildErrorLog } = require('./common');
 const Projects = require('../../models/projects');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
-const { toBooleanOrNull } = require('../../utils/filter-values');
+const { toOptionalBoolean } = require('../../utils/filter-values');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -113,11 +113,17 @@ router.get('/projects', authenticateToken, requirePermission('projects.read'), a
             defaultLimit: 20,
             maxLimit: 100
         });
-        const featured = toBooleanOrNull(req.query.featured);
+        const featured = toOptionalBoolean(req.query.featured);
+        if (!featured.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'featured 값은 boolean이어야 합니다.'
+            });
+        }
 
         let projects;
         let total;
-        if (featured === true) {
+        if (featured.value === true) {
             [projects, total] = await Promise.all([
                 Projects.getFeatured(pagination.limit, pagination.offset),
                 Projects.getCountWithFilters({

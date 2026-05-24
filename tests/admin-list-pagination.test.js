@@ -131,3 +131,45 @@ test('admin featured project list returns count-based pagination total', async (
         totalPages: 4
     });
 });
+
+test('admin project list rejects invalid featured filters before model calls', async () => {
+    clearRootModules([
+        ['routes', 'admin', 'projects.js'],
+        ['routes', 'admin', 'common.js'],
+        ['models', 'projects.js'],
+        ['utils', 'cache.js'],
+        ['utils', 'filter-values.js'],
+        ['utils', 'pagination.js'],
+        ['middleware', 'auth.js'],
+        ['log.js']
+    ]);
+
+    let getAllCalled = false;
+    let getFeaturedCalled = false;
+    stubRootModule(['routes', 'admin', 'common.js'], {
+        logger: createNoopLogger(),
+        verboseDebug: () => {},
+        buildErrorLog: (error) => ({ error: error.message })
+    });
+    stubRootModule(['models', 'projects.js'], {
+        getFeatured: async () => {
+            getFeaturedCalled = true;
+            return [];
+        },
+        getAll: async () => {
+            getAllCalled = true;
+            return [];
+        },
+        getCountWithFilters: async () => 0
+    });
+    stubRootModule(['utils', 'cache.js'], { invalidateResources: () => 0 });
+    stubAdminMiddleware();
+
+    const router = require(resolveFromRoot(['routes', 'admin', 'projects.js']));
+    const { status, body } = await requestJson(router, '/projects?featured=maybe');
+
+    assert.equal(status, 400);
+    assert.equal(body.message, 'featured 값은 boolean이어야 합니다.');
+    assert.equal(getAllCalled, false);
+    assert.equal(getFeaturedCalled, false);
+});

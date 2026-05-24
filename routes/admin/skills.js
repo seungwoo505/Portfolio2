@@ -4,6 +4,7 @@ const { logger, buildErrorLog } = require('./common');
 const Skills = require('../../models/skills');
 const CacheUtils = require('../../utils/cache');
 const { toBooleanOrNull, toStringValue } = require('../../utils/filter-values');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
@@ -217,12 +218,20 @@ router.delete('/skills/categories/:id',
     logActivity('delete_skill_category'),
     async (req, res) => {
         try {
-            const categoryId = req.params.id;
+            const categoryId = parsePositiveIntegerParam(req.params.id);
 
             if (!categoryId) {
                 return res.status(400).json({
                     success: false,
-                    message: '카테고리 ID가 필요합니다.'
+                    message: '유효한 카테고리 ID가 필요합니다.'
+                });
+            }
+
+            const existingCategory = await Skills.getCategoryById(categoryId);
+            if (!existingCategory) {
+                return res.status(404).json({
+                    success: false,
+                    message: '카테고리를 찾을 수 없습니다.'
                 });
             }
             
@@ -452,7 +461,14 @@ router.put('/skills/:id',
     logActivity('update_skill'),
     async (req, res) => {
         try {
-            const skillId = req.params.id;
+            const skillId = parsePositiveIntegerParam(req.params.id);
+            if (!skillId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 기술 스택 ID가 필요합니다.'
+                });
+            }
+
             const existingSkill = await Skills.getSkillById(skillId);
             if (!existingSkill) {
                 return res.status(404).json({
@@ -519,12 +535,20 @@ router.delete('/skills/:id',
     logActivity('delete_skill'),
     async (req, res) => {
         try {
-            const skillId = req.params.id;
+            const skillId = parsePositiveIntegerParam(req.params.id);
 
             if (!skillId) {
                 return res.status(400).json({
                     success: false,
-                    message: '기술 스택 ID가 필요합니다.'
+                    message: '유효한 기술 스택 ID가 필요합니다.'
+                });
+            }
+
+            const existingSkill = await Skills.getSkillById(skillId);
+            if (!existingSkill) {
+                return res.status(404).json({
+                    success: false,
+                    message: '기술 스택을 찾을 수 없습니다.'
                 });
             }
             await Skills.deleteSkill(skillId);
@@ -610,7 +634,14 @@ router.patch('/skills/:id/featured',
     logActivity('toggle_skill_featured'),
     async (req, res) => {
         try {
-            const skillId = req.params.id;
+            const skillId = parsePositiveIntegerParam(req.params.id);
+            if (!skillId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 기술 스택 ID가 필요합니다.'
+                });
+            }
+
             const isFeatured = toBooleanOrNull(req.body?.is_featured);
 
             if (isFeatured === null) {
@@ -619,6 +650,15 @@ router.patch('/skills/:id/featured',
                     message: '추천 상태는 boolean 값이어야 합니다.'
                 });
             }
+
+            const existingSkill = await Skills.getSkillById(skillId);
+            if (!existingSkill) {
+                return res.status(404).json({
+                    success: false,
+                    message: '기술 스택을 찾을 수 없습니다.'
+                });
+            }
+
             await Skills.updateSkill(skillId, { is_featured: isFeatured });
             CacheUtils.invalidateResources('skills');
 
@@ -643,7 +683,14 @@ router.patch('/skills/:id/order',
     logActivity('update_skill_order'),
     async (req, res) => {
         try {
-            const skillId = req.params.id;
+            const skillId = parsePositiveIntegerParam(req.params.id);
+            if (!skillId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 기술 스택 ID가 필요합니다.'
+                });
+            }
+
             const displayOrder = parseNumber(req.body?.display_order, { integer: true, min: 0 });
 
             if (displayOrder === undefined || displayOrder === null) {
@@ -652,6 +699,15 @@ router.patch('/skills/:id/order',
                     message: '표시 순서는 0 이상의 숫자여야 합니다.'
                 });
             }
+
+            const existingSkill = await Skills.getSkillById(skillId);
+            if (!existingSkill) {
+                return res.status(404).json({
+                    success: false,
+                    message: '기술 스택을 찾을 수 없습니다.'
+                });
+            }
+
             await Skills.updateSkill(skillId, { display_order: displayOrder });
             CacheUtils.invalidateResources('skills');
 

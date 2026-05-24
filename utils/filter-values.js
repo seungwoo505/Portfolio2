@@ -64,6 +64,22 @@ const toBooleanOrNull = (value) => {
     return null;
 };
 
+const toOptionalBoolean = (value) => {
+    const firstValue = firstQueryValue(value);
+    if (firstValue === undefined || firstValue === null || firstValue === '') {
+        return {
+            isValid: true,
+            value: null
+        };
+    }
+
+    const booleanValue = toBooleanOrNull(firstValue);
+    return {
+        isValid: booleanValue !== null,
+        value: booleanValue
+    };
+};
+
 const toChoice = (value, allowedValues, fallback) => {
     const normalized = toStringValue(value, fallback).trim().toLowerCase();
     return allowedValues.includes(normalized) ? normalized : fallback;
@@ -72,6 +88,7 @@ const toChoice = (value, allowedValues, fallback) => {
 module.exports = {
     firstQueryValue,
     toBooleanOrNull,
+    toOptionalBoolean,
     toChoice,
     toCsvStringArray,
     toStringArray,

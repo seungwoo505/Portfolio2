@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Interests = require('../../models/interests');
 const CacheUtils = require('../../utils/cache');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -76,7 +77,14 @@ router.put('/interests/:id',
     logActivity('update_interest'),
     async (req, res) => {
         try {
-            const { id } = req.params;
+            const id = parsePositiveIntegerParam(req.params.id);
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 관심사 ID가 필요합니다.'
+                });
+            }
+
             const body = trimStringFields(getPlainBody(req), interestStringFields);
 
             if (Object.keys(body).length === 0) {
@@ -90,6 +98,14 @@ router.put('/interests/:id',
                 return res.status(400).json({
                     success: false,
                     message: '제목과 카테고리는 비어 있을 수 없습니다.'
+                });
+            }
+
+            const existingInterest = await Interests.getById(id);
+            if (!existingInterest) {
+                return res.status(404).json({
+                    success: false,
+                    message: '관심사를 찾을 수 없습니다.'
                 });
             }
 
@@ -117,7 +133,22 @@ router.delete('/interests/:id',
     logActivity('delete_interest'),
     async (req, res) => {
         try {
-            const { id } = req.params;
+            const id = parsePositiveIntegerParam(req.params.id);
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 관심사 ID가 필요합니다.'
+                });
+            }
+
+            const existingInterest = await Interests.getById(id);
+            if (!existingInterest) {
+                return res.status(404).json({
+                    success: false,
+                    message: '관심사를 찾을 수 없습니다.'
+                });
+            }
+
             await Interests.delete(id);
             CacheUtils.invalidateResources('interests');
 

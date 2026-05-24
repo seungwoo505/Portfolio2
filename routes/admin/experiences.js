@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Experiences = require('../../models/experiences');
 const CacheUtils = require('../../utils/cache');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasRequiredStringFields,
@@ -110,13 +111,28 @@ router.put('/experiences/:id',
     logActivity('update_experience'),
     async (req, res) => {
         try {
-            const { id } = req.params;
+            const id = parsePositiveIntegerParam(req.params.id);
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 경력 ID가 필요합니다.'
+                });
+            }
+
             const body = trimStringFields(getPlainBody(req), ['type', 'title', 'company', 'company_or_institution']);
 
             if (!hasRequiredStringFields(body, ['type', 'title'])) {
                 return res.status(400).json({
                     success: false,
                     message: '타입과 제목은 필수입니다.'
+                });
+            }
+
+            const existingExperience = await Experiences.getById(id);
+            if (!existingExperience) {
+                return res.status(404).json({
+                    success: false,
+                    message: '경력을 찾을 수 없습니다.'
                 });
             }
 
@@ -146,7 +162,22 @@ router.delete('/experiences/:id',
     logActivity('delete_experience'),
     async (req, res) => {
         try {
-            const { id } = req.params;
+            const id = parsePositiveIntegerParam(req.params.id);
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 경력 ID가 필요합니다.'
+                });
+            }
+
+            const existingExperience = await Experiences.getById(id);
+            if (!existingExperience) {
+                return res.status(404).json({
+                    success: false,
+                    message: '경력을 찾을 수 없습니다.'
+                });
+            }
+
             await Experiences.delete(id);
             CacheUtils.invalidateResources('experiences');
 

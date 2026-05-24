@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
     toBooleanOrNull,
+    toOptionalBoolean,
     toChoice,
     toCsvStringArray,
     toStringArray,
@@ -21,4 +22,12 @@ test('filter value helpers normalize booleans and choices', () => {
     assert.equal(toBooleanOrNull({ value: true }), null);
     assert.equal(toChoice(['ASC'], ['asc', 'desc'], 'desc'), 'asc');
     assert.equal(toChoice({}, ['asc', 'desc'], 'desc'), 'desc');
+});
+
+test('filter value helpers validate optional booleans', () => {
+    assert.deepEqual(toOptionalBoolean(undefined), { isValid: true, value: null });
+    assert.deepEqual(toOptionalBoolean(''), { isValid: true, value: null });
+    assert.deepEqual(toOptionalBoolean('true'), { isValid: true, value: true });
+    assert.deepEqual(toOptionalBoolean('off'), { isValid: true, value: false });
+    assert.deepEqual(toOptionalBoolean('maybe'), { isValid: false, value: null });
 });

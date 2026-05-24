@@ -3,7 +3,8 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const ContactMessages = require('../../models/contact-messages');
 const { parsePagination } = require('../../utils/pagination');
-const { toBooleanOrNull } = require('../../utils/filter-values');
+const { toOptionalBoolean } = require('../../utils/filter-values');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -42,7 +43,14 @@ router.get('/contacts', authenticateToken, requirePermission('contacts.read'), a
             defaultLimit: 50,
             maxLimit: 1000
         });
-        const unreadOnly = toBooleanOrNull(req.query.unread) === true;
+        const unreadFilter = toOptionalBoolean(req.query.unread);
+        if (!unreadFilter.isValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'unread 값은 boolean이어야 합니다.'
+            });
+        }
+        const unreadOnly = unreadFilter.value === true;
 
         const [messages, total] = await Promise.all([
             unreadOnly
@@ -115,7 +123,23 @@ router.put('/contacts/:id/read',
     logActivity('mark_contact_read'),
     async (req, res) => {
         try {
-            const message = await ContactMessages.markAsRead(req.params.id);
+            const messageId = parsePositiveIntegerParam(req.params.id);
+            if (!messageId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 메시지 ID가 필요합니다.'
+                });
+            }
+
+            const existingMessage = await ContactMessages.getById(messageId);
+            if (!existingMessage) {
+                return res.status(404).json({
+                    success: false,
+                    message: '메시지를 찾을 수 없습니다.'
+                });
+            }
+
+            const message = await ContactMessages.markAsRead(messageId);
 
             res.json({
                 success: true,
@@ -137,12 +161,20 @@ router.delete('/contacts/:id',
     logActivity('delete_contact'),
     async (req, res) => {
         try {
-            const messageId = req.params.id;
+            const messageId = parsePositiveIntegerParam(req.params.id);
 
             if (!messageId) {
                 return res.status(400).json({
                     success: false,
-                    message: '메시지 ID가 필요합니다.'
+                    message: '유효한 메시지 ID가 필요합니다.'
+                });
+            }
+
+            const existingMessage = await ContactMessages.getById(messageId);
+            if (!existingMessage) {
+                return res.status(404).json({
+                    success: false,
+                    message: '삭제할 메시지를 찾을 수 없습니다.'
                 });
             }
 

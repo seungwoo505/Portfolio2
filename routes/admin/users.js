@@ -4,6 +4,7 @@ const { logger, buildErrorLog } = require('./common');
 const AdminUsers = require('../../models/admin-users');
 const { logActivity, superAdminOnly } = require('../../middleware/auth');
 const { toBooleanOrNull } = require('../../utils/filter-values');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -197,7 +198,15 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
 
 router.get('/users/:id', ...superAdminOnly, async (req, res) => {
     try {
-        const user = await AdminUsers.getById(req.params.id);
+        const userId = parsePositiveIntegerParam(req.params.id);
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 사용자 ID가 필요합니다.'
+            });
+        }
+
+        const user = await AdminUsers.getById(userId);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -301,6 +310,14 @@ router.get('/users/:id', ...superAdminOnly, async (req, res) => {
  */
 router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req, res) => {
     try {
+        const userId = parsePositiveIntegerParam(req.params.id);
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 사용자 ID가 필요합니다.'
+            });
+        }
+
         const body = normalizeUserUpdateBody(getPlainBody(req));
 
         if (Object.keys(body).length === 0) {
@@ -338,7 +355,15 @@ router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (
             });
         }
 
-        const updatedUser = await AdminUsers.update(req.params.id, body);
+        const existingUser = await AdminUsers.getById(userId);
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const updatedUser = await AdminUsers.update(userId, body);
 
         res.json({
             success: true,
@@ -360,9 +385,16 @@ router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (
 
 router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), async (req, res) => {
     try {
-        const userId = req.params.id;
+        const userId = parsePositiveIntegerParam(req.params.id);
 
-        if (userId === req.admin.id.toString()) {
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 사용자 ID가 필요합니다.'
+            });
+        }
+
+        if (userId === Number(req.admin.id)) {
             return res.status(400).json({
                 success: false,
                 message: '자신의 계정은 삭제할 수 없습니다.'

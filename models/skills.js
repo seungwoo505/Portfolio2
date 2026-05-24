@@ -170,6 +170,12 @@ const Skills = {
         `, [name]);
     },
 
+    async getCategoryById(id) {
+        return await executeQuerySingle(`
+            SELECT * FROM skill_categories WHERE id = ?
+        `, [id]);
+    },
+
     /**
      * @description 스킬 모델의 카테고리를 삭제한다.
       * @param {*} id 입력값

@@ -362,6 +362,7 @@ test('admin user create hides unexpected internal errors', async () => {
 test('admin user update normalizes boolean-like active status', async () => {
     const updatedPayloads = [];
     const router = loadUsersRoute({
+        getById: async (id) => ({ id }),
         update: async (_id, payload) => {
             updatedPayloads.push(payload);
             return { id: 5 };
@@ -381,4 +382,53 @@ test('admin user update normalizes boolean-like active status', async () => {
         email: 'active@example.com',
         is_active: false
     }]);
+});
+
+test('admin user update rejects invalid ids before model calls', async () => {
+    let getByIdCalled = false;
+    let updateCalled = false;
+    const router = loadUsersRoute({
+        getById: async () => {
+            getByIdCalled = true;
+            return { id: 5 };
+        },
+        update: async () => {
+            updateCalled = true;
+            return { id: 5 };
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/users/not-a-number', {
+        method: 'PUT',
+        body: {
+            email: 'active@example.com'
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '유효한 사용자 ID가 필요합니다.');
+    assert.equal(getByIdCalled, false);
+    assert.equal(updateCalled, false);
+});
+
+test('admin user update maps missing users to 404 before update', async () => {
+    let updateCalled = false;
+    const router = loadUsersRoute({
+        getById: async () => null,
+        update: async () => {
+            updateCalled = true;
+            return { id: 5 };
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/users/5', {
+        method: 'PUT',
+        body: {
+            email: 'active@example.com'
+        }
+    });
+
+    assert.equal(status, 404);
+    assert.equal(body.message, '사용자를 찾을 수 없습니다.');
+    assert.equal(updateCalled, false);
 });

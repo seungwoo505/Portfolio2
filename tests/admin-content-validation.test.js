@@ -169,6 +169,57 @@ test('admin tag update rejects blank provided name', async () => {
     assert.equal(updateCalled, false);
 });
 
+test('admin tag list rejects invalid popular filters before model calls', async () => {
+    let getAllCalled = false;
+    let getPopularCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'tags.js'], [{
+        segments: ['models', 'tags.js'],
+        moduleExports: {
+            getAll: async () => {
+                getAllCalled = true;
+                return [];
+            },
+            getPopular: async () => {
+                getPopularCalled = true;
+                return [];
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/tags?popular=maybe');
+
+    assert.equal(status, 400);
+    assert.equal(body.message, 'popular 값은 boolean이어야 합니다.');
+    assert.equal(getAllCalled, false);
+    assert.equal(getPopularCalled, false);
+});
+
+test('admin tag delete rejects invalid ids before model calls', async () => {
+    let getByIdCalled = false;
+    let deleteCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'tags.js'], [{
+        segments: ['models', 'tags.js'],
+        moduleExports: {
+            getById: async () => {
+                getByIdCalled = true;
+                return { id: 7 };
+            },
+            delete: async () => {
+                deleteCalled = true;
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/tags/not-a-number', {
+        method: 'DELETE'
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '유효한 태그 ID가 필요합니다.');
+    assert.equal(getByIdCalled, false);
+    assert.equal(deleteCalled, false);
+});
+
 test('admin social link create trims required strings before model call', async () => {
     const createdPayloads = [];
     const router = loadAdminRoute(['routes', 'admin', 'profile.js'], [
@@ -201,4 +252,104 @@ test('admin social link create trims required strings before model call', async 
         platform: 'GitHub',
         url: 'https://github.com/example'
     }]);
+});
+
+test('admin social link update maps missing links to 404 before update', async () => {
+    let updateCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'profile.js'], [
+        {
+            segments: ['models', 'personal-info.js'],
+            moduleExports: {}
+        },
+        {
+            segments: ['models', 'social-links.js'],
+            moduleExports: {
+                getById: async () => null,
+                update: async () => {
+                    updateCalled = true;
+                    return { id: 11 };
+                }
+            }
+        }
+    ]);
+
+    const { status, body } = await requestJson(router, '/social-links/11', {
+        method: 'PUT',
+        body: {
+            platform: 'GitHub'
+        }
+    });
+
+    assert.equal(status, 404);
+    assert.equal(body.message, '소셜 링크를 찾을 수 없습니다.');
+    assert.equal(updateCalled, false);
+});
+
+test('admin contact read maps missing messages to 404 before update', async () => {
+    let markAsReadCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'contacts.js'], [{
+        segments: ['models', 'contact-messages.js'],
+        moduleExports: {
+            getById: async () => null,
+            markAsRead: async () => {
+                markAsReadCalled = true;
+                return { id: 3 };
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/contacts/3/read', {
+        method: 'PUT'
+    });
+
+    assert.equal(status, 404);
+    assert.equal(body.message, '메시지를 찾을 수 없습니다.');
+    assert.equal(markAsReadCalled, false);
+});
+
+test('admin contact list rejects invalid unread filters before model calls', async () => {
+    let getAllCalled = false;
+    let getUnreadCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'contacts.js'], [{
+        segments: ['models', 'contact-messages.js'],
+        moduleExports: {
+            getAll: async () => {
+                getAllCalled = true;
+                return [];
+            },
+            getUnread: async () => {
+                getUnreadCalled = true;
+                return [];
+            },
+            countAll: async () => 0
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/contacts?unread=maybe');
+
+    assert.equal(status, 400);
+    assert.equal(body.message, 'unread 값은 boolean이어야 합니다.');
+    assert.equal(getAllCalled, false);
+    assert.equal(getUnreadCalled, false);
+});
+
+test('admin experience delete maps missing experiences to 404 before delete', async () => {
+    let deleteCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'experiences.js'], [{
+        segments: ['models', 'experiences.js'],
+        moduleExports: {
+            getById: async () => null,
+            delete: async () => {
+                deleteCalled = true;
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/experiences/4', {
+        method: 'DELETE'
+    });
+
+    assert.equal(status, 404);
+    assert.equal(body.message, '경력을 찾을 수 없습니다.');
+    assert.equal(deleteCalled, false);
 });

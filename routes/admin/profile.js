@@ -4,6 +4,7 @@ const { logger, buildErrorLog } = require('./common');
 const PersonalInfo = require('../../models/personal-info');
 const SocialLinks = require('../../models/social-links');
 const CacheUtils = require('../../utils/cache');
+const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
@@ -116,6 +117,14 @@ router.put('/social-links/:id',
     logActivity('update_social_link'),
     async (req, res) => {
         try {
+            const linkId = parsePositiveIntegerParam(req.params.id);
+            if (!linkId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 소셜 링크 ID가 필요합니다.'
+                });
+            }
+
             const body = trimStringFields(getPlainBody(req), ['platform', 'url']);
 
             if (Object.keys(body).length === 0) {
@@ -132,7 +141,15 @@ router.put('/social-links/:id',
                 });
             }
 
-            const link = await SocialLinks.update(req.params.id, body);
+            const existingLink = await SocialLinks.getById(linkId);
+            if (!existingLink) {
+                return res.status(404).json({
+                    success: false,
+                    message: '소셜 링크를 찾을 수 없습니다.'
+                });
+            }
+
+            const link = await SocialLinks.update(linkId, body);
             CacheUtils.invalidateResources('social_links');
             res.json({
                 success: true,
@@ -155,7 +172,23 @@ router.delete('/social-links/:id',
     logActivity('delete_social_link'),
     async (req, res) => {
         try {
-            await SocialLinks.delete(req.params.id);
+            const linkId = parsePositiveIntegerParam(req.params.id);
+            if (!linkId) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효한 소셜 링크 ID가 필요합니다.'
+                });
+            }
+
+            const existingLink = await SocialLinks.getById(linkId);
+            if (!existingLink) {
+                return res.status(404).json({
+                    success: false,
+                    message: '소셜 링크를 찾을 수 없습니다.'
+                });
+            }
+
+            await SocialLinks.delete(linkId);
             CacheUtils.invalidateResources('social_links');
             res.json({
                 success: true,
