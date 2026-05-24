@@ -3,7 +3,15 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Interests = require('../../models/interests');
 const CacheUtils = require('../../utils/cache');
+const {
+    getPlainBody,
+    hasInvalidProvidedStringFields,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
+
+const interestStringFields = ['title', 'description', 'icon', 'category'];
 
 router.get('/interests',
     authenticateToken,
@@ -35,7 +43,16 @@ router.post('/interests',
     logActivity('create_interest'),
     async (req, res) => {
         try {
-            const interest = await Interests.create(req.body);
+            const body = trimStringFields(getPlainBody(req), interestStringFields);
+
+            if (!hasRequiredStringFields(body, ['title', 'category'])) {
+                return res.status(400).json({
+                    success: false,
+                    message: '제목과 카테고리는 필수입니다.'
+                });
+            }
+
+            const interest = await Interests.create(body);
             CacheUtils.invalidateResources('interests');
 
             res.status(201).json({
@@ -60,7 +77,23 @@ router.put('/interests/:id',
     async (req, res) => {
         try {
             const { id } = req.params;
-            const interest = await Interests.update(id, req.body);
+            const body = trimStringFields(getPlainBody(req), interestStringFields);
+
+            if (Object.keys(body).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: '수정할 관심사 정보가 필요합니다.'
+                });
+            }
+
+            if (hasInvalidProvidedStringFields(body, ['title', 'category'])) {
+                return res.status(400).json({
+                    success: false,
+                    message: '제목과 카테고리는 비어 있을 수 없습니다.'
+                });
+            }
+
+            const interest = await Interests.update(id, body);
             CacheUtils.invalidateResources('interests');
 
             res.json({

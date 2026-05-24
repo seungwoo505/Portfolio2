@@ -4,6 +4,12 @@ const { logger, buildErrorLog } = require('./common');
 const PersonalInfo = require('../../models/personal-info');
 const SocialLinks = require('../../models/social-links');
 const CacheUtils = require('../../utils/cache');
+const {
+    getPlainBody,
+    hasInvalidProvidedStringFields,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 router.get('/personal-info',
@@ -29,14 +35,16 @@ router.put('/personal-info',
     logActivity('update_personal_info'),
     async (req, res) => {
         try {
-            if (!req.body || Object.keys(req.body).length === 0) {
+            const body = getPlainBody(req);
+
+            if (Object.keys(body).length === 0) {
                 return res.status(400).json({
                     success: false,
                     message: '수정할 개인 정보가 필요합니다.'
                 });
             }
 
-            const profile = await PersonalInfo.update(req.body || {});
+            const profile = await PersonalInfo.update(body);
             CacheUtils.invalidateResources('personal_info');
             res.json({
                 success: true,
@@ -76,15 +84,15 @@ router.post('/social-links',
     logActivity('create_social_link'),
     async (req, res) => {
         try {
-            const { platform, url } = req.body || {};
-            if (!platform || !url) {
+            const body = trimStringFields(getPlainBody(req), ['platform', 'url']);
+            if (!hasRequiredStringFields(body, ['platform', 'url'])) {
                 return res.status(400).json({
                     success: false,
                     message: '플랫폼과 URL은 필수입니다.'
                 });
             }
 
-            const id = await SocialLinks.create(req.body);
+            const id = await SocialLinks.create(body);
             const link = await SocialLinks.getById(id);
             CacheUtils.invalidateResources('social_links');
             res.status(201).json({
@@ -108,7 +116,23 @@ router.put('/social-links/:id',
     logActivity('update_social_link'),
     async (req, res) => {
         try {
-            const link = await SocialLinks.update(req.params.id, req.body || {});
+            const body = trimStringFields(getPlainBody(req), ['platform', 'url']);
+
+            if (Object.keys(body).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: '수정할 소셜 링크 정보가 필요합니다.'
+                });
+            }
+
+            if (hasInvalidProvidedStringFields(body, ['platform', 'url'])) {
+                return res.status(400).json({
+                    success: false,
+                    message: '플랫폼과 URL은 비어 있을 수 없습니다.'
+                });
+            }
+
+            const link = await SocialLinks.update(req.params.id, body);
             CacheUtils.invalidateResources('social_links');
             res.json({
                 success: true,

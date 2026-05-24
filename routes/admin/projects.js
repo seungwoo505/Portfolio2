@@ -5,7 +5,23 @@ const Projects = require('../../models/projects');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
 const { toBooleanOrNull } = require('../../utils/filter-values');
+const {
+    getPlainBody,
+    hasInvalidProvidedStringFields,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
+
+const normalizeUndefinedFields = (body) => {
+    const normalizedData = {};
+
+    Object.keys(body).forEach((key) => {
+        normalizedData[key] = body[key] === undefined ? null : body[key];
+    });
+
+    return normalizedData;
+};
 
 /**
  * @swagger
@@ -144,25 +160,18 @@ router.post('/projects',
     logActivity('create_project'),
     async (req, res) => {
         try {
-            const { title, description } = req.body;
+            const body = trimStringFields(getPlainBody(req), ['title', 'description']);
 
-            if (!title || !description) {
+            if (!hasRequiredStringFields(body, ['title', 'description'])) {
                 return res.status(400).json({
                     success: false,
                     message: '제목과 설명은 필수입니다.'
                 });
             }
 
-            const sanitizedData = {};
-            Object.keys(req.body).forEach(key => {
-                if (req.body[key] === undefined) {
-                    sanitizedData[key] = null;
-                } else {
-                    sanitizedData[key] = req.body[key];
-                }
-            });
+            const sanitizedData = normalizeUndefinedFields(body);
 
-            verboseDebug('원본 데이터:', req.body);
+            verboseDebug('원본 데이터:', body);
             verboseDebug('정규화된 데이터:', sanitizedData);
             verboseDebug('undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
 
@@ -309,7 +318,22 @@ router.put('/projects/slug/:slug',
     async (req, res) => {
         try {
             const projectSlug = req.params.slug;
+            const body = trimStringFields(getPlainBody(req), ['title', 'description']);
             verboseDebug('projectSlug:', projectSlug);
+
+            if (Object.keys(body).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: '수정할 프로젝트 정보가 필요합니다.'
+                });
+            }
+
+            if (hasInvalidProvidedStringFields(body, ['title', 'description'])) {
+                return res.status(400).json({
+                    success: false,
+                    message: '제목과 설명은 비어 있을 수 없습니다.'
+                });
+            }
 
             verboseDebug('Projects.getBySlug 호출 시작');
             const existingProject = await Projects.getBySlug(projectSlug);
@@ -323,16 +347,9 @@ router.put('/projects/slug/:slug',
             }
             verboseDebug('프로젝트 존재 확인 완료');
 
-            const sanitizedData = {};
-            Object.keys(req.body).forEach(key => {
-                if (req.body[key] === undefined) {
-                    sanitizedData[key] = null;
-                } else {
-                    sanitizedData[key] = req.body[key];
-                }
-            });
+            const sanitizedData = normalizeUndefinedFields(body);
 
-            verboseDebug('프로젝트 수정 - 원본 데이터:', req.body);
+            verboseDebug('프로젝트 수정 - 원본 데이터:', body);
             verboseDebug('프로젝트 수정 - 정규화된 데이터:', sanitizedData);
             verboseDebug('프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
 

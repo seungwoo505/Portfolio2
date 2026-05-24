@@ -3,6 +3,11 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Experiences = require('../../models/experiences');
 const CacheUtils = require('../../utils/cache');
+const {
+    getPlainBody,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
@@ -69,16 +74,16 @@ router.post('/experiences',
     logActivity('create_experience'),
     async (req, res) => {
         try {
-            const { type, title } = req.body;
+            const body = trimStringFields(getPlainBody(req), ['type', 'title', 'company', 'company_or_institution']);
 
-            if (!type || !title) {
+            if (!hasRequiredStringFields(body, ['type', 'title'])) {
                 return res.status(400).json({
                     success: false,
                     message: '타입과 제목은 필수입니다.'
                 });
             }
 
-            const mappedData = mapExperienceBody(req.body);
+            const mappedData = mapExperienceBody(body);
 
             const id = await Experiences.create(mappedData);
             const newExperience = await Experiences.getById(id);
@@ -106,16 +111,16 @@ router.put('/experiences/:id',
     async (req, res) => {
         try {
             const { id } = req.params;
-            const { type, title } = req.body;
+            const body = trimStringFields(getPlainBody(req), ['type', 'title', 'company', 'company_or_institution']);
 
-            if (!type || !title) {
+            if (!hasRequiredStringFields(body, ['type', 'title'])) {
                 return res.status(400).json({
                     success: false,
                     message: '타입과 제목은 필수입니다.'
                 });
             }
 
-            const mappedData = mapExperienceBody(req.body);
+            const mappedData = mapExperienceBody(body);
 
             const updatedExperience = await Experiences.update(id, mappedData);
             CacheUtils.invalidateResources('experiences');

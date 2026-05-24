@@ -3,7 +3,15 @@ const router = express.Router();
 const Tags = require('../../models/tags');
 const CacheUtils = require('../../utils/cache');
 const { toBooleanOrNull, toStringValue } = require('../../utils/filter-values');
+const {
+    getPlainBody,
+    hasInvalidProvidedStringFields,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
+
+const tagStringFields = ['name', 'slug', 'description', 'color', 'type'];
 
 /**
  * @swagger
@@ -76,8 +84,9 @@ router.get('/tags', authenticateToken, requirePermission('tags.read'), async (re
 
 router.post('/tags', authenticateToken, requirePermission('tags.create'), logActivity('create_tag'), async (req, res) => {
     try {
-        const { name, slug, description, color, type } = req.body;
-        if (!name) {
+        const body = trimStringFields(getPlainBody(req), tagStringFields);
+        const { name, slug, description, color, type } = body;
+        if (!hasRequiredStringFields(body, ['name'])) {
             return res.status(400).json({ success: false, message: '태그 이름은 필수입니다.' });
         }
         const id = await Tags.create({ name, slug, description, color, type });
@@ -134,7 +143,17 @@ router.post('/tags', authenticateToken, requirePermission('tags.create'), logAct
  */
 router.put('/tags/:id', authenticateToken, requirePermission('tags.update'), logActivity('update_tag'), async (req, res) => {
     try {
-        const updated = await Tags.update(req.params.id, req.body);
+        const body = trimStringFields(getPlainBody(req), tagStringFields);
+
+        if (Object.keys(body).length === 0) {
+            return res.status(400).json({ success: false, message: '수정할 태그 정보가 필요합니다.' });
+        }
+
+        if (hasInvalidProvidedStringFields(body, ['name'])) {
+            return res.status(400).json({ success: false, message: '태그 이름은 비어 있을 수 없습니다.' });
+        }
+
+        const updated = await Tags.update(req.params.id, body);
         CacheUtils.invalidateResources('tags', 'projects', 'blog');
         res.json({ success: true, message: '태그가 업데이트되었습니다.', data: updated });
     } catch (error) {

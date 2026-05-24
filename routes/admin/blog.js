@@ -5,6 +5,12 @@ const BlogPosts = require('../../models/blog-posts');
 const CacheUtils = require('../../utils/cache');
 const { parsePagination } = require('../../utils/pagination');
 const { toBooleanOrNull } = require('../../utils/filter-values');
+const {
+    getPlainBody,
+    hasInvalidProvidedStringFields,
+    hasRequiredStringFields,
+    trimStringFields
+} = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 /**
@@ -83,16 +89,16 @@ router.post('/blog/posts',
     logActivity('create_blog_post'),
     async (req, res) => {
         try {
-            const { title, content } = req.body;
+            const body = trimStringFields(getPlainBody(req), ['title', 'content']);
 
-            if (!title || !content) {
+            if (!hasRequiredStringFields(body, ['title', 'content'])) {
                 return res.status(400).json({
                     success: false,
                     message: '제목과 내용은 필수입니다.'
                 });
             }
 
-            const id = await BlogPosts.create(req.body);
+            const id = await BlogPosts.create(body);
             const newPost = await BlogPosts.getById(id);
             CacheUtils.invalidateResources('blog');
 
@@ -205,6 +211,21 @@ router.put('/blog/posts/slug/:slug',
     async (req, res) => {
         try {
             const postSlug = req.params.slug;
+            const body = trimStringFields(getPlainBody(req), ['title', 'content']);
+
+            if (Object.keys(body).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: '수정할 블로그 포스트 정보가 필요합니다.'
+                });
+            }
+
+            if (hasInvalidProvidedStringFields(body, ['title', 'content'])) {
+                return res.status(400).json({
+                    success: false,
+                    message: '제목과 내용은 비어 있을 수 없습니다.'
+                });
+            }
 
             const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
             if (!existingPost) {
@@ -214,7 +235,7 @@ router.put('/blog/posts/slug/:slug',
                 });
             }
 
-            const updatedPost = await BlogPosts.update(existingPost.id, req.body);
+            const updatedPost = await BlogPosts.update(existingPost.id, body);
 
             res.json({
                 success: true,
