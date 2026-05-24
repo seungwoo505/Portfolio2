@@ -11,6 +11,7 @@ const rateLimit = require("express-rate-limit");
 const compression = require("compression");
 const logger = require("./log");
 const { getRetryAfterSeconds } = require('./utils/rate-limit');
+const { validateProductionEnv } = require('./utils/env-validation');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -651,6 +652,14 @@ app.use((error, req, res, next) => {
 
 const hasHttpsConfig = !!(process.env.HTTPS_KEY && process.env.HTTPS_CERT);
 const isProduction = process.env.NODE_ENV === 'production';
+const productionEnvValidation = validateProductionEnv(process.env);
+
+if (!productionEnvValidation.ok) {
+    logger.error('운영 환경 변수 검증 실패', {
+        errors: productionEnvValidation.errors
+    });
+    process.exit(1);
+}
 
 if (isProduction && !hasHttpsConfig) {
     logger.error('운영 환경에서는 HTTPS_KEY와 HTTPS_CERT 환경 변수가 필요합니다.');
