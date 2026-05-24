@@ -537,15 +537,7 @@ const swaggerUiOptions = {
         defaultModelsExpandDepth: 1,
         defaultModelExpandDepth: 1,
         showExtensions: false,
-        showCommonExtensions: false,
-        defaultModelsExpandDepth: 1,
-        defaultModelExpandDepth: 1,
-        requestInterceptor: (req) => {
-            if (req.url.startsWith('https://seungwoo.i234.me/api')) {
-                req.url = req.url.replace('https://seungwoo.i234.me', '');
-            }
-            return req;
-        }
+        showCommonExtensions: false
     },
     customCss: `
         .swagger-ui .topbar { display: none; }

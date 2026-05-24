@@ -244,6 +244,30 @@ const checkRoutePermissionsSeeded = () => {
     }
 };
 
+const checkSwaggerServerConfig = () => {
+    const serverContent = fs.readFileSync(path.join(rootDir, 'server.js'), 'utf8');
+    const failures = [];
+
+    if (serverContent.includes('seungwoo.i234.me')) {
+        failures.push('server.js must not hard-code deployment domains in Swagger configuration');
+    }
+
+    const swaggerOptionsMatch = serverContent.match(/const\s+swaggerUiOptions\s*=\s*\{[\s\S]*?\n\};/);
+    if (swaggerOptionsMatch) {
+        const optionKeys = ['defaultModelsExpandDepth', 'defaultModelExpandDepth'];
+        optionKeys.forEach((key) => {
+            const count = (swaggerOptionsMatch[0].match(new RegExp(`${key}\\s*:`, 'g')) || []).length;
+            if (count > 1) {
+                failures.push(`swaggerUiOptions contains duplicate ${key}`);
+            }
+        });
+    }
+
+    if (failures.length > 0) {
+        throw new Error(`swagger server config check failed:\n${failures.join('\n')}`);
+    }
+};
+
 for (const file of syntaxCheckFiles) {
     run(['-c', file], `syntax check ${file}`);
 }
@@ -251,6 +275,7 @@ for (const file of syntaxCheckFiles) {
 checkAdminRouteExport();
 checkRouteModelMethods();
 checkRoutePermissionsSeeded();
+checkSwaggerServerConfig();
 checkServerBoots();
 
 console.log(`server check passed (${syntaxCheckFiles.length} files)`);
