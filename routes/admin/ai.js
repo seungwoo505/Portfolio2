@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const { authenticateToken, requirePermission } = require('../../middleware/auth');
+const { toBooleanOrNull } = require('../../utils/filter-values');
+const { getPlainBody } = require('../../utils/request-body');
 
 
 const geminiService = require('../../services/gemini-ai');
@@ -81,6 +83,19 @@ const normalizeMaxKeywords = (value = 10) => {
     }
 
     return parsed;
+};
+
+const normalizeIncludeKeywords = (value = false) => {
+    const normalizedValue = toBooleanOrNull(value);
+    if (normalizedValue !== null) {
+        return normalizedValue;
+    }
+
+    if (value === undefined || value === null || value === '') {
+        return false;
+    }
+
+    throw new AiValidationError('includeKeywords는 boolean 값이어야 합니다.');
 };
 
 const preprocessContent = (content, logLabel) => (
@@ -179,7 +194,9 @@ router.post('/ai/summarize',
     requirePermission('blog.create'),
     async (req, res) => {
         try {
-            const { content, includeKeywords = false, techTags = [] } = req.body;
+            const body = getPlainBody(req);
+            const { content, techTags = [] } = body;
+            const includeKeywords = normalizeIncludeKeywords(body.includeKeywords);
             const validatedContent = validateContent(content, '요약할 내용이 없습니다.');
             const normalizedTechTags = normalizeTechTags(techTags);
             const preprocessedContent = preprocessContent(validatedContent, '백엔드 전처리');
@@ -285,7 +302,8 @@ router.post('/ai/keywords',
     requirePermission('blog.create'),
     async (req, res) => {
         try {
-            const { content, maxKeywords = 10, techTags = [] } = req.body;
+            const body = getPlainBody(req);
+            const { content, maxKeywords = 10, techTags = [] } = body;
             const validatedContent = validateContent(content, '키워드를 추출할 내용이 없습니다.');
             const normalizedMaxKeywords = normalizeMaxKeywords(maxKeywords);
             const normalizedTechTags = normalizeTechTags(techTags);
