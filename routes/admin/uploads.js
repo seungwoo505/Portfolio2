@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
-const fs = require('fs');
+const fs = require('fs/promises');
 const { uploadImage, getUploadedImagePath, isSafeUploadedImageFilename } = require('../../utils/upload');
 
 /**
@@ -113,15 +113,17 @@ router.delete('/upload/image/:filename',
             }
 
             const filePath = getUploadedImagePath(filename);
-
-            if (!fs.existsSync(filePath)) {
+            try {
+                await fs.unlink(filePath);
+            } catch (error) {
+                if (error.code !== 'ENOENT') {
+                    throw error;
+                }
                 return res.status(404).json({
                     success: false,
                     message: '삭제할 이미지를 찾을 수 없습니다.'
                 });
             }
-
-            fs.unlinkSync(filePath);
 
             res.json({
                 success: true,
