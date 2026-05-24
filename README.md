@@ -478,11 +478,13 @@ erDiagram
 
 ### **PM2를 사용한 배포 (권장)**
 
+`ecosystem.config.js`는 저장소에 기본 포함되어 있지 않습니다. [배포 가이드](./docs/DEPLOYMENT_GUIDE.md)의 예시를 운영 환경에 맞게 저장한 뒤 실행하세요.
+
 ```bash
 # PM2 전역 설치
 npm install -g pm2
 
-# 애플리케이션 시작
+# ecosystem.config.js 생성 후 시작
 pm2 start ecosystem.config.js
 
 # 프로세스 저장 (재부팅 시 자동 시작)
@@ -492,8 +494,10 @@ pm2 startup
 
 ### **Docker를 사용한 배포**
 
+`Dockerfile`도 배포 환경별로 달라질 수 있어 예시만 제공합니다. [배포 가이드](./docs/DEPLOYMENT_GUIDE.md)의 Dockerfile 예시를 저장한 뒤 빌드하세요.
+
 ```bash
-# Docker 이미지 빌드
+# Dockerfile 생성 후 이미지 빌드
 docker build -t portfolio-server .
 
 # 컨테이너 실행

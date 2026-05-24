@@ -80,8 +80,7 @@ FLUSH PRIVILEGES;
 # 1. PM2 전역 설치
 npm install -g pm2
 
-# 2. PM2 ecosystem 파일 생성
-# ecosystem.config.js 참조
+# 2. 아래 예시를 ecosystem.config.js로 저장
 
 # 3. 애플리케이션 시작
 pm2 start ecosystem.config.js
@@ -94,22 +93,22 @@ pm2 startup
 ### **방법 2: Docker를 사용한 배포**
 
 ```bash
-# 1. Docker 이미지 빌드
+# 1. 아래 예시를 Dockerfile로 저장한 뒤 이미지 빌드
 docker build -t portfolio-server .
 
 # 2. Docker 컨테이너 실행
 docker run -d \
   --name portfolio-server \
   -p 3001:3001 \
-  -v /path/to/env:/app/.env \
-  -v /path/to/ssl:/app/ssl \
+  -v /path/to/.env:/app/.env:ro \
+  -v /path/to/ssl:/app/ssl:ro \
   portfolio-server
 ```
 
 ### **방법 3: systemd 서비스 (Linux)**
 
 ```bash
-# 1. 서비스 파일 생성
+# 1. 아래 예시를 portfolio-server.service로 저장한 뒤 서비스 파일 등록
 sudo cp portfolio-server.service /etc/systemd/system/
 
 # 2. 서비스 활성화
@@ -120,7 +119,9 @@ sudo systemctl start portfolio-server
 sudo systemctl status portfolio-server
 ```
 
-##  **필요한 설정 파일들**
+##  **설정 파일 예시**
+
+아래 파일들은 저장소에 기본 포함된 파일이 아니라 배포 환경에 맞게 생성해서 사용하는 예시입니다.
 
 ### **ecosystem.config.js (PM2)**
 
@@ -170,10 +171,6 @@ RUN mkdir -p uploads
 
 # 포트 노출
 EXPOSE 3001
-
-# 헬스체크
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
 
 # 애플리케이션 시작
 CMD ["node", "server.js"]
@@ -252,6 +249,8 @@ server {
 ##  **모니터링 설정**
 
 ### **헬스체크 스크립트**
+
+아래 내용은 선택적으로 `healthcheck.js` 파일로 저장해서 외부 프로세스 매니저나 컨테이너 헬스체크에서 사용할 수 있는 예시입니다. 운영 환경은 HTTPS 인증서가 필수이므로, 내부 헬스체크를 직접 붙일 때는 인증서 설정에 맞춰 `https` 모듈 또는 Nginx의 `/health` 프록시를 사용하세요.
 
 ```javascript
 // healthcheck.js
