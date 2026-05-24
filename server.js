@@ -13,6 +13,7 @@ const logger = require("./log");
 const { getRetryAfterSeconds } = require('./utils/rate-limit');
 const { validateProductionEnv } = require('./utils/env-validation');
 const { buildErrorResponse } = require('./utils/error-response');
+const { buildHealthResponse } = require('./utils/health-response');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -587,23 +588,7 @@ app.use((req, res, next) => {
     next();
 });
 app.get('/health', (req, res) => {
-    const memoryUsage = process.memoryUsage();
-    const uptime = process.uptime();
-    
-    res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: `${Math.floor(uptime)}s`,
-        memory: {
-            rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
-            heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
-            heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
-            external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`
-        },
-        cache: {
-            stats: require('./utils/cache').getStats()
-        }
-    });
+    res.json(buildHealthResponse());
 });
 app.use('/api/public/contact', contactLimiter);
 app.use('/api/public', publicRoutes);

@@ -580,21 +580,11 @@ curl https://localhost:3001/health
 {
   "status": "healthy",
   "timestamp": "2024-01-15T10:30:00.000Z",
-  "uptime": "3600s",
-  "memory": {
-    "rss": "45MB",
-    "heapTotal": "20MB",
-    "heapUsed": "15MB"
-  },
-  "cache": {
-    "stats": {
-      "hits": 150,
-      "misses": 25,
-      "hitRate": "85.7%"
-    }
-  }
+  "uptime": "3600s"
 }
 ```
+
+메모리, 캐시, DB/Redis 상태 같은 상세 운영 정보는 인증이 필요한 `/api/monitoring/*` 엔드포인트에서 확인합니다.
 
 ### **로그 관리**
 
