@@ -78,8 +78,8 @@ npm run dev
 ### 4. 접속
 
 - **프론트엔드**: http://localhost:3000 (개발) / https://seungwoo.i234.me (프로덕션)
-- **백엔드 API**: https://localhost:3001/api (개발) / https://seungwoo.i234.me:3333/api (프로덕션)
-- **API 문서**: https://localhost:3001/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
+- **백엔드 API**: http://localhost:3001/api (개발) / https://seungwoo.i234.me:3333/api (프로덕션)
+- **API 문서**: http://localhost:3001/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
 
 ## 📁 프로젝트 구조
 
@@ -162,7 +162,7 @@ pm2 start server.js
 
 ### API 문서
 
-- **Swagger UI**: https://localhost:3001/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
+- **Swagger UI**: http://localhost:3001/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
 - **API 엔드포인트**:
   - `GET /api/public/profile` - 개인 정보
   - `GET /api/public/projects` - 프로젝트 목록

@@ -197,7 +197,7 @@ npm run dev
 npm start
 ```
 
-서버는 기본적으로 `https://localhost:3001`에서 실행됩니다.
+개발 환경에서 HTTPS 인증서를 설정하지 않으면 서버는 기본적으로 `http://localhost:3001`에서 실행됩니다. 운영 환경에서는 HTTPS 인증서 설정이 필수입니다.
 
 ## 환경 설정
 
@@ -290,7 +290,7 @@ CONTACT_DUPLICATE_TTL_SECONDS=300
 
 서버 실행 후 다음 URL에서 API 문서를 확인할 수 있습니다:
 
-- **개발 환경**: `https://localhost:3001/api-docs`
+- **개발 환경**: `http://localhost:3001/api-docs`
 - **프로덕션**: `https://your-domain.com/api-docs`
 
 ### **주요 API 엔드포인트**
@@ -564,8 +564,8 @@ tail -f logs/$(date +%Y-%m-%d).log
 
 ```bash
 # API 테스트 (예시)
-curl -X GET https://localhost:3001/health
-curl -X GET https://localhost:3001/api/public/posts
+curl -X GET http://localhost:3001/health
+curl -X GET http://localhost:3001/api/public/posts
 ```
 
 ### **디버깅**
@@ -584,7 +584,7 @@ SLOW_REQUEST_MS=500 npm run dev
 
 ```bash
 # 서버 상태 확인
-curl https://localhost:3001/health
+curl http://localhost:3001/health
 ```
 
 응답 예시:
