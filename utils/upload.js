@@ -1,9 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const { parseIntegerEnv } = require('./env-number');
 
 const uploadImageDir = path.join(__dirname, '..', 'uploads', 'images');
-const uploadMaxFileSize = Number(process.env.UPLOAD_MAX_FILE_SIZE || 5 * 1024 * 1024);
+const defaultUploadMaxFileSize = 5 * 1024 * 1024;
+const uploadMaxFileSize = parseIntegerEnv(process.env.UPLOAD_MAX_FILE_SIZE, {
+    fallback: defaultUploadMaxFileSize,
+    min: 1024 * 1024,
+    max: 50 * 1024 * 1024
+});
 const uploadedImageFilenamePattern = /^\d+-[a-zA-Z0-9가-힣]+\.(jpe?g|png|gif|webp)$/i;
 const allowedImageTypes = new Map([
     ['image/jpeg', { extensions: ['.jpg', '.jpeg'], extension: '.jpg' }],
@@ -130,5 +136,6 @@ module.exports = {
     getUploadedImagePath,
     isSafeUploadedImageFilename,
     validateImageFile,
-    uploadImageDir
+    uploadImageDir,
+    uploadMaxFileSize
 };

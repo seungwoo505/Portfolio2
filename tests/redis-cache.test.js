@@ -104,3 +104,21 @@ test('RedisCache returns fallback when lazy connection fails', async () => {
     assert.equal(fixture.calls.createClient, 1);
     assert.equal(fixture.calls.connect, 1);
 });
+
+test('RedisCache retry delay falls back for invalid environment values', () => {
+    const previousValue = process.env.REDIS_RETRY_DELAY_MS;
+    process.env.REDIS_RETRY_DELAY_MS = 'not-a-delay';
+
+    try {
+        const fixture = createRedisCacheFixture();
+
+        assert.equal(fixture.redisCache.retryDelayMs, 30000);
+    } finally {
+        if (previousValue === undefined) {
+            delete process.env.REDIS_RETRY_DELAY_MS;
+        } else {
+            process.env.REDIS_RETRY_DELAY_MS = previousValue;
+        }
+        clearRootModules([['utils', 'redis-cache.js']]);
+    }
+});

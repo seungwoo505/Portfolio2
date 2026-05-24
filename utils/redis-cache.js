@@ -1,5 +1,6 @@
 const redis = require('redis');
 const logger = require('../log');
+const { parseIntegerEnv } = require('./env-number');
 
 class RedisCache {
     /**
@@ -11,7 +12,11 @@ class RedisCache {
         this.isConnected = false;
         this.connectPromise = null;
         this.lastConnectAttemptAt = 0;
-        this.retryDelayMs = Number(process.env.REDIS_RETRY_DELAY_MS || 30000);
+        this.retryDelayMs = parseIntegerEnv(process.env.REDIS_RETRY_DELAY_MS, {
+            fallback: 30000,
+            min: 1000,
+            max: 60 * 60 * 1000
+        });
     }
 
     /**

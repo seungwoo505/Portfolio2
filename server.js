@@ -14,6 +14,7 @@ const { getRetryAfterSeconds } = require('./utils/rate-limit');
 const { validateProductionEnv } = require('./utils/env-validation');
 const { buildErrorResponse } = require('./utils/error-response');
 const { buildHealthResponse } = require('./utils/health-response');
+const { parseIntegerEnv } = require('./utils/env-number');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -40,6 +41,10 @@ const cors = require("cors");
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
 const monitoringRoutes = require('./routes/monitoring');
+const CONTACT_RATE_LIMIT_MAX = parseIntegerEnv(process.env.CONTACT_RATE_LIMIT_MAX, {
+    fallback: 5,
+    max: 100
+});
 const generalLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 300,
@@ -110,7 +115,7 @@ const loginLimiter = rateLimit({
 });
 const contactLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: Number(process.env.CONTACT_RATE_LIMIT_MAX || 5),
+    max: CONTACT_RATE_LIMIT_MAX,
     message: {
       success: false,
       error: "문의 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
