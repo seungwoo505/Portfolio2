@@ -8,6 +8,7 @@ const { getPlainBody, hasRequiredStringFields, trimStringFields } = require('../
 const { getPasswordPolicyError } = require('../../utils/admin-validation');
 
 const genericLoginFailureMessage = '사용자명 또는 비밀번호가 올바르지 않습니다.';
+const genericRefreshFailureMessage = 'Refresh Token이 유효하지 않거나 만료되었습니다.';
 
 /**
  * @swagger
@@ -254,17 +255,29 @@ router.post('/refresh', async (req, res) => {
         
         const clientIP = req.ip || req.connection.remoteAddress;
         if (decoded.ip && decoded.ip !== clientIP) {
+            logger.warn('토큰 재발급 실패 - IP 불일치', {
+                requestId: req.requestId,
+                adminId: decoded.id,
+                ip: clientIP
+            });
+
             return res.status(401).json({
                 success: false,
-                message: 'Refresh Token이 다른 IP에서 발급되었습니다.'
+                message: genericRefreshFailureMessage
             });
         }
 
         const user = await AdminUsers.getById(decoded.id);
         if (!user || !user.is_active) {
+            logger.warn('토큰 재발급 실패 - 비활성 사용자', {
+                requestId: req.requestId,
+                adminId: decoded.id,
+                ip: clientIP
+            });
+
             return res.status(401).json({
                 success: false,
-                message: '비활성화된 사용자입니다.'
+                message: genericRefreshFailureMessage
             });
         }
 
@@ -281,9 +294,10 @@ router.post('/refresh', async (req, res) => {
             }
         });
     } catch (error) {
+        logger.warn('토큰 재발급 실패', buildErrorLog(error, req));
         res.status(401).json({
             success: false,
-            message: error.message
+            message: genericRefreshFailureMessage
         });
     }
 });
