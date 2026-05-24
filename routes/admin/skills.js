@@ -3,7 +3,115 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Skills = require('../../models/skills');
 const CacheUtils = require('../../utils/cache');
+const { toBooleanOrNull, toStringValue } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
+
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+const parseNumber = (value, { integer = false, min = 0, max = null } = {}) => {
+    if (value === null || value === '') {
+        return null;
+    }
+
+    const parsed = integer ? Number.parseInt(value, 10) : Number(value);
+    if (!Number.isFinite(parsed) || parsed < min || (max !== null && parsed > max)) {
+        return undefined;
+    }
+
+    return parsed;
+};
+
+const setStringField = (payload, body, field, { nullable = true } = {}) => {
+    if (!hasOwn(body, field)) {
+        return null;
+    }
+
+    const value = body[field] === null ? null : toStringValue(body[field]).trim();
+    if (value === '' && nullable) {
+        payload[field] = null;
+        return null;
+    }
+    if (value === '') {
+        return `${field} 값이 필요합니다.`;
+    }
+
+    payload[field] = value;
+    return null;
+};
+
+const normalizeSkillPayload = (body = {}, { requireRequired = false } = {}) => {
+    const payload = {};
+
+    if (requireRequired && !hasOwn(body, 'name')) {
+        return { error: '기술명을 입력해주세요.' };
+    }
+    if (requireRequired || hasOwn(body, 'name')) {
+        const nameError = setStringField(payload, body, 'name', { nullable: false });
+        if (nameError) {
+            return { error: '기술명을 입력해주세요.' };
+        }
+    }
+
+    if (requireRequired || hasOwn(body, 'category_id')) {
+        const categoryId = parseNumber(body.category_id, { integer: true, min: 1 });
+        if (categoryId === undefined || categoryId === null) {
+            return { error: '유효한 카테고리를 선택해주세요.' };
+        }
+        payload.category_id = categoryId;
+    }
+
+    if (hasOwn(body, 'proficiency_level')) {
+        const proficiencyLevel = parseNumber(body.proficiency_level, { integer: true, min: 0, max: 100 });
+        if (proficiencyLevel === undefined || proficiencyLevel === null) {
+            return { error: '숙련도는 0부터 100 사이의 숫자여야 합니다.' };
+        }
+        payload.proficiency_level = proficiencyLevel;
+    } else if (requireRequired) {
+        payload.proficiency_level = 50;
+    }
+
+    if (hasOwn(body, 'years_of_experience')) {
+        const yearsOfExperience = parseNumber(body.years_of_experience, { min: 0 });
+        if (yearsOfExperience === undefined) {
+            return { error: '경력 연수는 0 이상의 숫자여야 합니다.' };
+        }
+        payload.years_of_experience = yearsOfExperience;
+    } else if (requireRequired) {
+        payload.years_of_experience = null;
+    }
+
+    for (const field of ['icon', 'color']) {
+        const error = setStringField(payload, body, field);
+        if (error) {
+            return { error };
+        }
+        if (requireRequired && !hasOwn(payload, field)) {
+            payload[field] = null;
+        }
+    }
+
+    if (hasOwn(body, 'display_order')) {
+        const displayOrder = parseNumber(body.display_order, { integer: true, min: 0 });
+        if (displayOrder === undefined || displayOrder === null) {
+            return { error: '표시 순서는 0 이상의 숫자여야 합니다.' };
+        }
+        payload.display_order = displayOrder;
+    } else if (requireRequired) {
+        payload.display_order = 0;
+    }
+
+    if (hasOwn(body, 'is_featured')) {
+        const isFeatured = toBooleanOrNull(body.is_featured);
+        if (isFeatured === null) {
+            return { error: '추천 상태는 boolean 값이어야 합니다.' };
+        }
+        payload.is_featured = isFeatured;
+    } else if (requireRequired) {
+        payload.is_featured = false;
+    }
+
+    return { data: payload };
+};
 
 /**
  * @swagger
@@ -250,35 +358,25 @@ router.post('/skills',
     logActivity('create_skill'),
     async (req, res) => {
         try {
-            const { name, category_id, proficiency_level, years_of_experience, icon, color, display_order, is_featured } = req.body;
-
-            if (!name || !category_id) {
+            const { data: cleanData, error } = normalizeSkillPayload(req.body, {
+                requireRequired: true
+            });
+            if (error) {
                 return res.status(400).json({
                     success: false,
-                    message: '기술명과 카테고리는 필수입니다.'
+                    message: error
                 });
             }
             
-            if (is_featured && display_order) {
-                const existingSkill = await Skills.getByDisplayOrder(display_order);
+            if (cleanData.is_featured && cleanData.display_order) {
+                const existingSkill = await Skills.getByDisplayOrder(cleanData.display_order);
                 if (existingSkill) {
                     return res.status(400).json({
                         success: false,
-                        message: `표시 순서 ${display_order}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
+                        message: `표시 순서 ${cleanData.display_order}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
                     });
                 }
             }
-            
-            const cleanData = {
-                name: name ?? '',
-                category_id: category_id ?? '',
-                proficiency_level: proficiency_level ?? 50,
-                years_of_experience: years_of_experience ?? null,
-                icon: icon ?? null,
-                color: color ?? null,
-                display_order: display_order ?? 0,
-                is_featured: is_featured ?? false
-            };
             
             const skillId = await Skills.createSkill(cleanData);
 
@@ -355,36 +453,44 @@ router.put('/skills/:id',
     async (req, res) => {
         try {
             const skillId = req.params.id;
-            const { name, category_id, proficiency_level, years_of_experience, icon, color, display_order, is_featured } = req.body;
-            
-
-            if (!name || !category_id) {
-                return res.status(400).json({
+            const existingSkill = await Skills.getSkillById(skillId);
+            if (!existingSkill) {
+                return res.status(404).json({
                     success: false,
-                    message: '기술명과 카테고리는 필수입니다.'
+                    message: '기술 스택을 찾을 수 없습니다.'
                 });
             }
-            
-            if (is_featured && display_order) {
-                const existingSkill = await Skills.getByDisplayOrder(display_order, skillId);
-                if (existingSkill) {
+
+            const { data: cleanData, error } = normalizeSkillPayload(req.body);
+            if (error) {
+                return res.status(400).json({
+                    success: false,
+                    message: error
+                });
+            }
+
+            if (Object.keys(cleanData).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: '수정할 기술 스택 필드가 필요합니다.'
+                });
+            }
+
+            const nextIsFeatured = hasOwn(cleanData, 'is_featured')
+                ? cleanData.is_featured
+                : Boolean(existingSkill.is_featured);
+            const nextDisplayOrder = hasOwn(cleanData, 'display_order')
+                ? cleanData.display_order
+                : existingSkill.display_order;
+            if (nextIsFeatured && nextDisplayOrder) {
+                const conflictingSkill = await Skills.getByDisplayOrder(nextDisplayOrder, skillId);
+                if (conflictingSkill) {
                     return res.status(400).json({
                         success: false,
-                        message: `표시 순서 ${display_order}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
+                        message: `표시 순서 ${nextDisplayOrder}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
                     });
                 }
             }
-            
-            const cleanData = {
-                name: name ?? '',
-                category_id: category_id ?? '',
-                proficiency_level: proficiency_level ?? 50,
-                years_of_experience: years_of_experience ?? null,
-                icon: icon ?? null,
-                color: color ?? null,
-                display_order: display_order ?? 0,
-                is_featured: is_featured ?? false
-            };
             
             await Skills.updateSkill(skillId, cleanData);
 
