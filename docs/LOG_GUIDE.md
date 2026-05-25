@@ -1,362 +1,172 @@
-#  로깅 시스템 가이드
+# 로깅 시스템 가이드
 
-완전한 로깅 시스템이 구현되어 서버의 모든 활동을 추적할 수 있습니다.
+서버 로그는 Winston과 `winston-daily-rotate-file`을 사용합니다. 현재 포맷은 JSON 로그가 아니라 사람이 바로 읽기 쉬운 한 줄 로그입니다.
 
-##  **로그 시스템 구조**
-
-### **Winston 기반 로깅**
-
-- **파일 로깅**: 날짜별 로테이션 (최대 14일, 20MB 파일)
-- **콘솔 로깅**: 개발 환경에서 컬러 출력
-- **JSON 형식**: 구조화된 로그로 분석 용이
-
-### **로그 레벨**
-
-- `error` - 에러 및 예외 상황
-- `warn` - 경고 및 보안 이벤트
-- `info` - 일반 정보 및 API 요청
-- `debug` - 상세 디버깅 정보 (SQL 쿼리 등)
-
-##  **로그 파일 구조**
-
-```
-logs/
-├── 2024-01-15.log    # 일별 로그 파일
-├── 2024-01-16.log
-└── ...
+```text
+2026-05-25 14:30:25 INFO request.ok req=... method=GET path=/api/public/profile status=200 duration=12ms ip=...
+2026-05-25 14:31:10 WARN request.warn req=... method=POST path=/api/admin/login status=401 duration=43ms ip=...
+2026-05-25 14:32:03 ERROR 서버 오류 req=... method=POST path=/api/admin/projects status=500 details={...}
 ```
 
-##  **로그 카테고리**
+## 로그 출력 위치
 
-### **1. HTTP 요청 로그**
+- 콘솔: 서버 프로세스 표준 출력
+- 파일: `logs/YYYY-MM-DD.log`
+- 로테이션: 기본 최대 `20m`, 보관 `14d`
+- 환경 변수: `LOG_MAX_SIZE`, `LOG_MAX_FILES`로 조정
 
-모든 API 요청이 자동으로 기록됩니다:
+`logs/*.log`와 감사 임시 파일은 `.gitignore` 대상입니다.
 
-```json
-{
-  "timestamp": "2024-01-15 14:30:25",
-  "level": "info",
-  "message": "HTTP Request",
-  "method": "POST",
-  "url": "/api/public/contact",
-  "statusCode": 201,
-  "responseTime": "45ms",
-  "ip": "192.168.1.100",
-  "userAgent": "Mozilla/5.0...",
-  "contentLength": 256
-}
+## 로그 레벨
+
+- `error`: 서버 오류, DB 실패, Redis 작업 실패 같은 장애성 이벤트
+- `warn`: 인증 실패, rate limit, 요청 타임아웃, 4xx 응답, 느린 요청
+- `info`: 서버 시작, 운영 요청 요약, 감사 로그
+- `debug`: 상세 요청/응답, SQL 실행 등 verbose 로그
+
+운영에서는 기본적으로 `LOG_LEVEL=info`, `ENABLE_VERBOSE_LOGS=false`를 권장합니다.
+
+## 운영 중 출력 기준
+
+`ENABLE_VERBOSE_LOGS=false`일 때도 아래 로그는 남습니다.
+
+- 관리자 API 요청 요약
+- `POST`, `PUT`, `PATCH`, `DELETE` 요청 요약
+- 로그인/로그아웃 요청 요약
+- 4xx/5xx 응답 요약
+- `SLOW_REQUEST_MS` 이상 걸린 느린 요청
+- 보안 이벤트와 rate limit 이벤트
+- 서버 시작/환경 요약
+- DB 실패 및 느린 쿼리
+- 관리자 감사 로그
+
+아래 로그는 verbose가 켜져 있을 때만 남습니다.
+
+- 상세 요청 body/query 로그
+- 상세 응답 로그
+- 일반 DB 성공 debug 로그
+- 시간별 내부 통계 로그
+
+## 주요 로그 형식
+
+### 요청 요약
+
+```text
+2026-05-25 14:30:25 INFO request.ok req=2b51... method=GET path=/api/public/profile status=200 duration=12ms ip=203.0.113.10
+2026-05-25 14:31:10 WARN request.warn req=91cc... method=POST path=/api/admin/login status=401 duration=43ms ip=203.0.113.10
+2026-05-25 14:32:40 WARN request.slow req=778a... method=GET path=/api/admin/dashboard status=200 duration=1250ms admin=admin#1
+2026-05-25 14:33:02 ERROR request.error req=3f2d... method=POST path=/api/admin/projects status=500 duration=80ms admin=admin#1
 ```
 
-### **2. 인증 로그**
+### 보안 이벤트
 
-관리자 로그인/로그아웃 추적:
-
-```json
-{
-  "timestamp": "2024-01-15 14:30:25",
-  "level": "info",
-  "message": "[AUTH] Login successful",
-  "user": {
-    "id": 1,
-    "username": "admin",
-    "role": "super_admin"
-  },
-  "ipAddress": "192.168.1.100"
-}
+```text
+2026-05-25 14:35:01 WARN security.warn details={"message":"로그인 실패 - 잘못된 비밀번호","username":"admin","ipAddress":"203.0.113.10"}
+2026-05-25 14:36:15 WARN Admin rate limit exceeded ip=203.0.113.10 details={"userAgent":"Mozilla/5.0","url":"/api/admin/users","method":"GET"}
 ```
 
-### **3. 보안 로그**
+### 감사 로그
 
-보안 관련 이벤트 추적:
-
-```json
-{
-  "timestamp": "2024-01-15 14:30:25",
-  "level": "warn",
-  "message": "[SECURITY] Login failed - Invalid password",
-  "username": "admin",
-  "failedAttempts": 3,
-  "ipAddress": "192.168.1.100"
-}
+```text
+2026-05-25 14:40:10 INFO audit.admin action=update_project user=admin#1 resource=projects resourceId=portfolio-api
 ```
 
-### **4. 데이터베이스 로그**
+관리자 활동은 파일 로그와 별도로 DB 감사 로그에도 기록됩니다. DB 감사 로그 기록 실패는 요청 성공/실패 응답을 막지 않고 서버 로그에만 남깁니다.
 
-SQL 쿼리 성능 및 오류 추적:
+### DB 로그
 
-```json
-{
-  "timestamp": "2024-01-15 14:30:25",
-  "level": "info",
-  "message": "[DATABASE] Query executed successfully",
-  "duration": "25ms",
-  "rowCount": 1,
-  "queryType": "SELECT"
-}
+```text
+2026-05-25 14:41:22 WARN 느린 쿼리 감지 details={"query":"SELECT ...","paramCount":2,"duration":"1250ms"}
+2026-05-25 14:42:03 ERROR 데이터베이스 쿼리 실패 details={"query":"UPDATE ...","paramCount":3,"duration":"90ms","errno":1205}
 ```
 
-### **5. 관리자 활동 로그**
+DB 로그에는 SQL 파라미터 원문을 남기지 않습니다. 민감한 값이 포함될 수 있으므로 `params` 대신 `paramCount`만 기록합니다.
 
-관리자의 모든 활동 기록:
+## 민감정보 마스킹
 
-```json
-{
-  "timestamp": "2024-01-15 14:30:25",
-  "level": "info",
-  "message": "[ADMIN] Blog post created",
-  "admin": {
-    "id": 1,
-    "username": "admin",
-    "role": "super_admin"
-  },
-  "action": "create_blog_post",
-  "resourceId": 123
-}
+로그 메타데이터는 `password`, `token`, `secret`, `authorization`, `cookie`, `api_key` 등 민감 키를 `[REDACTED]`로 마스킹합니다.
+
+예시:
+
+```text
+details={"body":{"username":"admin","password":"[REDACTED]"}}
 ```
 
-### **6. 에러 로그**
+DB 쿼리 파라미터 배열은 키 기반 마스킹이 어려워 로그에서 제거했습니다.
 
-예외 및 오류 상황:
-
-```json
-{
-  "timestamp": "2024-01-15 14:30:25",
-  "level": "error",
-  "message": "Database query failed",
-  "error": "Connection timeout",
-  "query": "SELECT * FROM blog_posts",
-  "duration": "5000ms",
-  "errno": 1205
-}
-```
-
-##  **환경 변수 설정**
-
-```env
-# .env 파일
-LOG_LEVEL=info          # 로그 레벨 (error, warn, info, debug)
-NODE_ENV=production     # 환경 (development, production)
-```
-
-### **로그 레벨별 출력**
-
-- `error`: 에러만
-- `warn`: 경고 + 에러
-- `info`: 정보 + 경고 + 에러 (기본값)
-- `debug`: 모든 로그 (SQL 쿼리 포함)
-
-##  **로그 분석 방법**
-
-### **1. 실시간 로그 모니터링**
+## 실시간 확인
 
 ```bash
-# 실시간 로그 확인
 tail -f logs/$(date +%Y-%m-%d).log
-
-# 에러만 필터링
 tail -f logs/$(date +%Y-%m-%d).log | grep "ERROR"
-
-# 특정 IP 추적
-tail -f logs/$(date +%Y-%m-%d).log | grep "192.168.1.100"
+tail -f logs/$(date +%Y-%m-%d).log | grep "request.warn"
+tail -f logs/$(date +%Y-%m-%d).log | grep "request.slow"
 ```
 
-### **2. 로그 검색**
+## 자주 쓰는 검색
 
 ```bash
-# 특정 날짜의 로그인 시도
-grep "Login attempt" logs/2024-01-15.log
+# 서버 오류
+grep "ERROR" logs/*.log
 
-# 실패한 로그인 찾기
-grep "Login failed" logs/*.log
+# 4xx 요청
+grep "request.warn" logs/*.log
 
-# 데이터베이스 에러 검색
-grep "Database query failed" logs/*.log
+# 느린 요청
+grep "request.slow" logs/*.log
 
-# 특정 사용자 활동
-grep "username.*admin" logs/*.log
+# 관리자 감사 로그
+grep "audit.admin" logs/*.log
+
+# 특정 request id 추적
+grep "req=2b51" logs/*.log
+
+# 특정 경로 확인
+grep "path=/api/admin/login" logs/*.log
 ```
 
-### **3. JSON 로그 분석 (jq 사용)**
-
-```bash
-# 에러 로그만 추출
-cat logs/2024-01-15.log | jq 'select(.level == "error")'
-
-# 응답 시간이 긴 요청 찾기
-cat logs/2024-01-15.log | jq 'select(.responseTime and (.responseTime | tonumber > 1000))'
-
-# IP별 요청 수 집계
-cat logs/2024-01-15.log | jq -r '.ip' | sort | uniq -c | sort -nr
-```
-
-##  **로그 분석 스크립트**
-
-### **일일 통계 스크립트**
+## 일일 요약 예시
 
 ```bash
 #!/bin/bash
-# daily-stats.sh
 
 LOG_FILE="logs/$(date +%Y-%m-%d).log"
 
-echo "=== 일일 로그 통계 ==="
-echo "날짜: $(date +%Y-%m-%d)"
-echo ""
-
-echo " 요청 통계:"
-echo "총 요청 수: $(grep -c "HTTP Request" $LOG_FILE)"
-echo "성공 요청: $(grep "HTTP Request" $LOG_FILE | grep -c '"statusCode":2')"
-echo "에러 요청: $(grep "HTTP Request" $LOG_FILE | grep -c '"statusCode":[45]')"
-echo ""
-
-echo " 인증 통계:"
-echo "로그인 시도: $(grep -c "Login attempt" $LOG_FILE)"
-echo "로그인 성공: $(grep -c "Login successful" $LOG_FILE)"
-echo "로그인 실패: $(grep -c "Login failed" $LOG_FILE)"
-echo ""
-
-echo "  보안 이벤트:"
-echo "계정 잠금: $(grep -c "Account locked" $LOG_FILE)"
-echo "잘못된 비밀번호: $(grep -c "Invalid password" $LOG_FILE)"
-echo ""
-
-echo " 연락처 폼:"
-echo "메시지 수신: $(grep -c "Contact form submission" $LOG_FILE)"
-echo "전송 성공: $(grep -c "Contact message created successfully" $LOG_FILE)"
+echo "=== 서버 로그 요약 ==="
+echo "전체 요청: $(grep -c "request." "$LOG_FILE")"
+echo "경고 요청: $(grep -c "request.warn" "$LOG_FILE")"
+echo "서버 오류: $(grep -c "request.error" "$LOG_FILE")"
+echo "느린 요청: $(grep -c "request.slow" "$LOG_FILE")"
+echo "감사 로그: $(grep -c "audit.admin" "$LOG_FILE")"
+echo "보안 경고: $(grep -c "security.warn" "$LOG_FILE")"
 ```
 
-### **에러 분석 스크립트**
+## 운영 권장 설정
 
-```bash
-#!/bin/bash
-# error-analysis.sh
-
-echo "=== 최근 에러 분석 ==="
-echo ""
-
-echo " 최근 에러 (최신 10개):"
-grep '"level":"error"' logs/*.log | tail -10 | jq -r '.timestamp + " - " + .message'
-echo ""
-
-echo " 에러 유형별 통계:"
-grep '"level":"error"' logs/*.log | jq -r '.message' | sort | uniq -c | sort -nr
-echo ""
-
-echo " 에러가 많은 IP:"
-grep '"level":"error"' logs/*.log | jq -r '.ip' | grep -v null | sort | uniq -c | sort -nr | head -5
+```env
+LOG_LEVEL=info
+ENABLE_VERBOSE_LOGS=false
+SLOW_REQUEST_MS=1000
+LOG_MAX_SIZE=20m
+LOG_MAX_FILES=14d
 ```
 
-##  **로그 관리**
+장애 분석 중 일시적으로 상세 로그가 필요할 때만 `ENABLE_VERBOSE_LOGS=true` 또는 `LOG_LEVEL=debug`를 사용하세요. 상세 로그는 요청 body/query와 SQL 실행 정보를 더 많이 남기므로 운영 상시 사용은 권장하지 않습니다.
 
-### **로그 로테이션**
+## 트러블슈팅
 
-자동으로 날짜별 로테이션이 설정되어 있습니다:
+### 로그 파일이 생성되지 않는 경우
 
-- 파일명: `YYYY-MM-DD.log`
-- 최대 크기: 20MB
-- 보관 기간: 14일
-- 압축: 비활성화 (분석 용이성을 위해)
+- 서버 프로세스가 `logs/` 디렉터리를 생성할 권한이 있는지 확인합니다.
+- 컨테이너/PM2/systemd 실행 사용자가 프로젝트 디렉터리에 쓰기 권한을 갖는지 확인합니다.
 
-### **로그 정리**
+### 요청이 너무 많이 기록되는 경우
 
-```bash
-# 30일 이상 된 로그 삭제
-find logs/ -name "*.log" -mtime +30 -delete
+- 운영에서 `ENABLE_VERBOSE_LOGS=false`인지 확인합니다.
+- `LOG_LEVEL=info` 이하로 유지합니다.
+- 정상 공개 GET 요청은 기본적으로 모두 기록되지 않으며, 관리자/변경 요청/오류/느린 요청 위주로 남습니다.
 
-# 로그 압축 (수동)
-gzip logs/$(date -d "yesterday" +%Y-%m-%d).log
-```
+### 실제 클라이언트 IP가 프록시 IP로 보이는 경우
 
-##  **사용자 정의 로그**
-
-코드에서 직접 로그를 남기는 방법:
-
-```javascript
-const logger = require("./log");
-
-// 기본 로그
-logger.info("Something happened");
-logger.warn("Warning message");
-logger.error("Error occurred");
-
-// 구조화된 로그
-logger.info("User action", {
-  userId: 123,
-  action: "profile_update",
-  changes: ["name", "email"],
-});
-
-// 헬퍼 함수 사용
-logger.auth("Password changed", user, { method: "admin_reset" });
-logger.security("Suspicious activity detected", { ip, attempts: 5 });
-logger.database("Slow query detected", { query, duration: "2.5s" });
-```
-
-##  **실시간 모니터링**
-
-### **PM2 로그 모니터링**
-
-```bash
-# PM2로 실행 중인 경우
-pm2 logs portfolio-server
-
-# 에러만 모니터링
-pm2 logs portfolio-server --err
-```
-
-### **로그 알림 설정**
-
-중요한 이벤트에 대한 알림을 설정할 수 있습니다:
-
-```bash
-# Fail2ban과 연동하여 자동 차단
-# /etc/fail2ban/filter.d/portfolio-server.conf
-[Definition]
-failregex = .*"level":"warn".*"message":"\[SECURITY\] Login failed".*"ipAddress":"<HOST>"
-ignoreregex =
-```
-
-##  **트러블슈팅**
-
-### **자주 발생하는 문제들**
-
-#### **1. 로그 파일 권한 문제**
-
-```bash
-# 로그 디렉토리 권한 설정
-chmod 755 logs/
-chmod 644 logs/*.log
-```
-
-#### **2. 디스크 공간 부족**
-
-```bash
-# 로그 파일 크기 확인
-du -sh logs/
-
-# 큰 로그 파일 찾기
-find logs/ -size +100M -ls
-```
-
-#### **3. 로그 레벨 변경이 적용되지 않음**
-
-```bash
-# 서버 재시작 필요
-pm2 restart portfolio-server
-```
-
-##  **성능 고려사항**
-
-### **로그 성능 최적화**
-
-- 비동기 로깅으로 응답 속도에 영향 없음
-- JSON 구조화로 분석 도구 활용 가능
-- 로그 레벨 조정으로 필요한 정보만 기록
-
-### **저장 공간 관리**
-
-- 자동 로테이션으로 디스크 공간 절약
-- 압축 옵션 활용 가능
-- 오래된 로그 자동 삭제
-
-이 로깅 시스템으로 서버의 모든 활동을 추적하고 문제를 빠르게 진단할 수 있습니다! 
+- Nginx 같은 단일 리버스 프록시 뒤에서는 `TRUST_PROXY=1`을 설정합니다.
+- Nginx에서 `X-Forwarded-For`, `X-Real-IP`, `X-Forwarded-Proto` 헤더가 전달되는지 확인합니다.
