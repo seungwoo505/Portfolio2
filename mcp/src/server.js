@@ -306,8 +306,21 @@ function clampInteger(value, min, max) {
     if (value === undefined || value === null) {
         return undefined;
     }
-    const parsed = Number.parseInt(value, 10);
-    if (!Number.isFinite(parsed)) {
+
+    let parsed;
+    if (typeof value === 'number') {
+        parsed = value;
+    } else if (typeof value === 'string') {
+        const normalizedValue = value.trim();
+        if (!/^-?\d+$/.test(normalizedValue)) {
+            return undefined;
+        }
+        parsed = Number(normalizedValue);
+    } else {
+        return undefined;
+    }
+
+    if (!Number.isSafeInteger(parsed)) {
         return undefined;
     }
     return Math.min(Math.max(parsed, min), max);

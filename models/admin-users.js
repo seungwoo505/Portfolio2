@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const logger = require('../log');
+const { parseIntegerEnv } = require('../utils/env-number');
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
@@ -324,8 +325,11 @@ const AdminUsers = {
      * @returns {Promise<number>} 삭제된 세션 수
      */
     async cleanupExpiredSessions(revokedRetentionDays = 7) {
-        const retentionDays = Number.parseInt(revokedRetentionDays, 10);
-        const safeRetentionDays = Number.isInteger(retentionDays) && retentionDays >= 0 ? retentionDays : 7;
+        const safeRetentionDays = parseIntegerEnv(revokedRetentionDays, {
+            fallback: 7,
+            min: 0,
+            clamp: false
+        });
         const revokedBefore = new Date(Date.now() - safeRetentionDays * 24 * 60 * 60 * 1000);
 
         const result = await executeQuery(`

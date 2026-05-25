@@ -172,13 +172,16 @@ app.use((req, res, next) => {
     res.setHeader('X-Request-Id', req.requestId);
     next();
 });
-const parsePositiveInt = (value, fallback) => {
-    const parsed = Number.parseInt(value, 10);
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
-};
-
-const REQUEST_TIMEOUT = parsePositiveInt(process.env.REQUEST_TIMEOUT, 2000);
-const AI_REQUEST_TIMEOUT = parsePositiveInt(process.env.AI_REQUEST_TIMEOUT, 15000);
+const REQUEST_TIMEOUT = parseIntegerEnv(process.env.REQUEST_TIMEOUT, {
+    fallback: 2000,
+    min: 1,
+    clamp: false
+});
+const AI_REQUEST_TIMEOUT = parseIntegerEnv(process.env.AI_REQUEST_TIMEOUT, {
+    fallback: 15000,
+    min: 1,
+    clamp: false
+});
 const getRequestTimeout = (req) => (
     req.originalUrl && req.originalUrl.startsWith('/api/admin/ai')
         ? AI_REQUEST_TIMEOUT

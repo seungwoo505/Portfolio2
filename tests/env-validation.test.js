@@ -70,3 +70,13 @@ test('production env validation rejects weak bootstrap credentials when provided
     assert.match(result.errors.join('\n'), /ADMIN_BOOTSTRAP_EMAIL/);
     assert.match(result.errors.join('\n'), /ADMIN_BOOTSTRAP_PASSWORD/);
 });
+
+test('production env validation rejects partially numeric DB_PORT values', () => {
+    const result = validateProductionEnv({
+        ...validProductionEnv(),
+        DB_PORT: '3306abc'
+    });
+
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join('\n'), /DB_PORT/);
+});

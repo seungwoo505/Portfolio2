@@ -4,8 +4,13 @@ require('dotenv').config({ quiet: true });
 
 const logger = require('../log');
 const AdminUsers = require('../models/admin-users');
+const { parseIntegerEnv } = require('../utils/env-number');
 
-const retentionDays = Number.parseInt(process.env.ADMIN_SESSION_RETAIN_DAYS || '7', 10);
+const retentionDays = parseIntegerEnv(process.env.ADMIN_SESSION_RETAIN_DAYS, {
+    fallback: 7,
+    min: 0,
+    clamp: false
+});
 
 AdminUsers.cleanupExpiredSessions(retentionDays)
     .then((deletedCount) => {

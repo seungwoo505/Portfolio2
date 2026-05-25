@@ -1,3 +1,5 @@
+const { parseIntegerEnv } = require('./env-number');
+
 const placeholderPatterns = [
     /change[_-]?me/i,
     /your[_-\s]/i,
@@ -114,7 +116,12 @@ const validateProductionEnv = (env = process.env) => {
     validateBootstrapCredentials(errors, env);
 
     const dbPort = valueOf(env, 'DB_PORT');
-    if (dbPort && (!Number.isInteger(Number(dbPort)) || Number(dbPort) <= 0)) {
+    const dbPortNumber = parseIntegerEnv(dbPort, {
+        fallback: null,
+        min: 1,
+        clamp: false
+    });
+    if (dbPort && dbPortNumber === null) {
         errors.push('DB_PORT 값은 1 이상의 정수여야 합니다.');
     }
 

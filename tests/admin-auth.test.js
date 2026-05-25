@@ -292,6 +292,24 @@ test('AdminUsers.cleanupExpiredSessions removes expired and old revoked sessions
     assert.equal(sessions.length, 1);
 });
 
+test('AdminUsers.cleanupExpiredSessions falls back for partially numeric retention days', async () => {
+    const { AdminUsers, sessions } = await createAdminUsersFixture();
+
+    await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'active-agent');
+    sessions.push({
+        session_id: 'recent-revoked-session',
+        admin_id: 1,
+        refresh_token_hash: 'recent-revoked',
+        expires_at: new Date(Date.now() + 100000),
+        revoked_at: new Date(Date.now() - 24 * 60 * 60 * 1000)
+    });
+
+    const deletedCount = await AdminUsers.cleanupExpiredSessions('0abc');
+
+    assert.equal(deletedCount, 0);
+    assert.equal(sessions.some((session) => session.session_id === 'recent-revoked-session'), true);
+});
+
 test('AdminUsers.update can explicitly clear nullable profile fields', async () => {
     const { AdminUsers, queryCalls } = await createAdminUsersFixture();
 

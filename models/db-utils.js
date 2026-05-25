@@ -2,6 +2,14 @@ const db = require('../db');
 const logger = require('../log');
 const CacheUtils = require('../utils/cache');
 
+const normalizeQueryForLog = (query) => query.replace(/\s+/g, ' ').trim();
+
+const buildQueryLogMeta = (query, params = [], extra = {}) => ({
+    query: normalizeQueryForLog(query),
+    paramCount: Array.isArray(params) ? params.length : 0,
+    ...extra
+});
+
 /**
  * @description DB 유틸 모델에서 쿼리를 실행한다.
   * @param {*} query 입력값
@@ -22,22 +30,18 @@ const executeQuery = async (query, params = [], options = {}) => {
             }
         }
 
-        logger.debug('SQL 쿼리 실행 중', {
-            query: query.replace(/\s+/g, ' ').trim(),
-            params: params,
+        logger.debug('SQL 쿼리 실행 중', buildQueryLogMeta(query, params, {
             timestamp: new Date().toISOString(),
             useCache: useCache
-        });
+        }));
 
         const [results] = await db.execute(query, params);
         const duration = Date.now() - start;
         
         if (duration > 1000) { // 1초 이상 걸리는 쿼리 경고
-            logger.warn('느린 쿼리 감지', {
+            logger.warn('느린 쿼리 감지', buildQueryLogMeta(query, params, {
                 duration: `${duration}ms`,
-                query: query.replace(/\s+/g, ' ').trim(),
-                params: params
-            });
+            }));
         }
         
         logger.database('쿼리 실행 성공', {
@@ -54,14 +58,12 @@ const executeQuery = async (query, params = [], options = {}) => {
         return results;
     } catch (error) {
         const duration = Date.now() - start;
-        logger.error('데이터베이스 쿼리 실패', {
+        logger.error('데이터베이스 쿼리 실패', buildQueryLogMeta(query, params, {
             error: error.message,
-            query: query.replace(/\s+/g, ' ').trim(),
-            params: params,
             duration: `${duration}ms`,
             sqlState: error.sqlState,
             errno: error.errno
-        });
+        }));
         throw error;
     }
 };

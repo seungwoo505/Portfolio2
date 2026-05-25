@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
+const { parseIntegerEnv } = require('./utils/env-number');
 
 const logDir = path.join(__dirname, 'logs');
 fs.promises.mkdir(logDir, { recursive: true })
@@ -12,7 +13,11 @@ fs.promises.mkdir(logDir, { recursive: true })
     });
 
 const isVerboseEnabled = process.env.ENABLE_VERBOSE_LOGS === 'true';
-const slowRequestMs = parseInt(process.env.SLOW_REQUEST_MS || '1000', 10) || 1000;
+const slowRequestMs = parseIntegerEnv(process.env.SLOW_REQUEST_MS, {
+    fallback: 1000,
+    min: 1,
+    clamp: false
+});
 const sensitiveKeys = new Set([
     'authorization',
     'cookie',
