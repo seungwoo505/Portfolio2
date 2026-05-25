@@ -30,3 +30,17 @@ test('parsePagination supports array query values and fallback defaults', () => 
         offset: 0
     });
 });
+
+test('parsePagination rejects partially numeric values', () => {
+    assert.deepEqual(parsePagination({ limit: '20abc', page: '3xyz' }, { defaultLimit: 25 }), {
+        limit: 25,
+        page: 1,
+        offset: 0
+    });
+
+    assert.deepEqual(parsePagination({ limit: '1.5', page: '2.5' }, { defaultLimit: 25 }), {
+        limit: 25,
+        page: 1,
+        offset: 0
+    });
+});

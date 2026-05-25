@@ -1,9 +1,22 @@
 const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
 
 const clampInteger = (value, { min = 1, max = 100, fallback = 20 } = {}) => {
-    const parsed = Number.parseInt(firstQueryValue(value), 10);
+    const firstValue = firstQueryValue(value);
+    let parsed;
 
-    if (!Number.isFinite(parsed)) {
+    if (typeof firstValue === 'number') {
+        parsed = firstValue;
+    } else if (typeof firstValue === 'string') {
+        const normalizedValue = firstValue.trim();
+        if (!/^-?\d+$/.test(normalizedValue)) {
+            return fallback;
+        }
+        parsed = Number(normalizedValue);
+    } else {
+        return fallback;
+    }
+
+    if (!Number.isSafeInteger(parsed)) {
         return fallback;
     }
 

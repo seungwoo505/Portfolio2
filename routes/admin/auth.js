@@ -14,6 +14,29 @@ const passwordChangeClientErrors = new Set([
     '기존 비밀번호가 올바르지 않습니다.'
 ]);
 
+const logAuthActivitySafe = async (req, {
+    adminId = null,
+    action,
+    details
+}) => {
+    try {
+        await AdminActivityLogs.log(
+            adminId,
+            action,
+            'auth',
+            null,
+            details,
+            req.ip,
+            req.headers['user-agent']
+        );
+    } catch (error) {
+        logger.warn('인증 활동 로그 기록 실패', buildErrorLog(error, req, {
+            action,
+            adminId
+        }));
+    }
+};
+
 /**
  * @swagger
  * /api/admin/login:
@@ -67,15 +90,11 @@ router.post('/login', async (req, res) => {
             req.headers['user-agent']
         );
 
-        await AdminActivityLogs.log(
-            result.user.id,
-            'admin_login',
-            'auth',
-            null,
-            `${username} 로그인`,
-            req.ip,
-            req.headers['user-agent']
-        );
+        await logAuthActivitySafe(req, {
+            adminId: result.user.id,
+            action: 'admin_login',
+            details: `${username} 로그인`
+        });
 
         logger.activity('관리자 로그인 성공', {
             username,
@@ -92,15 +111,10 @@ router.post('/login', async (req, res) => {
             data: result
         });
     } catch (error) {
-        await AdminActivityLogs.log(
-            null,
-            'admin_login_failed',
-            'auth',
-            null,
-            `${username || 'unknown'} 로그인 실패`,
-            req.ip,
-            req.headers['user-agent']
-        );
+        await logAuthActivitySafe(req, {
+            action: 'admin_login_failed',
+            details: `${username || 'unknown'} 로그인 실패`
+        });
 
         logger.activity('관리자 로그인 실패', {
             username,

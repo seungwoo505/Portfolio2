@@ -35,6 +35,8 @@ const tagStringFields = ['name', 'slug', 'description', 'color', 'type'];
  *     responses:
  *       200:
  *         description: 태그 조회 성공
+ *       400:
+ *         description: 잘못된 query 값
  *   post:
  *     summary: 태그 생성
  *     tags: ['Admin - Tags']
