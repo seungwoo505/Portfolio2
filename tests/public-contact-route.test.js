@@ -37,6 +37,47 @@ const requestJson = async (router, path, { method = 'GET', body = undefined } = 
     }
 };
 
+const startRouterServer = async (router) => {
+    const app = express();
+    app.use(express.json({ strict: false }));
+    app.use(router);
+
+    const server = await new Promise((resolve) => {
+        const activeServer = app.listen(0, '127.0.0.1', () => resolve(activeServer));
+    });
+
+    return {
+        baseUrl: `http://127.0.0.1:${server.address().port}`,
+        close: () => new Promise((resolve, reject) => {
+            server.close((error) => (error ? reject(error) : resolve()));
+        })
+    };
+};
+
+const postJson = async (baseUrl, path, body) => {
+    const response = await fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    return {
+        status: response.status,
+        body: await response.json()
+    };
+};
+
+const waitFor = async (predicate, timeoutMs = 500) => {
+    const startedAt = Date.now();
+
+    while (!predicate()) {
+        if (Date.now() - startedAt > timeoutMs) {
+            throw new Error('condition was not met in time');
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+};
+
 const createCacheStub = () => {
     const values = new Map();
 
@@ -44,6 +85,17 @@ const createCacheStub = () => {
         get: (key) => values.get(key),
         set: (key, value) => {
             values.set(key, value);
+            return true;
+        },
+        claim: (key, ttl) => {
+            if (values.has(key)) {
+                return false;
+            }
+            values.set(key, true, ttl);
+            return true;
+        },
+        release: (key) => {
+            values.delete(key);
             return true;
         },
         del: () => true,
@@ -114,4 +166,48 @@ test('public contact rejects duplicate submissions before creating another messa
     assert.equal(createdPayloads.length, 1);
     assert.equal(createdPayloads[0].email, 'person@example.com');
     assert.equal(createdPayloads[0].message, '같은 문의입니다.');
+});
+
+test('public contact claims duplicate key before create completes', async () => {
+    const createdPayloads = [];
+    let resolveCreate;
+    const createBlock = new Promise((resolve) => {
+        resolveCreate = resolve;
+    });
+    const router = loadPublicRoute({
+        CacheUtils: createCacheStub(),
+        ContactMessages: {
+            countRecentByIp: async () => 0,
+            create: async (payload) => {
+                createdPayloads.push(payload);
+                await createBlock;
+                return 42;
+            }
+        }
+    });
+    const body = {
+        name: '홍길동',
+        email: 'person@example.com',
+        subject: '문의',
+        message: '동시 문의입니다.'
+    };
+    const server = await startRouterServer(router);
+
+    try {
+        const first = postJson(server.baseUrl, '/contact', body);
+        await waitFor(() => createdPayloads.length === 1);
+        const second = await postJson(server.baseUrl, '/contact', body);
+
+        assert.equal(second.status, 409);
+        assert.equal(createdPayloads.length, 1);
+
+        resolveCreate();
+        const firstResult = await first;
+
+        assert.equal(firstResult.status, 201);
+        assert.equal(createdPayloads.length, 1);
+    } finally {
+        resolveCreate?.();
+        await server.close();
+    }
 });

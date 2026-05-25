@@ -157,14 +157,18 @@ const getContactDuplicateKey = ({ email, message, req }) => cacheKey(
 
 const incrementViewOnce = async ({ resourceType, slug, req, increment, invalidate }) => {
     const dedupeKey = getViewDedupeKey(resourceType, slug, req);
-    if (CacheUtils.get(dedupeKey)) {
+    if (!CacheUtils.claim(dedupeKey, PUBLIC_VIEW_DEDUPE_TTL_SECONDS)) {
         return false;
     }
 
-    await increment();
-    CacheUtils.set(dedupeKey, true, PUBLIC_VIEW_DEDUPE_TTL_SECONDS);
-    invalidate();
-    return true;
+    try {
+        await increment();
+        invalidate();
+        return true;
+    } catch (error) {
+        CacheUtils.release(dedupeKey);
+        throw error;
+    }
 };
 
 const buildProjectFilters = (query) => {
@@ -574,7 +578,7 @@ router.post('/contact', async (req, res) => {
         }
 
         const duplicateKey = getContactDuplicateKey({ email, message, req });
-        if (CacheUtils.get(duplicateKey)) {
+        if (!CacheUtils.claim(duplicateKey, CONTACT_DUPLICATE_TTL_SECONDS)) {
             res.setHeader('Cache-Control', 'no-store');
             return res.status(409).json({
                 success: false,
@@ -582,15 +586,20 @@ router.post('/contact', async (req, res) => {
             });
         }
 
-        const id = await ContactMessages.create({
-            name,
-            email,
-            subject: subject || null,
-            message,
-            ip_address: req.ip,
-            user_agent: req.headers['user-agent']
-        });
-        CacheUtils.set(duplicateKey, true, CONTACT_DUPLICATE_TTL_SECONDS);
+        let id;
+        try {
+            id = await ContactMessages.create({
+                name,
+                email,
+                subject: subject || null,
+                message,
+                ip_address: req.ip,
+                user_agent: req.headers['user-agent']
+            });
+        } catch (error) {
+            CacheUtils.release(duplicateKey);
+            throw error;
+        }
 
         res.setHeader('Cache-Control', 'no-store');
         return res.status(201).json({

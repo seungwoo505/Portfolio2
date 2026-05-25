@@ -68,3 +68,50 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
 
     assert.deepEqual(invalidations, [['blog', 'tags']]);
 });
+
+test('cacheApiResponse reuses an in-flight loader for the same key', async () => {
+    clearRootModules([
+        ['utils', 'cache.js'],
+        ['log.js']
+    ]);
+
+    stubRootModule(['log.js'], createNoopLogger());
+
+    const CacheUtils = require(resolveFromRoot(['utils', 'cache.js']));
+    CacheUtils.flush();
+
+    let loaderCalls = 0;
+    let resolveLoader;
+    const loaderBlock = new Promise((resolve) => {
+        resolveLoader = resolve;
+    });
+
+    try {
+        const first = CacheUtils.cacheApiResponse('shared:profile', async () => {
+            loaderCalls += 1;
+            await loaderBlock;
+            return { name: 'Tester' };
+        });
+        const second = CacheUtils.cacheApiResponse('shared:profile', async () => {
+            loaderCalls += 1;
+            return { name: 'Duplicate' };
+        });
+
+        assert.equal(loaderCalls, 1);
+        resolveLoader();
+
+        const [firstResult, secondResult] = await Promise.all([first, second]);
+        assert.deepEqual(firstResult, { name: 'Tester' });
+        assert.deepEqual(secondResult, { name: 'Tester' });
+
+        const cachedResult = await CacheUtils.cacheApiResponse('shared:profile', async () => {
+            loaderCalls += 1;
+            return { name: 'Cached' };
+        });
+
+        assert.deepEqual(cachedResult, { name: 'Tester' });
+        assert.equal(loaderCalls, 1);
+    } finally {
+        CacheUtils.flush();
+    }
+});

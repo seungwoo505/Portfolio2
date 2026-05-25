@@ -13,6 +13,7 @@ const cache = new NodeCache({
     objectValueSize: 1000, // 객체 값 크기 제한
     promiseValueSize: 100, // Promise 값 크기 제한
 });
+const pendingCacheLoads = new Map();
 
 cache.on('flush', () => {
     logger.info('캐시 전체 삭제');
@@ -151,13 +152,45 @@ const CacheUtils = {
             return cached;
         }
 
+        if (pendingCacheLoads.has(key)) {
+            return await pendingCacheLoads.get(key);
+        }
+
+        const loadPromise = (async () => {
+            try {
+                const result = await fetchFunction();
+                this.set(key, result, ttl);
+                return result;
+            } catch (error) {
+                logger.error('캐시 API 응답 실패', { key, error: error.message });
+                throw error;
+            } finally {
+                pendingCacheLoads.delete(key);
+            }
+        })();
+
+        pendingCacheLoads.set(key, loadPromise);
+        return await loadPromise;
+    },
+
+    claim(key, ttl = 300) {
+        if (this.get(key) !== undefined) {
+            return false;
+        }
+
+        const isStored = this.set(key, true, ttl);
+        if (!isStored) {
+            logger.warn('캐시 선점 저장 실패', { key });
+        }
+        return true;
+    },
+
+    release(key) {
         try {
-            const result = await fetchFunction();
-            this.set(key, result, ttl);
-            return result;
+            return this.del(key);
         } catch (error) {
-            logger.error('캐시 API 응답 실패', { key, error: error.message });
-            throw error;
+            logger.error('캐시 선점 해제 실패', { key, error: error.message });
+            return false;
         }
     },
 

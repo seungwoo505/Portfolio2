@@ -31,6 +31,38 @@ const requestJson = async (router, path, { method = 'GET' } = {}) => {
     }
 };
 
+const startRouterServer = async (router) => {
+    const app = express();
+    app.use(router);
+
+    const server = await new Promise((resolve) => {
+        const activeServer = app.listen(0, '127.0.0.1', () => resolve(activeServer));
+    });
+
+    return {
+        baseUrl: `http://127.0.0.1:${server.address().port}`,
+        close: () => new Promise((resolve, reject) => {
+            server.close((error) => (error ? reject(error) : resolve()));
+        })
+    };
+};
+
+const readJsonResponse = async (response) => ({
+    status: response.status,
+    body: await response.json()
+});
+
+const waitFor = async (predicate, timeoutMs = 500) => {
+    const startedAt = Date.now();
+
+    while (!predicate()) {
+        if (Date.now() - startedAt > timeoutMs) {
+            throw new Error('condition was not met in time');
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+};
+
 const createCacheStub = () => {
     const values = new Map();
     const invalidations = [];
@@ -40,6 +72,17 @@ const createCacheStub = () => {
         get: (key) => values.get(key),
         set: (key, value) => {
             values.set(key, value);
+            return true;
+        },
+        claim: (key, ttl) => {
+            if (values.has(key)) {
+                return false;
+            }
+            values.set(key, true, ttl);
+            return true;
+        },
+        release: (key) => {
+            values.delete(key);
             return true;
         },
         del: (key) => {
@@ -115,6 +158,45 @@ test('public project view increments only once for repeated client requests', as
     ]);
 });
 
+test('public project view claims dedupe before increment completes', async () => {
+    const increments = [];
+    const CacheUtils = createCacheStub();
+    let resolveIncrement;
+    const incrementBlock = new Promise((resolve) => {
+        resolveIncrement = resolve;
+    });
+    const router = loadPublicRoute({
+        CacheUtils,
+        Projects: {
+            getBySlug: async () => ({ id: 10, is_published: 1 }),
+            incrementView: async (id) => {
+                increments.push(id);
+                await incrementBlock;
+            }
+        },
+        BlogPosts: {}
+    });
+    const server = await startRouterServer(router);
+
+    try {
+        const first = fetch(`${server.baseUrl}/projects/project-a/view`, { method: 'POST' }).then(readJsonResponse);
+        await waitFor(() => increments.length === 1);
+        const second = await fetch(`${server.baseUrl}/projects/project-a/view`, { method: 'POST' }).then(readJsonResponse);
+
+        assert.equal(second.status, 200);
+        assert.equal(increments.length, 1);
+
+        resolveIncrement();
+        const firstResult = await first;
+
+        assert.equal(firstResult.status, 200);
+        assert.deepEqual(increments, [10]);
+    } finally {
+        resolveIncrement?.();
+        await server.close();
+    }
+});
+
 test('public post view increments only once for repeated client requests', async () => {
     const increments = [];
     const CacheUtils = createCacheStub();
@@ -139,4 +221,43 @@ test('public post view increments only once for repeated client requests', async
         ['del', 'blog_post:public:slug:post-a'],
         ['delPattern', 'blog_posts:public:']
     ]);
+});
+
+test('public post view claims dedupe before increment completes', async () => {
+    const increments = [];
+    const CacheUtils = createCacheStub();
+    let resolveIncrement;
+    const incrementBlock = new Promise((resolve) => {
+        resolveIncrement = resolve;
+    });
+    const router = loadPublicRoute({
+        CacheUtils,
+        Projects: {},
+        BlogPosts: {
+            getBySlug: async () => ({ id: 20 }),
+            incrementView: async (id) => {
+                increments.push(id);
+                await incrementBlock;
+            }
+        }
+    });
+    const server = await startRouterServer(router);
+
+    try {
+        const first = fetch(`${server.baseUrl}/posts/post-a/view`, { method: 'POST' }).then(readJsonResponse);
+        await waitFor(() => increments.length === 1);
+        const second = await fetch(`${server.baseUrl}/posts/post-a/view`, { method: 'POST' }).then(readJsonResponse);
+
+        assert.equal(second.status, 200);
+        assert.equal(increments.length, 1);
+
+        resolveIncrement();
+        const firstResult = await first;
+
+        assert.equal(firstResult.status, 200);
+        assert.deepEqual(increments, [20]);
+    } finally {
+        resolveIncrement?.();
+        await server.close();
+    }
 });
