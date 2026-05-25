@@ -104,6 +104,31 @@ test('admin skills create normalizes numeric and boolean fields', async () => {
     }]);
 });
 
+test('admin skills create rejects fractional integer fields before model calls', async () => {
+    let createCalled = false;
+    const router = loadSkillsRoute({
+        getByDisplayOrder: async () => null,
+        createSkill: async () => {
+            createCalled = true;
+            return 9;
+        },
+        getSkillById: async (id) => ({ id })
+    });
+
+    const { status, body } = await requestJson(router, '/skills', {
+        method: 'POST',
+        body: {
+            name: 'Node.js',
+            category_id: '3',
+            proficiency_level: '1.5'
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '숙련도는 0부터 100 사이의 숫자여야 합니다.');
+    assert.equal(createCalled, false);
+});
+
 test('admin skill category create rejects missing bodies before model calls', async () => {
     let getCategoryByNameCalled = false;
     let createCategoryCalled = false;
@@ -191,6 +216,32 @@ test('admin skills order update normalizes numeric strings', async () => {
 
     assert.equal(status, 200);
     assert.deepEqual(updatedPayloads, [{ display_order: 7 }]);
+});
+
+test('admin skills order update rejects partially numeric values before model calls', async () => {
+    let getSkillByIdCalled = false;
+    let updateCalled = false;
+    const router = loadSkillsRoute({
+        getSkillById: async () => {
+            getSkillByIdCalled = true;
+            return { id: 9 };
+        },
+        updateSkill: async () => {
+            updateCalled = true;
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/skills/9/order', {
+        method: 'PATCH',
+        body: {
+            display_order: '7abc'
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '표시 순서는 0 이상의 숫자여야 합니다.');
+    assert.equal(getSkillByIdCalled, false);
+    assert.equal(updateCalled, false);
 });
 
 test('admin skills featured toggle rejects invalid ids before model calls', async () => {

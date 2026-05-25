@@ -11,12 +11,38 @@ const { authenticateToken, requirePermission, logActivity } = require('../../mid
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
 const parseNumber = (value, { integer = false, min = 0, max = null } = {}) => {
-    if (value === null || value === '') {
+    if (value === null) {
         return null;
     }
+    if (value === undefined) {
+        return undefined;
+    }
 
-    const parsed = integer ? Number.parseInt(value, 10) : Number(value);
-    if (!Number.isFinite(parsed) || parsed < min || (max !== null && parsed > max)) {
+    let parsed;
+    if (typeof value === 'number') {
+        parsed = value;
+    } else if (typeof value === 'string') {
+        const normalizedValue = value.trim();
+        if (normalizedValue === '') {
+            return null;
+        }
+        const numberPattern = integer
+            ? /^-?\d+$/
+            : /^-?(?:\d+|\d+\.\d+|\.\d+)$/;
+        if (!numberPattern.test(normalizedValue)) {
+            return undefined;
+        }
+        parsed = Number(normalizedValue);
+    } else {
+        return undefined;
+    }
+
+    if (
+        !Number.isFinite(parsed)
+        || (integer && !Number.isInteger(parsed))
+        || parsed < min
+        || (max !== null && parsed > max)
+    ) {
         return undefined;
     }
 

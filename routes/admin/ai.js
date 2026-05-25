@@ -13,6 +13,24 @@ const parsePositiveInt = (value, fallback) => {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
+const parseStrictInteger = (value) => {
+    if (typeof value === 'number') {
+        return Number.isSafeInteger(value) ? value : null;
+    }
+
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const normalizedValue = value.trim();
+    if (!/^-?\d+$/.test(normalizedValue)) {
+        return null;
+    }
+
+    const parsed = Number(normalizedValue);
+    return Number.isSafeInteger(parsed) ? parsed : null;
+};
+
 const AI_CONTENT_MAX_LENGTH = parsePositiveInt(process.env.AI_CONTENT_MAX_LENGTH, 20000);
 const AI_TECH_TAGS_MAX = parsePositiveInt(process.env.AI_TECH_TAGS_MAX, 30);
 const AI_TECH_TAG_MAX_LENGTH = parsePositiveInt(process.env.AI_TECH_TAG_MAX_LENGTH, 80);
@@ -76,9 +94,9 @@ const normalizeTechTags = (techTags = []) => {
 };
 
 const normalizeMaxKeywords = (value = 10) => {
-    const parsed = Number.parseInt(value, 10);
+    const parsed = parseStrictInteger(value);
 
-    if (!Number.isInteger(parsed) || parsed < 1 || parsed > AI_MAX_KEYWORDS) {
+    if (parsed === null || parsed < 1 || parsed > AI_MAX_KEYWORDS) {
         throw new AiValidationError(`maxKeywords는 1~${AI_MAX_KEYWORDS} 사이의 정수여야 합니다.`);
     }
 
@@ -144,6 +162,20 @@ const sendAiError = (res, error, fallbackMessage) => {
     });
 };
 
+const logAiError = (error, req, message) => {
+    if (error instanceof AiValidationError) {
+        return;
+    }
+
+    const payload = buildErrorLog(error, req);
+    if (error.code === 'AI_ROUTE_TIMEOUT') {
+        logger.warn(message, payload);
+        return;
+    }
+
+    logger.error(message, payload);
+};
+
 verboseDebug('geminiService 객체 로드됨:', typeof geminiService);
 verboseDebug('geminiService.constructor.name:', geminiService.constructor.name);
 verboseDebug('geminiService.generateSummary 존재 여부:', typeof geminiService.generateSummary);
@@ -186,6 +218,10 @@ verboseDebug('geminiService 객체의 프로토타입 체인:', Object.getProtot
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       413:
+ *         description: content 길이 초과
+ *       504:
+ *         description: AI 응답 시간 초과
  *       500:
  *         description: 서버 오류
  */
@@ -230,17 +266,11 @@ router.post('/ai/summarize',
                 verboseDebug('generateSummary 메서드 타입:', typeof geminiService.generateSummary);
                 verboseDebug('generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
 
-                let summary;
-                try {
-                    summary = await withTimeout(
-                        geminiService.generateSummary(preprocessedContent, 160, normalizedTechTags),
-                        'AI 요약 생성'
-                    );
-                    verboseDebug('generateSummary 호출 성공');
-                } catch (error) {
-                    logger.error('AI 요약 생성 호출 실패', buildErrorLog(error, req));
-                    throw error;
-                }
+                const summary = await withTimeout(
+                    geminiService.generateSummary(preprocessedContent, 160, normalizedTechTags),
+                    'AI 요약 생성'
+                );
+                verboseDebug('generateSummary 호출 성공');
 
                 verboseDebug('AI 요약 생성 완료 - summary 길이:', summary.length);
                 verboseDebug('summary 내용:', summary.substring(0, 100) + '...');
@@ -257,7 +287,7 @@ router.post('/ai/summarize',
             }
 
         } catch (error) {
-            logger.error('Gemini AI 요약 생성 실패', buildErrorLog(error, req));
+            logAiError(error, req, 'Gemini AI 요약 생성 실패');
             sendAiError(res, error, 'AI 요약 생성에 실패했습니다.');
         }
     }
@@ -294,6 +324,10 @@ router.post('/ai/summarize',
  *         description: 키워드 추출 성공
  *       400:
  *         description: 잘못된 요청
+ *       413:
+ *         description: content 길이 초과
+ *       504:
+ *         description: AI 응답 시간 초과
  *       500:
  *         description: 서버 오류
  */
@@ -326,7 +360,7 @@ router.post('/ai/keywords',
             });
 
         } catch (error) {
-            logger.error('Gemini AI 키워드 추출 실패', buildErrorLog(error, req));
+            logAiError(error, req, 'Gemini AI 키워드 추출 실패');
             sendAiError(res, error, 'AI 키워드 추출에 실패했습니다.');
         }
     }

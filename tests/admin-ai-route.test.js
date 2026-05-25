@@ -37,7 +37,7 @@ const requestJson = async (router, path, { method = 'GET', body = undefined } = 
     }
 };
 
-const loadAiRoute = (geminiService) => {
+const loadAiRoute = (geminiService, logger = createNoopLogger()) => {
     const requiredPermissions = [];
 
     clearRootModules([
@@ -49,7 +49,7 @@ const loadAiRoute = (geminiService) => {
     ]);
 
     stubRootModule(['routes', 'admin', 'common.js'], {
-        logger: createNoopLogger(),
+        logger,
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })
     });
@@ -134,6 +134,31 @@ test('admin AI summarize rejects invalid includeKeywords values', async () => {
     assert.equal(called, false);
 });
 
+test('admin AI validation errors are not logged as server errors', async () => {
+    const logs = [];
+    const logger = {
+        error: (...args) => logs.push(['error', args]),
+        warn: (...args) => logs.push(['warn', args])
+    };
+    const { router } = loadAiRoute({
+        generateSummary: async () => '요약',
+        generateSummaryAndKeywords: async () => ({ summary: '요약', keywords: [], keywordsString: '' }),
+        extractKeywords: async () => []
+    }, logger);
+
+    const { status, body } = await requestJson(router, '/ai/summarize', {
+        method: 'POST',
+        body: {
+            content: '본문 내용',
+            includeKeywords: 'maybe'
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, 'includeKeywords는 boolean 값이어야 합니다.');
+    assert.deepEqual(logs, []);
+});
+
 test('admin AI summarize rejects missing object bodies', async () => {
     let called = false;
     const { router } = loadAiRoute({
@@ -171,6 +196,29 @@ test('admin AI keywords rejects out-of-range maxKeywords before service call', a
         body: {
             content: '키워드 본문',
             maxKeywords: '0'
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.match(body.message, /maxKeywords/);
+    assert.equal(called, false);
+});
+
+test('admin AI keywords rejects partially numeric maxKeywords before service call', async () => {
+    let called = false;
+    const { router } = loadAiRoute({
+        generateSummary: async () => '',
+        generateSummaryAndKeywords: async () => ({ summary: '', keywords: [], keywordsString: '' }),
+        extractKeywords: async () => {
+            called = true;
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/ai/keywords', {
+        method: 'POST',
+        body: {
+            content: '키워드 본문',
+            maxKeywords: '3abc'
         }
     });
 
