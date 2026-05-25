@@ -5,6 +5,7 @@ const Skills = require('../../models/skills');
 const CacheUtils = require('../../utils/cache');
 const { toBooleanOrNull, toStringValue } = require('../../utils/filter-values');
 const { parsePositiveIntegerParam } = require('../../utils/route-params');
+const { getPlainBody } = require('../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
@@ -178,15 +179,16 @@ router.post('/skills/categories',
     logActivity('create_skill_category'),
     async (req, res) => {
         try {
-            const { name } = req.body;
+            const body = getPlainBody(req);
+            const name = toStringValue(body.name).trim();
 
-            if (!name || !name.trim()) {
+            if (!name) {
                 return res.status(400).json({
                     success: false,
                     message: '카테고리명을 입력해주세요.'
                 });
             }
-            const existingCategory = await Skills.getCategoryByName(name.trim());
+            const existingCategory = await Skills.getCategoryByName(name);
             
             if (existingCategory) {
                 return res.status(400).json({
@@ -195,13 +197,13 @@ router.post('/skills/categories',
                 });
             }
 
-            const categoryId = await Skills.createCategory(name.trim());
+            const categoryId = await Skills.createCategory(name);
             CacheUtils.invalidateResources('skills');
 
             res.status(201).json({
                 success: true,
                 message: '카테고리가 성공적으로 추가되었습니다.',
-                data: { id: categoryId, name: name.trim() }
+                data: { id: categoryId, name }
             });
 
         } catch (error) {

@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Experiences = require('../../models/experiences');
 const CacheUtils = require('../../utils/cache');
+const { toStringValue } = require('../../utils/filter-values');
 const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
@@ -30,7 +31,7 @@ router.get('/experiences',
     requirePermission('experiences.read'),
     async (req, res) => {
         try {
-            const { type } = req.query;
+            const type = toStringValue(req.query.type).trim() || null;
             const experiences = type
                 ? await Experiences.getByType(type)
                 : await Experiences.getAll();

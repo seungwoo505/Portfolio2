@@ -19,6 +19,9 @@ const defaultQueryContext = {
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
 const serializeSettingValue = (value, type = 'string') => {
+    if (value === null || value === undefined) {
+        return null;
+    }
     if (type === 'json') {
         return JSON.stringify(value);
     }
@@ -26,6 +29,27 @@ const serializeSettingValue = (value, type = 'string') => {
         return value ? 'true' : 'false';
     }
     return String(value);
+};
+
+const parseSettingValue = (setting) => {
+    let value = setting.setting_value;
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    if (setting.setting_type === 'boolean') {
+        value = value === 'true';
+    } else if (setting.setting_type === 'number') {
+        value = Number(value);
+    } else if (setting.setting_type === 'json') {
+        try {
+            value = JSON.parse(value);
+        } catch (e) {
+            value = setting.setting_value;
+        }
+    }
+
+    return value;
 };
 
 const SiteSettings = {
@@ -51,21 +75,8 @@ const SiteSettings = {
     async getValue(key) {
         const setting = await this.get(key);
         if (!setting) return null;
-        
-        let value = setting.setting_value;
-        if (setting.setting_type === 'boolean') {
-            value = value === 'true';
-        } else if (setting.setting_type === 'number') {
-            value = Number(value);
-        } else if (setting.setting_type === 'json') {
-            try {
-                value = JSON.parse(value);
-            } catch (e) {
-                value = setting.setting_value;
-            }
-        }
-        
-        return value;
+
+        return parseSettingValue(setting);
     },
 
     /**
@@ -184,21 +195,7 @@ const SiteSettings = {
         const settings = await this.getAll(true);
         
         return settings.reduce((acc, setting) => {
-            let value = setting.setting_value;
-            
-            if (setting.setting_type === 'boolean') {
-                value = value === 'true';
-            } else if (setting.setting_type === 'number') {
-                value = Number(value);
-            } else if (setting.setting_type === 'json') {
-                try {
-                    value = JSON.parse(value);
-                } catch (e) {
-                    value = setting.setting_value;
-                }
-            }
-            
-            acc[setting.setting_key] = value;
+            acc[setting.setting_key] = parseSettingValue(setting);
             return acc;
         }, {});
     },
@@ -211,22 +208,8 @@ const SiteSettings = {
         const settings = await this.getAll(false);
         
         return settings.reduce((acc, setting) => {
-            let value = setting.setting_value;
-            
-            if (setting.setting_type === 'boolean') {
-                value = value === 'true';
-            } else if (setting.setting_type === 'number') {
-                value = Number(value);
-            } else if (setting.setting_type === 'json') {
-                try {
-                    value = JSON.parse(value);
-                } catch (e) {
-                    value = setting.setting_value;
-                }
-            }
-            
             acc[setting.setting_key] = {
-                value,
+                value: parseSettingValue(setting),
                 type: setting.setting_type,
                 is_public: setting.is_public,
                 description: setting.description,

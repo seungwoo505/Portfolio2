@@ -43,6 +43,7 @@ const loadSkillsRoute = (Skills) => {
         ['models', 'skills.js'],
         ['utils', 'cache.js'],
         ['utils', 'filter-values.js'],
+        ['utils', 'request-body.js'],
         ['middleware', 'auth.js'],
         ['log.js']
     ]);
@@ -101,6 +102,30 @@ test('admin skills create normalizes numeric and boolean fields', async () => {
         display_order: 4,
         is_featured: true
     }]);
+});
+
+test('admin skill category create rejects missing bodies before model calls', async () => {
+    let getCategoryByNameCalled = false;
+    let createCategoryCalled = false;
+    const router = loadSkillsRoute({
+        getCategoryByName: async () => {
+            getCategoryByNameCalled = true;
+            return null;
+        },
+        createCategory: async () => {
+            createCategoryCalled = true;
+            return 1;
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/skills/categories', {
+        method: 'POST'
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '카테고리명을 입력해주세요.');
+    assert.equal(getCategoryByNameCalled, false);
+    assert.equal(createCategoryCalled, false);
 });
 
 test('admin skills update only writes provided fields', async () => {

@@ -102,6 +102,64 @@ test('SiteSettings.setMany stores all settings through one transaction connectio
     assert.equal(result.length, 2);
 });
 
+test('SiteSettings.setMany stores null setting values as database null', async () => {
+    const fixture = loadSiteSettingsFixture();
+
+    await fixture.SiteSettings.setMany({
+        optional_banner: {
+            value: null,
+            type: 'string',
+            is_public: true
+        }
+    });
+
+    const insertOperation = fixture.operations.find((operation) => operation.sql.startsWith('insert into site_settings'));
+    assert.ok(insertOperation);
+    assert.deepEqual(insertOperation.params, ['optional_banner', null, 'string', true, null]);
+});
+
+test('SiteSettings getters preserve null setting values', async () => {
+    clearRootModules([
+        ['models', 'site-settings.js'],
+        ['models', 'db-utils.js']
+    ]);
+
+    const nullableSetting = {
+        setting_key: 'optional_banner',
+        setting_value: null,
+        setting_type: 'boolean',
+        is_public: true,
+        description: null,
+        updated_at: '2026-05-25'
+    };
+
+    stubRootModule(['models', 'db-utils.js'], {
+        executeQuery: async () => [nullableSetting],
+        executeQuerySingle: async () => nullableSetting,
+        executeConnectionQuery: async () => [],
+        executeConnectionQuerySingle: async () => null,
+        executeTransaction: async (callback) => callback({
+            execute: async () => [[nullableSetting]]
+        })
+    });
+
+    const SiteSettings = require(resolveFromRoot(['models', 'site-settings.js']));
+
+    assert.equal(await SiteSettings.getValue('optional_banner'), null);
+    assert.deepEqual(await SiteSettings.getPublicSettings(), {
+        optional_banner: null
+    });
+    assert.deepEqual(await SiteSettings.getAllSettings(), {
+        optional_banner: {
+            value: null,
+            type: 'boolean',
+            is_public: true,
+            description: null,
+            updated_at: '2026-05-25'
+        }
+    });
+});
+
 test('SiteSettings.update can explicitly clear nullable values', async () => {
     const fixture = loadSiteSettingsFixture();
 

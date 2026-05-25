@@ -3,6 +3,7 @@ const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const Interests = require('../../models/interests');
 const CacheUtils = require('../../utils/cache');
+const { toStringValue } = require('../../utils/filter-values');
 const { parsePositiveIntegerParam } = require('../../utils/route-params');
 const {
     getPlainBody,
@@ -19,7 +20,7 @@ router.get('/interests',
     requirePermission('interests.read'),
     async (req, res) => {
         try {
-            const { category } = req.query;
+            const category = toStringValue(req.query.category).trim() || null;
             const interests = category
                 ? await Interests.getByCategory(category)
                 : await Interests.getAll();
