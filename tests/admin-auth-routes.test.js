@@ -73,6 +73,9 @@ const adminAuthRouteModules = [
     ['routes', 'admin', 'auth', 'index.js'],
     ['routes', 'admin', 'auth', 'common.js'],
     ['routes', 'admin', 'auth', 'session.js'],
+    ['routes', 'admin', 'auth', 'session', 'login.js'],
+    ['routes', 'admin', 'auth', 'session', 'logout.js'],
+    ['routes', 'admin', 'auth', 'session', 'refresh.js'],
     ['routes', 'admin', 'auth', 'profile.js']
 ];
 
