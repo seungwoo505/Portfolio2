@@ -10,9 +10,29 @@ const {
 
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
+const projectModelModules = [
+    ['models', 'projects.js'],
+    ['models', 'projects', 'index.js'],
+    ['models', 'projects', 'common.js'],
+    ['models', 'projects', 'detail.js'],
+    ['models', 'projects', 'filters.js'],
+    ['models', 'projects', 'list.js'],
+    ['models', 'projects', 'mutations.js'],
+    ['models', 'projects', 'relations.js'],
+    ['models', 'projects', 'slugs.js']
+];
+
+const getModelModules = (modelPath) => {
+    if (modelPath.join('/') === 'models/projects.js') {
+        return projectModelModules;
+    }
+
+    return [modelPath];
+};
+
 const createModelFixture = (modelPath) => {
     clearRootModules([
-        modelPath,
+        ...getModelModules(modelPath),
         ['models', 'db-utils.js'],
         ['utils', 'slug.js'],
         ['utils', 'cache.js'],
