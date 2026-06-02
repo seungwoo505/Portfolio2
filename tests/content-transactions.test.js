@@ -22,7 +22,23 @@ const projectModelModules = [
     ['models', 'projects', 'slugs.js']
 ];
 
+const blogPostModelModules = [
+    ['models', 'blog-posts.js'],
+    ['models', 'blog-posts', 'index.js'],
+    ['models', 'blog-posts', 'common.js'],
+    ['models', 'blog-posts', 'detail.js'],
+    ['models', 'blog-posts', 'filters.js'],
+    ['models', 'blog-posts', 'list.js'],
+    ['models', 'blog-posts', 'mutations.js'],
+    ['models', 'blog-posts', 'search.js'],
+    ['models', 'blog-posts', 'tags.js']
+];
+
 const getModelModules = (modelPath) => {
+    if (modelPath.join('/') === 'models/blog-posts.js') {
+        return blogPostModelModules;
+    }
+
     if (modelPath.join('/') === 'models/projects.js') {
         return projectModelModules;
     }

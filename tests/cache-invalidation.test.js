@@ -8,6 +8,18 @@ const {
     stubRootModule
 } = require('./helpers/module-loader');
 
+const blogPostModelModules = [
+    ['models', 'blog-posts.js'],
+    ['models', 'blog-posts', 'index.js'],
+    ['models', 'blog-posts', 'common.js'],
+    ['models', 'blog-posts', 'detail.js'],
+    ['models', 'blog-posts', 'filters.js'],
+    ['models', 'blog-posts', 'list.js'],
+    ['models', 'blog-posts', 'mutations.js'],
+    ['models', 'blog-posts', 'search.js'],
+    ['models', 'blog-posts', 'tags.js']
+];
+
 test('resource invalidation clears public blog detail cache keys', () => {
     clearRootModules([
         ['utils', 'cache.js'],
@@ -38,7 +50,7 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
     const invalidations = [];
 
     clearRootModules([
-        ['models', 'blog-posts.js'],
+        ...blogPostModelModules,
         ['models', 'db-utils.js'],
         ['utils', 'cache.js'],
         ['utils', 'slug.js']
