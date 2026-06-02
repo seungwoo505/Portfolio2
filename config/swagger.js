@@ -280,7 +280,8 @@ const createSwaggerSpec = ({ port }) => {
         apis: [
             "./routes/*.js",
             "./routes/public/*.js",
-            "./routes/admin/*.js"
+            "./routes/admin/*.js",
+            "./routes/admin/**/*.js"
         ]
     });
 };

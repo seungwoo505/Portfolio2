@@ -39,6 +39,11 @@ const requestJson = async (router, path, { method = 'GET', body = null } = {}) =
 const loadSkillsRoute = (Skills) => {
     clearRootModules([
         ['routes', 'admin', 'skills.js'],
+        ['routes', 'admin', 'skills', 'index.js'],
+        ['routes', 'admin', 'skills', 'common.js'],
+        ['routes', 'admin', 'skills', 'categories.js'],
+        ['routes', 'admin', 'skills', 'crud.js'],
+        ['routes', 'admin', 'skills', 'actions.js'],
         ['routes', 'admin', 'common.js'],
         ['models', 'skills.js'],
         ['utils', 'cache.js'],
