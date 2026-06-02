@@ -35,6 +35,16 @@ const requestJson = async (router, path) => {
 const loadPublicRoute = ({ PersonalInfo, CacheUtils }) => {
     clearRootModules([
         ['routes', 'public.js'],
+        ['routes', 'public', 'index.js'],
+        ['routes', 'public', 'common.js'],
+        ['routes', 'public', 'profile.js'],
+        ['routes', 'public', 'contact.js'],
+        ['routes', 'public', 'skills.js'],
+        ['routes', 'public', 'projects.js'],
+        ['routes', 'public', 'posts.js'],
+        ['routes', 'public', 'tags.js'],
+        ['routes', 'public', 'experiences.js'],
+        ['routes', 'public', 'interests.js'],
         ['models', 'personal-info.js'],
         ['models', 'social-links.js'],
         ['models', 'skills.js'],
