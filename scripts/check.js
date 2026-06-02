@@ -25,6 +25,7 @@ const collectJsFiles = (directory) => {
 
 const syntaxCheckFiles = Array.from(new Set([
     'server.js',
+    'app.js',
     'log.js',
     'db.js',
     ...collectJsFiles('routes'),
@@ -80,9 +81,6 @@ const checkServerBoots = () => {
         process.env.NODE_ENV = 'development';
         process.env.LOCALHOST = 'http://localhost:3000';
         process.env.MY_HOST = 'http://localhost:3001';
-        process.env.HTTPS_KEY = '';
-        process.env.HTTPS_CERT = '';
-        process.env.HTTPS_CA = '';
         process.env.REDIS_SOCKET = process.env.REDIS_SOCKET || '/tmp/portfolio-server-check.sock';
         require('./server');
         setTimeout(() => process.exit(0), 500);
@@ -245,14 +243,14 @@ const checkRoutePermissionsSeeded = () => {
 };
 
 const checkSwaggerServerConfig = () => {
-    const serverContent = fs.readFileSync(path.join(rootDir, 'server.js'), 'utf8');
+    const appContent = fs.readFileSync(path.join(rootDir, 'app.js'), 'utf8');
     const failures = [];
 
-    if (serverContent.includes('seungwoo.i234.me')) {
-        failures.push('server.js must not hard-code deployment domains in Swagger configuration');
+    if (appContent.includes('seungwoo.i234.me')) {
+        failures.push('app.js must not hard-code deployment domains in Swagger configuration');
     }
 
-    const swaggerOptionsMatch = serverContent.match(/const\s+swaggerUiOptions\s*=\s*\{[\s\S]*?\n\};/);
+    const swaggerOptionsMatch = appContent.match(/const\s+swaggerUiOptions\s*=\s*\{[\s\S]*?\n\};/);
     if (swaggerOptionsMatch) {
         const optionKeys = ['defaultModelsExpandDepth', 'defaultModelExpandDepth'];
         optionKeys.forEach((key) => {
