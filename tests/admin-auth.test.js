@@ -14,9 +14,20 @@ process.env.JWT_REFRESH_SECRET = 'unit-test-refresh-secret';
 
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
+const adminUsersModules = [
+    ['models', 'admin-users.js'],
+    ['models', 'admin-users', 'index.js'],
+    ['models', 'admin-users', 'common.js'],
+    ['models', 'admin-users', 'auth.js'],
+    ['models', 'admin-users', 'tokens.js'],
+    ['models', 'admin-users', 'sessions.js'],
+    ['models', 'admin-users', 'users.js'],
+    ['models', 'admin-users', 'permissions.js']
+];
+
 const createAdminUsersFixture = async () => {
     clearRootModules([
-        ['models', 'admin-users.js'],
+        ...adminUsersModules,
         ['models', 'db-utils.js'],
         ['log.js']
     ]);
@@ -154,7 +165,7 @@ const createAdminUsersFixture = async () => {
 const loadAuthMiddleware = (AdminUsers, logger = createNoopLogger()) => {
     clearRootModules([
         ['middleware', 'auth.js'],
-        ['models', 'admin-users.js'],
+        ...adminUsersModules,
         ['models', 'admin-activity-logs.js'],
         ['log.js']
     ]);
