@@ -10,8 +10,18 @@ const {
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
 const loadActivityLogsFixture = () => {
-    clearRootModules([
+    const activityLogModelModules = [
         ['models', 'activity-logs.js'],
+        ['models', 'activity-logs', 'index.js'],
+        ['models', 'activity-logs', 'common.js'],
+        ['models', 'activity-logs', 'writes.js'],
+        ['models', 'activity-logs', 'queries.js'],
+        ['models', 'activity-logs', 'stats.js'],
+        ['models', 'activity-logs', 'maintenance.js']
+    ];
+
+    clearRootModules([
+        ...activityLogModelModules,
         ['models', 'admin-activity-logs.js'],
         ['models', 'db-utils.js']
     ]);
