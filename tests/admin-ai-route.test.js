@@ -39,9 +39,16 @@ const requestJson = async (router, path, { method = 'GET', body = undefined } = 
 
 const loadAiRoute = (geminiService, logger = createNoopLogger()) => {
     const requiredPermissions = [];
+    const adminAiRouteModules = [
+        ['routes', 'admin', 'ai.js'],
+        ['routes', 'admin', 'ai', 'index.js'],
+        ['routes', 'admin', 'ai', 'common.js'],
+        ['routes', 'admin', 'ai', 'summarize.js'],
+        ['routes', 'admin', 'ai', 'keywords.js']
+    ];
 
     clearRootModules([
-        ['routes', 'admin', 'ai.js'],
+        ...adminAiRouteModules,
         ['routes', 'admin', 'common.js'],
         ['services', 'gemini-ai.js'],
         ['middleware', 'auth.js'],
