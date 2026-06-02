@@ -51,6 +51,14 @@ const adminBlogRouteModules = [
     ['routes', 'admin', 'blog', 'status.js']
 ];
 
+const adminProjectRouteModules = [
+    ['routes', 'admin', 'projects.js'],
+    ['routes', 'admin', 'projects', 'index.js'],
+    ['routes', 'admin', 'projects', 'common.js'],
+    ['routes', 'admin', 'projects', 'collection.js'],
+    ['routes', 'admin', 'projects', 'detail.js']
+];
+
 test('admin blog list returns count-based pagination total', async () => {
     clearRootModules([
         ...adminBlogRouteModules,
@@ -92,7 +100,7 @@ test('admin blog list returns count-based pagination total', async () => {
 
 test('admin featured project list returns count-based pagination total', async () => {
     clearRootModules([
-        ['routes', 'admin', 'projects.js'],
+        ...adminProjectRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'projects.js'],
         ['utils', 'cache.js'],
@@ -143,7 +151,7 @@ test('admin featured project list returns count-based pagination total', async (
 
 test('admin project list rejects invalid featured filters before model calls', async () => {
     clearRootModules([
-        ['routes', 'admin', 'projects.js'],
+        ...adminProjectRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'projects.js'],
         ['utils', 'cache.js'],

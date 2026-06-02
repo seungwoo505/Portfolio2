@@ -45,9 +45,21 @@ const adminBlogRouteModules = [
     ['routes', 'admin', 'blog', 'status.js']
 ];
 
+const adminProjectRouteModules = [
+    ['routes', 'admin', 'projects.js'],
+    ['routes', 'admin', 'projects', 'index.js'],
+    ['routes', 'admin', 'projects', 'common.js'],
+    ['routes', 'admin', 'projects', 'collection.js'],
+    ['routes', 'admin', 'projects', 'detail.js']
+];
+
 const getRouteModules = (routeSegments) => {
     if (routeSegments.join('/') === 'routes/admin/blog.js') {
         return adminBlogRouteModules;
+    }
+
+    if (routeSegments.join('/') === 'routes/admin/projects.js') {
+        return adminProjectRouteModules;
     }
 
     return [routeSegments];
