@@ -68,9 +68,17 @@ const stubAuthMiddleware = () => {
     });
 };
 
+const adminAuthRouteModules = [
+    ['routes', 'admin', 'auth.js'],
+    ['routes', 'admin', 'auth', 'index.js'],
+    ['routes', 'admin', 'auth', 'common.js'],
+    ['routes', 'admin', 'auth', 'session.js'],
+    ['routes', 'admin', 'auth', 'profile.js']
+];
+
 const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } }) => {
     clearRootModules([
-        ['routes', 'admin', 'auth.js'],
+        ...adminAuthRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'admin-users.js'],
         ['models', 'admin-activity-logs.js'],
