@@ -35,11 +35,6 @@ REQUEST_TIMEOUT=3000
 AI_REQUEST_TIMEOUT=15000
 AI_ROUTE_TIMEOUT=14500
 
-# HTTPS 인증서 경로
-HTTPS_KEY=/path/to/ssl/private.key
-HTTPS_CERT=/path/to/ssl/certificate.crt
-HTTPS_CA=/path/to/ssl/ca-bundle.crt
-
 # CORS 허용 도메인
 LOCALHOST=http://localhost:3000
 MY_HOST=https://yourdomain.com
@@ -101,7 +96,6 @@ docker run -d \
   --name portfolio-server \
   -p 3001:3001 \
   -v /path/to/.env:/app/.env:ro \
-  -v /path/to/ssl:/app/ssl:ro \
   portfolio-server
 ```
 
@@ -218,9 +212,9 @@ server {
     # 업로드 파일 크기 제한
     client_max_body_size 10M;
 
-    # API 프록시
+    # API 프록시: TLS는 Nginx에서 종료하고 Node 서버는 내부 HTTP로 실행
     location /api {
-        proxy_pass https://localhost:3001;
+        proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -250,7 +244,7 @@ server {
 
 ### **헬스체크 스크립트**
 
-아래 내용은 선택적으로 `healthcheck.js` 파일로 저장해서 외부 프로세스 매니저나 컨테이너 헬스체크에서 사용할 수 있는 예시입니다. 운영 환경은 HTTPS 인증서가 필수이므로, 내부 헬스체크를 직접 붙일 때는 인증서 설정에 맞춰 `https` 모듈 또는 Nginx의 `/health` 프록시를 사용하세요.
+아래 내용은 선택적으로 `healthcheck.js` 파일로 저장해서 외부 프로세스 매니저나 컨테이너 헬스체크에서 사용할 수 있는 예시입니다. Node 서버는 내부 HTTP로 실행되므로 내부 헬스체크는 `http` 모듈을 사용하고, 외부 HTTPS 헬스체크는 Nginx의 `/health` 프록시를 사용하세요.
 
 ```javascript
 // healthcheck.js
@@ -387,10 +381,10 @@ npm install
 mysql -h DB_HOST -u DB_USER -p DB_SCHEMA
 ```
 
-#### **3. SSL 인증서 문제**
+#### **3. Nginx TLS 인증서 문제**
 
 ```bash
-# 인증서 권한 확인
+# Nginx에서 사용하는 인증서 권한 확인
 sudo chown www-data:www-data /path/to/ssl/*
 sudo chmod 600 /path/to/ssl/private.key
 sudo chmod 644 /path/to/ssl/certificate.crt
@@ -409,8 +403,8 @@ node --max-old-space-size=2048 server.js
 
 ```bash
 # API 엔드포인트 테스트
-curl -k https://yourdomain.com/health
-curl -k https://yourdomain.com/api/public/posts
+curl https://yourdomain.com/health
+curl https://yourdomain.com/api/public/posts
 ```
 
 ### **2. 보안 테스트**

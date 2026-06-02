@@ -1,8 +1,6 @@
 require("dotenv").config({ quiet: true });
 const crypto = require("crypto");
-const fs = require("fs");
 const http = require("http");
-const https = require("https");
 const path = require("path");
 const express = require("express");
 const expressWs = require("express-ws");
@@ -645,8 +643,6 @@ app.use((error, req, res, next) => {
     res.status(errorResponse.statusCode).json(errorResponse.body);
 });
 
-const hasHttpsConfig = !!(process.env.HTTPS_KEY && process.env.HTTPS_CERT);
-const isProduction = process.env.NODE_ENV === 'production';
 const productionEnvValidation = validateProductionEnv(process.env);
 
 if (!productionEnvValidation.ok) {
@@ -656,25 +652,7 @@ if (!productionEnvValidation.ok) {
     process.exit(1);
 }
 
-if (isProduction && !hasHttpsConfig) {
-    logger.error('운영 환경에서는 HTTPS_KEY와 HTTPS_CERT 환경 변수가 필요합니다.');
-    process.exit(1);
-}
-
-const server = (() => {
-    if (!hasHttpsConfig) {
-        logger.warn('HTTPS 인증서 설정이 없어 HTTP 서버로 실행합니다. 운영 환경에서는 HTTPS를 설정해야 합니다.');
-        return http.createServer(app);
-    }
-
-    const options = {
-        key: fs.readFileSync(process.env.HTTPS_KEY),
-        cert: fs.readFileSync(process.env.HTTPS_CERT),
-        ...(process.env.HTTPS_CA ? { ca: fs.readFileSync(process.env.HTTPS_CA) } : {})
-    };
-
-    return https.createServer(options, app);
-})();
+const server = http.createServer(app);
 expressWs(app, server);
 logger.info('포트폴리오 서버 시작 중...');
 logger.info('환경 설정', {
@@ -683,7 +661,8 @@ logger.info('환경 설정', {
     dbHost: process.env.DB_HOST || 'localhost',
     dbSchema: process.env.DB_SCHEMA || 'portfolio_db',
     corsOrigins: [process.env.LOCALHOST, process.env.MY_HOST].filter(Boolean),
-    httpsEnabled: hasHttpsConfig,
+    protocol: 'http',
+    tlsTermination: 'reverse-proxy',
     requestTimeout: `${REQUEST_TIMEOUT}ms`,
     aiRequestTimeout: `${AI_REQUEST_TIMEOUT}ms`
 });

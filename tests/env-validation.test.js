@@ -12,9 +12,7 @@ const validProductionEnv = () => ({
     DB_SCHEMA: 'portfolio_db',
     JWT_SECRET: 'access-secret-with-more-than-32-characters',
     JWT_REFRESH_SECRET: 'refresh-secret-with-more-than-32-characters',
-    MY_HOST: 'https://portfolio.example.net',
-    HTTPS_KEY: '/etc/ssl/private.key',
-    HTTPS_CERT: '/etc/ssl/certificate.crt'
+    MY_HOST: 'https://portfolio.example.net'
 });
 
 test('production env validation is skipped outside production', () => {
@@ -37,12 +35,12 @@ test('production env validation rejects missing and placeholder values', () => {
     const result = validateProductionEnv({
         ...validProductionEnv(),
         DB_PASSWORD: 'change_me',
-        HTTPS_CERT: ''
+        MY_HOST: ''
     });
 
     assert.equal(result.ok, false);
     assert.match(result.errors.join('\n'), /DB_PASSWORD/);
-    assert.match(result.errors.join('\n'), /HTTPS_CERT/);
+    assert.match(result.errors.join('\n'), /MY_HOST/);
 });
 
 test('production env validation rejects weak secret configuration', () => {

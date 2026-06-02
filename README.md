@@ -197,7 +197,7 @@ npm run dev
 npm start
 ```
 
-개발 환경에서 HTTPS 인증서를 설정하지 않으면 서버는 기본적으로 `http://localhost:3001`에서 실행됩니다. 운영 환경에서는 HTTPS 인증서 설정이 필수입니다.
+서버는 개발/운영 모두 기본적으로 `http://localhost:3001`에서 실행됩니다. 운영 환경의 HTTPS는 Nginx 같은 리버스 프록시에서 처리합니다.
 
 ## 환경 설정
 
@@ -229,17 +229,14 @@ ADMIN_SESSION_RETAIN_DAYS=7
 LOCALHOST=http://localhost:3000
 MY_HOST=https://your-domain.com
 
-# HTTPS 인증서
-# 개발 환경에서는 비워두면 HTTP로 실행됩니다.
-# 운영 환경에서는 실제 인증서 경로를 설정해야 합니다.
-HTTPS_KEY=
-HTTPS_CERT=
-HTTPS_CA=
+# 리버스 프록시 설정
+# Nginx 같은 단일 프록시 뒤에서 운영할 때 1로 설정합니다.
+TRUST_PROXY=1
 ```
 
 `.env.example`은 개발용 예시 파일입니다. `NODE_ENV=production`에서는 `change_me`, `example.com`, `your-*` 같은 placeholder 값, 32자 미만 JWT secret, 동일한 access/refresh secret, 짧은 bootstrap password가 서버 시작 단계에서 차단됩니다.
 
-운영 배포 시에는 `HTTPS_KEY`와 `HTTPS_CERT`에 실제 인증서 파일 경로를 설정해야 합니다. `HTTPS_CA`는 중간 인증서가 필요한 경우에만 설정합니다.
+운영 배포 시 TLS 인증서는 Nginx 같은 리버스 프록시에서 처리합니다. Node 서버는 내부 HTTP 포트로만 실행되며, 외부 HTTPS 요청은 프록시를 통해 전달합니다.
 
 `TRUST_PROXY`는 리버스 프록시 없이 직접 실행하면 `0`으로 둡니다. Nginx 같은 단일 프록시 뒤에서 운영할 때는 `1`로 설정해야 `req.ip`, 관리자 토큰 IP 검증, rate limit이 실제 클라이언트 IP 기준으로 동작합니다.
 
@@ -523,9 +520,11 @@ server {
     ssl_certificate_key /path/to/ssl/private.key;
 
     location /api {
-        proxy_pass https://localhost:3001;
+        proxy_pass http://localhost:3001;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /uploads/images/ {

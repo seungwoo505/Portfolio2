@@ -62,12 +62,9 @@ DB_SCHEMA=portfolio_db
 PORT=3001
 NODE_ENV=development
 
-# HTTPS 인증서
-# 개발 환경에서는 비워두면 HTTP로 실행됩니다.
-# 운영 환경에서는 실제 인증서 경로를 설정해야 합니다.
-HTTPS_KEY=
-HTTPS_CERT=
-HTTPS_CA=
+# 리버스 프록시 설정
+# TLS는 Nginx 같은 프록시에서 종료하고 Node 서버는 내부 HTTP로 실행합니다.
+TRUST_PROXY=1
 
 # CORS 설정
 LOCALHOST=http://localhost:3000
@@ -270,7 +267,7 @@ export const api = {
 
 ## 배포 시 고려사항
 
-1. **환경 변수**: 운영 환경의 데이터베이스 정보와 HTTPS 인증서 경로 설정
+1. **환경 변수**: 운영 환경의 데이터베이스 정보, CORS, 리버스 프록시 설정
 2. **CORS**: 프론트엔드 도메인을 CORS 설정에 추가
 3. **보안**: Rate limiting, 문의 API 별도 제한, helmet 미들웨어가 활성화되어 있음
 4. **로깅**: log.js를 통한 로그 관리

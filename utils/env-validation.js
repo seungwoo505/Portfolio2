@@ -16,9 +16,7 @@ const productionRequiredVariables = [
     'DB_SCHEMA',
     'JWT_SECRET',
     'JWT_REFRESH_SECRET',
-    'MY_HOST',
-    'HTTPS_KEY',
-    'HTTPS_CERT'
+    'MY_HOST'
 ];
 
 const bootstrapRequiredVariables = [
