@@ -33,6 +33,7 @@ const syntaxCheckFiles = Array.from(new Set([
     ...collectJsFiles('utils'),
     ...collectJsFiles('services'),
     ...collectJsFiles('middleware'),
+    ...collectJsFiles('config'),
     ...collectJsFiles('scripts'),
     ...collectJsFiles('migrations'),
     ...collectJsFiles(path.join('mcp', 'src')),
@@ -243,14 +244,14 @@ const checkRoutePermissionsSeeded = () => {
 };
 
 const checkSwaggerServerConfig = () => {
-    const appContent = fs.readFileSync(path.join(rootDir, 'app.js'), 'utf8');
+    const swaggerContent = fs.readFileSync(path.join(rootDir, 'config', 'swagger.js'), 'utf8');
     const failures = [];
 
-    if (appContent.includes('seungwoo.i234.me')) {
-        failures.push('app.js must not hard-code deployment domains in Swagger configuration');
+    if (swaggerContent.includes('seungwoo.i234.me')) {
+        failures.push('config/swagger.js must not hard-code deployment domains in Swagger configuration');
     }
 
-    const swaggerOptionsMatch = appContent.match(/const\s+swaggerUiOptions\s*=\s*\{[\s\S]*?\n\};/);
+    const swaggerOptionsMatch = swaggerContent.match(/const\s+swaggerUiOptions\s*=\s*\{[\s\S]*?\n\};/);
     if (swaggerOptionsMatch) {
         const optionKeys = ['defaultModelsExpandDepth', 'defaultModelExpandDepth'];
         optionKeys.forEach((key) => {
