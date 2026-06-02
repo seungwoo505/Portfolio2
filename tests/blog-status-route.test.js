@@ -37,8 +37,17 @@ const requestJson = async (router, path, body) => {
 };
 
 const loadBlogRoute = (BlogPosts) => {
-    clearRootModules([
+    const adminBlogRouteModules = [
         ['routes', 'admin', 'blog.js'],
+        ['routes', 'admin', 'blog', 'index.js'],
+        ['routes', 'admin', 'blog', 'common.js'],
+        ['routes', 'admin', 'blog', 'collection.js'],
+        ['routes', 'admin', 'blog', 'detail.js'],
+        ['routes', 'admin', 'blog', 'status.js']
+    ];
+
+    clearRootModules([
+        ...adminBlogRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'blog-posts.js'],
         ['utils', 'cache.js'],

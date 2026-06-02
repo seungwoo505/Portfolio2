@@ -42,9 +42,18 @@ const stubAdminMiddleware = () => {
     });
 };
 
+const adminBlogRouteModules = [
+    ['routes', 'admin', 'blog.js'],
+    ['routes', 'admin', 'blog', 'index.js'],
+    ['routes', 'admin', 'blog', 'common.js'],
+    ['routes', 'admin', 'blog', 'collection.js'],
+    ['routes', 'admin', 'blog', 'detail.js'],
+    ['routes', 'admin', 'blog', 'status.js']
+];
+
 test('admin blog list returns count-based pagination total', async () => {
     clearRootModules([
-        ['routes', 'admin', 'blog.js'],
+        ...adminBlogRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'blog-posts.js'],
         ['utils', 'cache.js'],

@@ -36,9 +36,26 @@ const requestJson = async (router, path, { method = 'GET', body = null } = {}) =
     }
 };
 
+const adminBlogRouteModules = [
+    ['routes', 'admin', 'blog.js'],
+    ['routes', 'admin', 'blog', 'index.js'],
+    ['routes', 'admin', 'blog', 'common.js'],
+    ['routes', 'admin', 'blog', 'collection.js'],
+    ['routes', 'admin', 'blog', 'detail.js'],
+    ['routes', 'admin', 'blog', 'status.js']
+];
+
+const getRouteModules = (routeSegments) => {
+    if (routeSegments.join('/') === 'routes/admin/blog.js') {
+        return adminBlogRouteModules;
+    }
+
+    return [routeSegments];
+};
+
 const loadAdminRoute = (routeSegments, moduleStubs) => {
     clearRootModules([
-        routeSegments,
+        ...getRouteModules(routeSegments),
         ['routes', 'admin', 'common.js'],
         ['utils', 'cache.js'],
         ['utils', 'filter-values.js'],
