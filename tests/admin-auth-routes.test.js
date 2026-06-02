@@ -76,6 +76,14 @@ const adminAuthRouteModules = [
     ['routes', 'admin', 'auth', 'profile.js']
 ];
 
+const adminUsersRouteModules = [
+    ['routes', 'admin', 'users.js'],
+    ['routes', 'admin', 'users', 'index.js'],
+    ['routes', 'admin', 'users', 'common.js'],
+    ['routes', 'admin', 'users', 'collection.js'],
+    ['routes', 'admin', 'users', 'detail.js']
+];
+
 const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } }) => {
     clearRootModules([
         ...adminAuthRouteModules,
@@ -96,7 +104,7 @@ const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } 
 
 const loadUsersRoute = (AdminUsers) => {
     clearRootModules([
-        ['routes', 'admin', 'users.js'],
+        ...adminUsersRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'admin-users.js'],
         ['middleware', 'auth.js'],
