@@ -25,6 +25,15 @@ const adminUsersModules = [
     ['models', 'admin-users', 'permissions.js']
 ];
 
+const authMiddlewareModules = [
+    ['middleware', 'auth.js'],
+    ['middleware', 'auth', 'index.js'],
+    ['middleware', 'auth', 'common.js'],
+    ['middleware', 'auth', 'token.js'],
+    ['middleware', 'auth', 'authorization.js'],
+    ['middleware', 'auth', 'activity.js']
+];
+
 const createAdminUsersFixture = async () => {
     clearRootModules([
         ...adminUsersModules,
@@ -164,7 +173,7 @@ const createAdminUsersFixture = async () => {
 
 const loadAuthMiddleware = (AdminUsers, logger = createNoopLogger()) => {
     clearRootModules([
-        ['middleware', 'auth.js'],
+        ...authMiddlewareModules,
         ...adminUsersModules,
         ['models', 'admin-activity-logs.js'],
         ['log.js']
