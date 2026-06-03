@@ -54,7 +54,7 @@
 ### **보안 및 성능**
 
 - Rate Limiting (DDoS/브루트포스 방지)
-- HTTPS/SSL 지원
+- 리버스 프록시 기반 HTTPS 운영
 - Helmet.js 보안 헤더
 - Redis 캐싱 (선택사항)
 - 파일 업로드 보안
@@ -114,26 +114,35 @@ portfolio-server/
 ├──  log.js                       # 로깅 설정
 │
 ├──  models/                      # 데이터베이스 모델
-│   ├──  db-utils.js              # DB 유틸리티 함수
-│   ├──  personal-info.js         # 개인 정보 모델
-│   ├──  projects.js              # 프로젝트 모델
-│   ├──  blog-posts.js            # 블로그 포스트 모델
-│   ├──  admin-users.js           # 관리자 사용자 모델
-│   └── ...                         # 기타 모델들
+│   ├──  db-utils.js              # DB 유틸 호환 엔트리
+│   ├──  db-utils/                # 쿼리 실행, 배치, 트랜잭션 유틸
+│   ├──  projects.js              # 프로젝트 모델 호환 엔트리
+│   ├──  projects/                # 프로젝트 조회, 필터, 관계, 변경 로직
+│   ├──  blog-posts.js            # 블로그 모델 호환 엔트리
+│   ├──  blog-posts/              # 블로그 조회, 필터, 태그, 변경 로직
+│   ├──  admin-users.js           # 관리자 사용자 모델 호환 엔트리
+│   └──  admin-users/             # 인증, 세션, 토큰, 권한, 사용자 로직
 │
 ├──  routes/                      # API 라우트
-│   ├──  public.js                # 포트폴리오 공개 API
+│   ├──  public.js                # 공개 API 호환 엔트리
+│   ├──  public/                  # 공개 프로필, 프로젝트, 블로그, 문의 라우트
 │   ├──  admin.js                 # 관리자 라우트 호환 엔트리
 │   ├──  admin/                   # 관리자 도메인별 라우트
 │   └──  monitoring.js            # 모니터링 API
 │
 ├──  middleware/                  # 미들웨어
-│   └──  auth.js                  # 인증 미들웨어
+│   ├──  auth.js                  # 인증 미들웨어 호환 엔트리
+│   ├──  auth/                    # 토큰, 권한, 활동 로그 미들웨어
+│   ├──  rate-limiters.js         # 요청 제한 미들웨어
+│   └──  error-handlers.js        # 공통 에러 처리
 │
 ├──  utils/                       # 유틸리티
-│   ├──  cache.js                 # 캐시 유틸리티
-│   ├──  redis-cache.js           # Redis 캐시 유틸리티
-│   └──  upload.js                # 업로드 유틸리티
+│   ├──  cache.js                 # 메모리 캐시 호환 엔트리
+│   ├──  cache/                   # 캐시 저장소, 로더, 무효화, 락
+│   ├──  redis-cache.js           # Redis 캐시 호환 엔트리
+│   ├──  redis-cache/             # Redis 연결, 명령, 통계
+│   ├──  upload.js                # 업로드 유틸 호환 엔트리
+│   └──  upload/                  # 업로드 경로, 검증, 저장소
 │
 ├──  mcp/                         # Portfolio MCP 서버
 │   ├──  src/server.js            # stdio MCP 서버 엔트리
