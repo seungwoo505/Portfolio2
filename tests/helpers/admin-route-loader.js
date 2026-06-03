@@ -87,6 +87,16 @@ const adminContactsRouteModules = [
     ['routes', 'admin', 'contacts', 'actions.js']
 ];
 
+const adminLogsRouteModules = [
+    ['routes', 'admin', 'logs.js'],
+    ['routes', 'admin', 'logs', 'index.js'],
+    ['routes', 'admin', 'logs', 'collection.js'],
+    ['routes', 'admin', 'logs', 'export-route.js'],
+    ['routes', 'admin', 'logs', 'export.js'],
+    ['routes', 'admin', 'logs', 'filters.js'],
+    ['routes', 'admin', 'logs', 'stats.js']
+];
+
 const adminExperiencesRouteModules = [
     ['routes', 'admin', 'experiences.js'],
     ['routes', 'admin', 'experiences', 'index.js'],
@@ -124,6 +134,10 @@ const getRouteModules = (routeSegments) => {
 
     if (routePath === 'routes/admin/contacts.js') {
         return adminContactsRouteModules;
+    }
+
+    if (routePath === 'routes/admin/logs.js') {
+        return adminLogsRouteModules;
     }
 
     if (routePath === 'routes/admin/experiences.js') {
