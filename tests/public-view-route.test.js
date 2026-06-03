@@ -1,153 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const express = require('express');
-
 const {
-    clearRootModules,
-    createNoopLogger,
-    resolveFromRoot,
-    stubRootModule
-} = require('./helpers/module-loader');
-
-const requestJson = async (router, path, { method = 'GET' } = {}) => {
-    const app = express();
-    app.use(router);
-
-    const server = await new Promise((resolve) => {
-        const activeServer = app.listen(0, '127.0.0.1', () => resolve(activeServer));
-    });
-
-    try {
-        const { port } = server.address();
-        const response = await fetch(`http://127.0.0.1:${port}${path}`, { method });
-        return {
-            status: response.status,
-            body: await response.json()
-        };
-    } finally {
-        await new Promise((resolve, reject) => {
-            server.close((error) => (error ? reject(error) : resolve()));
-        });
-    }
-};
-
-const startRouterServer = async (router) => {
-    const app = express();
-    app.use(router);
-
-    const server = await new Promise((resolve) => {
-        const activeServer = app.listen(0, '127.0.0.1', () => resolve(activeServer));
-    });
-
-    return {
-        baseUrl: `http://127.0.0.1:${server.address().port}`,
-        close: () => new Promise((resolve, reject) => {
-            server.close((error) => (error ? reject(error) : resolve()));
-        })
-    };
-};
-
-const readJsonResponse = async (response) => ({
-    status: response.status,
-    body: await response.json()
-});
-
-const waitFor = async (predicate, timeoutMs = 500) => {
-    const startedAt = Date.now();
-
-    while (!predicate()) {
-        if (Date.now() - startedAt > timeoutMs) {
-            throw new Error('condition was not met in time');
-        }
-        await new Promise((resolve) => setTimeout(resolve, 5));
-    }
-};
-
-const createCacheStub = () => {
-    const values = new Map();
-    const invalidations = [];
-
-    return {
-        invalidations,
-        get: (key) => values.get(key),
-        set: (key, value) => {
-            values.set(key, value);
-            return true;
-        },
-        claim: (key, ttl) => {
-            if (values.has(key)) {
-                return false;
-            }
-            values.set(key, true, ttl);
-            return true;
-        },
-        release: (key) => {
-            values.delete(key);
-            return true;
-        },
-        del: (key) => {
-            invalidations.push(['del', key]);
-            values.delete(key);
-            return true;
-        },
-        delPattern: (pattern) => {
-            invalidations.push(['delPattern', pattern]);
-            return 0;
-        },
-        generateKey: (prefix, ...parts) => `${prefix}:${parts.join(':')}`,
-        cacheApiResponse: async (_key, loader) => loader()
-    };
-};
-
-const loadPublicRoute = ({ Projects, BlogPosts, CacheUtils }) => {
-    clearRootModules([
-        ['routes', 'public.js'],
-        ['routes', 'public', 'index.js'],
-        ['routes', 'public', 'common.js'],
-        ['routes', 'public', 'common', 'cache.js'],
-        ['routes', 'public', 'common', 'config.js'],
-        ['routes', 'public', 'common', 'contact.js'],
-        ['routes', 'public', 'common', 'filters.js'],
-        ['routes', 'public', 'common', 'index.js'],
-        ['routes', 'public', 'common', 'responses.js'],
-        ['routes', 'public', 'common', 'views.js'],
-        ['routes', 'public', 'profile.js'],
-        ['routes', 'public', 'contact.js'],
-        ['routes', 'public', 'skills.js'],
-        ['routes', 'public', 'projects.js'],
-        ['routes', 'public', 'posts.js'],
-        ['routes', 'public', 'tags.js'],
-        ['routes', 'public', 'experiences.js'],
-        ['routes', 'public', 'interests.js'],
-        ['models', 'personal-info.js'],
-        ['models', 'social-links.js'],
-        ['models', 'skills.js'],
-        ['models', 'projects.js'],
-        ['models', 'blog-posts.js'],
-        ['models', 'tags.js'],
-        ['models', 'contact-messages.js'],
-        ['models', 'experiences.js'],
-        ['models', 'interests.js'],
-        ['models', 'site-settings.js'],
-        ['utils', 'cache.js'],
-        ['log.js']
-    ]);
-
-    stubRootModule(['log.js'], createNoopLogger());
-    stubRootModule(['models', 'personal-info.js'], {});
-    stubRootModule(['models', 'social-links.js'], {});
-    stubRootModule(['models', 'skills.js'], {});
-    stubRootModule(['models', 'projects.js'], Projects);
-    stubRootModule(['models', 'blog-posts.js'], BlogPosts);
-    stubRootModule(['models', 'tags.js'], {});
-    stubRootModule(['models', 'contact-messages.js'], {});
-    stubRootModule(['models', 'experiences.js'], {});
-    stubRootModule(['models', 'interests.js'], {});
-    stubRootModule(['models', 'site-settings.js'], {});
-    stubRootModule(['utils', 'cache.js'], CacheUtils);
-
-    return require(resolveFromRoot(['routes', 'public.js']));
-};
+    readJsonResponse,
+    requestJson,
+    startRouterServer,
+    waitFor
+} = require('./helpers/http-route-server');
+const { createCacheStub } = require('./helpers/cache-stub');
+const { loadPublicRoute } = require('./helpers/public-route-loader');
 
 test('public project view increments only once for repeated client requests', async () => {
     const increments = [];
@@ -159,8 +19,7 @@ test('public project view increments only once for repeated client requests', as
             incrementView: async (id) => {
                 increments.push(id);
             }
-        },
-        BlogPosts: {}
+        }
     });
 
     const first = await requestJson(router, '/projects/project-a/view', { method: 'POST' });
@@ -190,8 +49,7 @@ test('public project view claims dedupe before increment completes', async () =>
                 increments.push(id);
                 await incrementBlock;
             }
-        },
-        BlogPosts: {}
+        }
     });
     const server = await startRouterServer(router);
 
@@ -219,7 +77,6 @@ test('public post view increments only once for repeated client requests', async
     const CacheUtils = createCacheStub();
     const router = loadPublicRoute({
         CacheUtils,
-        Projects: {},
         BlogPosts: {
             getBySlug: async () => ({ id: 20 }),
             incrementView: async (id) => {
@@ -249,7 +106,6 @@ test('public post view claims dedupe before increment completes', async () => {
     });
     const router = loadPublicRoute({
         CacheUtils,
-        Projects: {},
         BlogPosts: {
             getBySlug: async () => ({ id: 20 }),
             incrementView: async (id) => {

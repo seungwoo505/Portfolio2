@@ -10,6 +10,14 @@ const {
     validateImageFile
 } = require('../utils/upload');
 
+const uploadModulePaths = [
+    ['utils', 'upload.js'],
+    ['utils', 'upload', 'index.js'],
+    ['utils', 'upload', 'paths.js'],
+    ['utils', 'upload', 'storage.js'],
+    ['utils', 'upload', 'validation.js']
+];
+
 test('validateImageFile accepts matching image MIME and extension', () => {
     assert.deepEqual(
         validateImageFile({ originalname: 'profile.jpeg', mimetype: 'image/jpeg' }),
@@ -42,7 +50,7 @@ test('upload max file size falls back for invalid environment values', () => {
     process.env.UPLOAD_MAX_FILE_SIZE = 'not-a-size';
 
     try {
-        clearRootModules([['utils', 'upload.js']]);
+        clearRootModules(uploadModulePaths);
         const { uploadMaxFileSize } = require(resolveFromRoot(['utils', 'upload.js']));
 
         assert.equal(uploadMaxFileSize, 5 * 1024 * 1024);
@@ -52,6 +60,6 @@ test('upload max file size falls back for invalid environment values', () => {
         } else {
             process.env.UPLOAD_MAX_FILE_SIZE = previousValue;
         }
-        clearRootModules([['utils', 'upload.js']]);
+        clearRootModules(uploadModulePaths);
     }
 });

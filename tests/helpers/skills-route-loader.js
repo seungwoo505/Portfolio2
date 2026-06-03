@@ -15,6 +15,8 @@ const loadSkillsRoute = (Skills) => {
         ['routes', 'admin', 'skills', 'display-order.js'],
         ['routes', 'admin', 'skills', 'categories.js'],
         ['routes', 'admin', 'skills', 'crud.js'],
+        ['routes', 'admin', 'skills', 'collection.js'],
+        ['routes', 'admin', 'skills', 'detail.js'],
         ['routes', 'admin', 'skills', 'actions.js'],
         ['routes', 'admin', 'common.js'],
         ['models', 'skills.js'],
