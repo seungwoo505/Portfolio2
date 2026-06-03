@@ -64,6 +64,38 @@ const adminSettingsRouteModules = [
     ['routes', 'admin', 'settings', 'validation.js']
 ];
 
+const adminInterestsRouteModules = [
+    ['routes', 'admin', 'interests.js'],
+    ['routes', 'admin', 'interests', 'index.js'],
+    ['routes', 'admin', 'interests', 'collection.js'],
+    ['routes', 'admin', 'interests', 'detail.js'],
+    ['routes', 'admin', 'interests', 'payload.js']
+];
+
+const adminTagsRouteModules = [
+    ['routes', 'admin', 'tags.js'],
+    ['routes', 'admin', 'tags', 'index.js'],
+    ['routes', 'admin', 'tags', 'collection.js'],
+    ['routes', 'admin', 'tags', 'detail.js'],
+    ['routes', 'admin', 'tags', 'payload.js']
+];
+
+const adminContactsRouteModules = [
+    ['routes', 'admin', 'contacts.js'],
+    ['routes', 'admin', 'contacts', 'index.js'],
+    ['routes', 'admin', 'contacts', 'collection.js'],
+    ['routes', 'admin', 'contacts', 'actions.js']
+];
+
+const adminExperiencesRouteModules = [
+    ['routes', 'admin', 'experiences.js'],
+    ['routes', 'admin', 'experiences', 'index.js'],
+    ['routes', 'admin', 'experiences', 'collection.js'],
+    ['routes', 'admin', 'experiences', 'detail.js'],
+    ['routes', 'admin', 'experiences', 'timeline.js'],
+    ['routes', 'admin', 'experiences', 'payload.js']
+];
+
 const getRouteModules = (routeSegments) => {
     const routePath = routeSegments.join('/');
     if (routePath === 'routes/admin/blog.js') {
@@ -80,6 +112,22 @@ const getRouteModules = (routeSegments) => {
 
     if (routePath === 'routes/admin/settings.js') {
         return adminSettingsRouteModules;
+    }
+
+    if (routePath === 'routes/admin/interests.js') {
+        return adminInterestsRouteModules;
+    }
+
+    if (routePath === 'routes/admin/tags.js') {
+        return adminTagsRouteModules;
+    }
+
+    if (routePath === 'routes/admin/contacts.js') {
+        return adminContactsRouteModules;
+    }
+
+    if (routePath === 'routes/admin/experiences.js') {
+        return adminExperiencesRouteModules;
     }
 
     return [routeSegments];
