@@ -4,16 +4,12 @@ const {
     Projects,
     authenticateToken,
     buildErrorLog,
-    getPlainBody,
-    hasInvalidProvidedStringFields,
     logActivity,
     logger,
-    normalizeUndefinedFields,
     parseSlugParam,
-    requirePermission,
-    trimStringFields,
-    verboseDebug
+    requirePermission
 } = require('./common');
+const { parseProjectUpdateRequest, updateProjectBySlug } = require('./update');
 
 const router = express.Router();
 
@@ -101,66 +97,27 @@ router.put('/projects/slug/:slug',
     logActivity('update_project'),
     async (req, res) => {
         try {
-            const projectSlug = parseSlugParam(req.params.slug);
-            if (!projectSlug) {
-                return res.status(400).json({
+            const parsed = parseProjectUpdateRequest(req);
+            if (parsed.error) {
+                return res.status(parsed.error.statusCode).json({
                     success: false,
-                    message: '유효한 slug가 필요합니다.'
-                });
-            }
-            const body = trimStringFields(getPlainBody(req), ['title', 'description']);
-            verboseDebug('projectSlug:', projectSlug);
-
-            if (Object.keys(body).length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: '수정할 프로젝트 정보가 필요합니다.'
+                    message: parsed.error.message
                 });
             }
 
-            if (hasInvalidProvidedStringFields(body, ['title', 'description'])) {
-                return res.status(400).json({
-                    success: false,
-                    message: '제목과 설명은 비어 있을 수 없습니다.'
-                });
-            }
-
-            verboseDebug('Projects.getBySlug 호출 시작');
-            const existingProject = await Projects.getBySlug(projectSlug);
-            verboseDebug('Projects.getById 결과:', existingProject);
-            if (!existingProject) {
-                verboseDebug('프로젝트를 찾을 수 없음');
+            const updateResult = await updateProjectBySlug(parsed.projectSlug, parsed.sanitizedData, req);
+            if (updateResult.notFound) {
                 return res.status(404).json({
                     success: false,
                     message: '프로젝트를 찾을 수 없습니다.'
                 });
             }
-            verboseDebug('프로젝트 존재 확인 완료');
 
-            const sanitizedData = normalizeUndefinedFields(body);
-
-            verboseDebug('프로젝트 수정 - 원본 데이터:', body);
-            verboseDebug('프로젝트 수정 - 정규화된 데이터:', sanitizedData);
-            verboseDebug('프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));
-
-            verboseDebug('Projects.update 호출 시작');
-            verboseDebug('projectSlug:', projectSlug);
-            verboseDebug('sanitizedData:', sanitizedData);
-
-            try {
-                const updatedProject = await Projects.update(existingProject.id, sanitizedData);
-                verboseDebug('Projects.update 성공:', updatedProject);
-                CacheUtils.invalidateResources('projects', 'tags');
-
-                res.json({
-                    success: true,
-                    message: '프로젝트가 수정되었습니다.',
-                    data: updatedProject
-                });
-            } catch (updateError) {
-                logger.error('프로젝트 업데이트 실패', buildErrorLog(updateError, req));
-                throw updateError;
-            }
+            res.json({
+                success: true,
+                message: '프로젝트가 수정되었습니다.',
+                data: updateResult.project
+            });
         } catch (error) {
             logger.error('프로젝트 수정 실패', buildErrorLog(error, req));
             res.status(500).json({

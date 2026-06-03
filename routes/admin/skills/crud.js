@@ -5,10 +5,14 @@ const {
     CacheUtils,
     Skills,
     buildErrorLog,
-    hasOwn,
     logger,
     normalizeSkillPayload
 } = require('./common');
+const {
+    buildDisplayOrderConflictMessage,
+    findFeaturedDisplayOrderConflict,
+    getNextDisplayOrder
+} = require('./display-order');
 
 const router = express.Router();
 
@@ -66,14 +70,12 @@ router.post('/skills',
                 });
             }
 
-            if (cleanData.is_featured && cleanData.display_order) {
-                const existingSkill = await Skills.getByDisplayOrder(cleanData.display_order);
-                if (existingSkill) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `표시 순서 ${cleanData.display_order}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
-                    });
-                }
+            const existingOrderSkill = await findFeaturedDisplayOrderConflict(Skills, cleanData);
+            if (existingOrderSkill) {
+                return res.status(400).json({
+                    success: false,
+                    message: buildDisplayOrderConflictMessage(cleanData.display_order)
+                });
             }
 
             const skillId = await Skills.createSkill(cleanData);
@@ -133,20 +135,15 @@ router.put('/skills/:id',
                 });
             }
 
-            const nextIsFeatured = hasOwn(cleanData, 'is_featured')
-                ? cleanData.is_featured
-                : Boolean(existingSkill.is_featured);
-            const nextDisplayOrder = hasOwn(cleanData, 'display_order')
-                ? cleanData.display_order
-                : existingSkill.display_order;
-            if (nextIsFeatured && nextDisplayOrder) {
-                const conflictingSkill = await Skills.getByDisplayOrder(nextDisplayOrder, skillId);
-                if (conflictingSkill) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `표시 순서 ${nextDisplayOrder}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
-                    });
-                }
+            const conflictingSkill = await findFeaturedDisplayOrderConflict(Skills, cleanData, {
+                existingSkill,
+                excludeSkillId: skillId
+            });
+            if (conflictingSkill) {
+                return res.status(400).json({
+                    success: false,
+                    message: buildDisplayOrderConflictMessage(getNextDisplayOrder(cleanData, existingSkill))
+                });
             }
 
             await Skills.updateSkill(skillId, cleanData);

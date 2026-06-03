@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { logger, verboseDebug, buildErrorLog } = require('./common');
 const { authenticateToken, requirePermission, logActivity } = require('../../middleware/auth');
-const fs = require('fs/promises');
-const { uploadImage, getUploadedImagePath, isSafeUploadedImageFilename } = require('../../utils/upload');
+const { uploadImage } = require('../../utils/upload');
+const {
+    buildUploadedImageData,
+    buildUploadedImageLog,
+    deleteUploadedImage
+} = require('./uploads/images');
 
 /**
  * @swagger
@@ -64,28 +68,12 @@ router.post('/upload/image',
                 });
             }
 
-            const fileInfo = {
-                originalName: req.file.originalname,
-                filename: req.file.filename,
-                size: req.file.size,
-                mimetype: req.file.mimetype,
-                path: req.file.path
-            };
-
-            const baseUrl = req.protocol + '://' + req.get('host');
-            const imageUrl = `${baseUrl}/uploads/images/${req.file.filename}`;
-
-            verboseDebug('이미지 업로드 성공:', fileInfo);
+            verboseDebug('이미지 업로드 성공:', buildUploadedImageLog(req.file));
 
             res.json({
                 success: true,
                 message: '이미지가 성공적으로 업로드되었습니다.',
-                data: {
-                    url: imageUrl,
-                    filename: req.file.filename,
-                    originalName: req.file.originalname,
-                    size: req.file.size
-                }
+                data: buildUploadedImageData(req)
             });
 
         } catch (error) {
@@ -104,30 +92,17 @@ router.delete('/upload/image/:filename',
     logActivity('delete_image'),
     async (req, res) => {
         try {
-            const filename = req.params.filename;
-            if (!isSafeUploadedImageFilename(filename)) {
-                return res.status(400).json({
+            const result = await deleteUploadedImage(req.params.filename);
+            if (!result.deleted) {
+                return res.status(result.status).json({
                     success: false,
-                    message: '올바르지 않은 이미지 파일명입니다.'
-                });
-            }
-
-            const filePath = getUploadedImagePath(filename);
-            try {
-                await fs.unlink(filePath);
-            } catch (error) {
-                if (error.code !== 'ENOENT') {
-                    throw error;
-                }
-                return res.status(404).json({
-                    success: false,
-                    message: '삭제할 이미지를 찾을 수 없습니다.'
+                    message: result.message
                 });
             }
 
             res.json({
                 success: true,
-                message: '이미지가 성공적으로 삭제되었습니다.'
+                message: result.message
             });
 
         } catch (error) {

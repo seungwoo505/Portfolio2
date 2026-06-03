@@ -12,6 +12,11 @@ const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 const createContactMessagesFixture = () => {
     clearRootModules([
         ['models', 'contact-messages.js'],
+        ['models', 'contact-messages', 'index.js'],
+        ['models', 'contact-messages', 'queries.js'],
+        ['models', 'contact-messages', 'mutations.js'],
+        ['models', 'contact-messages', 'stats.js'],
+        ['models', 'contact-messages', 'rate-limit.js'],
         ['models', 'db-utils.js']
     ]);
 

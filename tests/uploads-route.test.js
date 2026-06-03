@@ -37,6 +37,7 @@ const requestJson = async (router, pathName, { method = 'GET' } = {}) => {
 const loadUploadsRoute = (filePath, options = {}) => {
     clearRootModules([
         ['routes', 'admin', 'uploads.js'],
+        ['routes', 'admin', 'uploads', 'images.js'],
         ['routes', 'admin', 'common.js'],
         ['utils', 'upload.js'],
         ['middleware', 'auth.js'],

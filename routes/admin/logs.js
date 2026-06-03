@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { logger, buildErrorLog } = require('./common');
 const ActivityLogs = require('../../models/activity-logs');
-const { escapeCsvField } = require('../../utils/csv');
 const { parsePagination } = require('../../utils/pagination');
 const { toChoice, toStringValue } = require('../../utils/filter-values');
 const { authenticateToken, requirePermission } = require('../../middleware/auth');
+const { buildActivityLogsCsv, buildActivityLogsFilename } = require('./logs/export');
 
 const normalizeLogFilters = (query = {}) => ({
     search: toStringValue(query.search),
@@ -128,33 +128,8 @@ router.get('/logs/export',
                 limit: 10000 // 최대 10,000개 로그 내보내기
             };
             const logs = await ActivityLogs.findWithFilters(filters);
-
-            const csvHeaders = [
-                'ID', '사용자 ID', '사용자명', '액션', '리소스 타입',
-                '리소스 ID', '리소스명', '상세정보', 'IP 주소', 'OS + 브라우저', '생성일'
-            ];
-
-            const csvData = logs.map(log => [
-                log.id,
-                log.user_id,
-                log.username,
-                log.action,
-                log.resource_type,
-                log.resource_id || '',
-                log.resource_name || '',
-                log.details || '',
-                log.ip_address || '',
-                log.user_agent || '',
-                new Date(log.created_at).toLocaleString('ko-KR')
-            ]);
-
-            const csvContent = [
-                csvHeaders.map(escapeCsvField).join(','),
-                ...csvData.map(row => row.map(escapeCsvField).join(','))
-            ].join('\n');
-
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const filename = `activity-logs-${timestamp}.csv`;
+            const csvContent = buildActivityLogsCsv(logs);
+            const filename = buildActivityLogsFilename();
 
             res.setHeader('Content-Type', 'text/csv; charset=utf-8');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

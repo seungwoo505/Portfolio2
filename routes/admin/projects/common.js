@@ -11,16 +11,7 @@ const {
     trimStringFields
 } = require('../../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../../middleware/auth');
-
-const normalizeUndefinedFields = (body) => {
-    const normalizedData = {};
-
-    Object.keys(body).forEach((key) => {
-        normalizedData[key] = body[key] === undefined ? null : body[key];
-    });
-
-    return normalizedData;
-};
+const { normalizeUndefinedFields } = require('./payload');
 
 module.exports = {
     authenticateToken,
