@@ -15,6 +15,7 @@ const publicRouteModules = [
     ['routes', 'public', 'common', 'contact.js'],
     ['routes', 'public', 'common', 'filters.js'],
     ['routes', 'public', 'common', 'index.js'],
+    ['routes', 'public', 'common', 'resources.js'],
     ['routes', 'public', 'common', 'responses.js'],
     ['routes', 'public', 'common', 'views.js'],
     ['routes', 'public', 'profile.js'],

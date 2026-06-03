@@ -4,14 +4,15 @@ const { isValidSlug } = require('../../utils/slug');
 const {
     CacheUtils,
     badRequest,
+    buildPaginationMeta,
     buildProjectFilters,
     cacheKey,
-    cached,
     fail,
     incrementViewOnce,
+    loadCachedPaginatedResource,
+    loadCachedSlugResource,
     notFound,
-    ok,
-    stableStringify
+    ok
 } = require('./common');
 
 const router = express.Router();
@@ -37,22 +38,15 @@ router.get('/projects', async (req, res) => {
         if (filters.error) {
             return badRequest(res, filters.error);
         }
-        const data = await cached(cacheKey('projects', stableStringify(filters)), async () => {
-            const [projects, total] = await Promise.all([
-                Projects.getWithFilters(filters),
-                Projects.getCountWithFilters(filters)
-            ]);
-
-            return { projects, total };
+        const data = await loadCachedPaginatedResource({
+            cachePrefix: 'projects',
+            filters,
+            loadItems: () => Projects.getWithFilters(filters),
+            loadTotal: () => Projects.getCountWithFilters(filters)
         });
 
-        return ok(res, data.projects, {
-            pagination: {
-                page: filters.page,
-                limit: filters.limit,
-                total: data.total,
-                totalPages: Math.ceil(data.total / filters.limit)
-            }
+        return ok(res, data.items, {
+            pagination: buildPaginationMeta(filters, data.total)
         });
     } catch (error) {
         return fail(res, error, req, '프로젝트 목록을 가져오는데 실패했습니다.');
@@ -99,7 +93,11 @@ router.get('/projects/:slug', async (req, res) => {
             return badRequest(res, '유효한 slug가 필요합니다.');
         }
 
-        const data = await cached(cacheKey('project', 'slug', slug), () => Projects.getBySlug(slug));
+        const data = await loadCachedSlugResource({
+            cachePrefix: 'project',
+            slug,
+            loadResource: () => Projects.getBySlug(slug)
+        });
 
         if (!data || !data.is_published) {
             return notFound(res, '프로젝트를 찾을 수 없습니다.');

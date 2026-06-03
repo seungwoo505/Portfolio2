@@ -4,14 +4,15 @@ const { isValidSlug } = require('../../utils/slug');
 const {
     CacheUtils,
     badRequest,
+    buildPaginationMeta,
     buildPostFilters,
     cacheKey,
-    cached,
     fail,
     incrementViewOnce,
+    loadCachedPaginatedResource,
+    loadCachedSlugResource,
     notFound,
-    ok,
-    stableStringify
+    ok
 } = require('./common');
 
 const router = express.Router();
@@ -41,22 +42,15 @@ router.get('/posts', async (req, res) => {
         if (filters.error) {
             return badRequest(res, filters.error);
         }
-        const data = await cached(cacheKey('blog_posts', stableStringify(filters)), async () => {
-            const [posts, total] = await Promise.all([
-                BlogPosts.getWithFilters(filters),
-                BlogPosts.getCountWithFilters(filters)
-            ]);
-
-            return { posts, total };
+        const data = await loadCachedPaginatedResource({
+            cachePrefix: 'blog_posts',
+            filters,
+            loadItems: () => BlogPosts.getWithFilters(filters),
+            loadTotal: () => BlogPosts.getCountWithFilters(filters)
         });
 
-        return ok(res, data.posts, {
-            pagination: {
-                page: filters.page,
-                limit: filters.limit,
-                total: data.total,
-                totalPages: Math.ceil(data.total / filters.limit)
-            }
+        return ok(res, data.items, {
+            pagination: buildPaginationMeta(filters, data.total)
         });
     } catch (error) {
         return fail(res, error, req, '블로그 글 목록을 가져오는데 실패했습니다.');
@@ -78,22 +72,16 @@ router.get('/posts/tag/:tagSlug', async (req, res) => {
             return badRequest(res, filters.error);
         }
 
-        const data = await cached(cacheKey('blog_posts', 'tag', tagSlug, stableStringify(filters)), async () => {
-            const [posts, total] = await Promise.all([
-                BlogPosts.getWithFilters(filters),
-                BlogPosts.getCountWithFilters(filters)
-            ]);
-
-            return { posts, total };
+        const data = await loadCachedPaginatedResource({
+            cachePrefix: 'blog_posts',
+            cacheParts: ['tag', tagSlug],
+            filters,
+            loadItems: () => BlogPosts.getWithFilters(filters),
+            loadTotal: () => BlogPosts.getCountWithFilters(filters)
         });
 
-        return ok(res, data.posts, {
-            pagination: {
-                page: filters.page,
-                limit: filters.limit,
-                total: data.total,
-                totalPages: Math.ceil(data.total / filters.limit)
-            }
+        return ok(res, data.items, {
+            pagination: buildPaginationMeta(filters, data.total)
         });
     } catch (error) {
         return fail(res, error, req, '태그별 블로그 글 목록을 가져오는데 실패했습니다.');
@@ -140,7 +128,11 @@ router.get('/posts/:slug', async (req, res) => {
             return badRequest(res, '유효한 slug가 필요합니다.');
         }
 
-        const data = await cached(cacheKey('blog_post', 'slug', slug), () => BlogPosts.getBySlug(slug));
+        const data = await loadCachedSlugResource({
+            cachePrefix: 'blog_post',
+            slug,
+            loadResource: () => BlogPosts.getBySlug(slug)
+        });
 
         if (!data) {
             return notFound(res, '블로그 글을 찾을 수 없습니다.');
