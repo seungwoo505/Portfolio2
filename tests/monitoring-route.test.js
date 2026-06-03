@@ -40,6 +40,11 @@ const requestJson = async (router, path, { method = 'GET', body = undefined } = 
 const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
     clearRootModules([
         ['routes', 'monitoring.js'],
+        ['routes', 'monitoring', 'index.js'],
+        ['routes', 'monitoring', 'common.js'],
+        ['routes', 'monitoring', 'cache.js'],
+        ['routes', 'monitoring', 'dashboard.js'],
+        ['routes', 'monitoring', 'metrics.js'],
         ['utils', 'cache.js'],
         ['utils', 'redis-cache.js'],
         ['middleware', 'auth.js'],

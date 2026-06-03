@@ -7,6 +7,7 @@ const { normalizeServerUrl } = require("./servers");
 
 const swaggerApis = [
     "./routes/*.js",
+    "./routes/monitoring/*.js",
     "./routes/public/*.js",
     "./routes/admin/*.js",
     "./routes/admin/**/*.js"
