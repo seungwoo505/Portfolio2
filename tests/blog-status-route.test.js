@@ -43,6 +43,9 @@ const loadBlogRoute = (BlogPosts) => {
         ['routes', 'admin', 'blog', 'common.js'],
         ['routes', 'admin', 'blog', 'collection.js'],
         ['routes', 'admin', 'blog', 'detail.js'],
+        ['routes', 'admin', 'blog', 'lookup.js'],
+        ['routes', 'admin', 'blog', 'payload.js'],
+        ['routes', 'admin', 'blog', 'status-update.js'],
         ['routes', 'admin', 'blog', 'status.js']
     ];
 

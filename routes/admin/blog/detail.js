@@ -3,16 +3,24 @@ const {
     BlogPosts,
     authenticateToken,
     buildErrorLog,
-    getPlainBody,
-    hasInvalidProvidedStringFields,
     logActivity,
     logger,
-    parseSlugParam,
-    requirePermission,
-    trimStringFields
+    requirePermission
 } = require('./common');
+const {
+    findBlogPostBySlug,
+    parseBlogPostSlugParam
+} = require('./lookup');
+const { normalizeBlogUpdatePayload } = require('./payload');
 
 const router = express.Router();
+
+const sendRouteError = (res, error) => (
+    res.status(error.statusCode).json({
+        success: false,
+        message: error.message
+    })
+);
 
 /**
  * @swagger
@@ -85,26 +93,19 @@ const router = express.Router();
  */
 router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.read'), async (req, res) => {
     try {
-        const postSlug = parseSlugParam(req.params.slug);
-        if (!postSlug) {
-            return res.status(400).json({
-                success: false,
-                message: '유효한 slug가 필요합니다.'
-            });
+        const parsed = parseBlogPostSlugParam(req.params.slug);
+        if (parsed.error) {
+            return sendRouteError(res, parsed.error);
         }
 
-        const post = await BlogPosts.getBySlugAdmin(postSlug);
-
-        if (!post) {
-            return res.status(404).json({
-                success: false,
-                message: '포스트를 찾을 수 없습니다.'
-            });
+        const lookup = await findBlogPostBySlug(parsed.postSlug);
+        if (lookup.error) {
+            return sendRouteError(res, lookup.error);
         }
 
         res.json({
             success: true,
-            data: post
+            data: lookup.post
         });
     } catch (error) {
         logger.error('블로그 포스트 조회 실패', buildErrorLog(error, req));
@@ -121,38 +122,25 @@ router.put('/blog/posts/slug/:slug',
     logActivity('update_blog_post'),
     async (req, res) => {
         try {
-            const postSlug = parseSlugParam(req.params.slug);
-            if (!postSlug) {
+            const parsed = parseBlogPostSlugParam(req.params.slug);
+            if (parsed.error) {
+                return sendRouteError(res, parsed.error);
+            }
+
+            const payload = normalizeBlogUpdatePayload(req);
+            if (payload.error) {
                 return res.status(400).json({
                     success: false,
-                    message: '유효한 slug가 필요합니다.'
-                });
-            }
-            const body = trimStringFields(getPlainBody(req), ['title', 'content']);
-
-            if (Object.keys(body).length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: '수정할 블로그 포스트 정보가 필요합니다.'
+                    message: payload.error
                 });
             }
 
-            if (hasInvalidProvidedStringFields(body, ['title', 'content'])) {
-                return res.status(400).json({
-                    success: false,
-                    message: '제목과 내용은 비어 있을 수 없습니다.'
-                });
+            const lookup = await findBlogPostBySlug(parsed.postSlug);
+            if (lookup.error) {
+                return sendRouteError(res, lookup.error);
             }
 
-            const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
-            if (!existingPost) {
-                return res.status(404).json({
-                    success: false,
-                    message: '포스트를 찾을 수 없습니다.'
-                });
-            }
-
-            const updatedPost = await BlogPosts.update(existingPost.id, body);
+            const updatedPost = await BlogPosts.update(lookup.post.id, payload.body);
 
             res.json({
                 success: true,
@@ -175,23 +163,17 @@ router.delete('/blog/posts/slug/:slug',
     logActivity('delete_blog_post'),
     async (req, res) => {
         try {
-            const postSlug = parseSlugParam(req.params.slug);
-            if (!postSlug) {
-                return res.status(400).json({
-                    success: false,
-                    message: '유효한 slug가 필요합니다.'
-                });
+            const parsed = parseBlogPostSlugParam(req.params.slug);
+            if (parsed.error) {
+                return sendRouteError(res, parsed.error);
             }
 
-            const post = await BlogPosts.getBySlugAdmin(postSlug);
-            if (!post) {
-                return res.status(404).json({
-                    success: false,
-                    message: '포스트를 찾을 수 없습니다.'
-                });
+            const lookup = await findBlogPostBySlug(parsed.postSlug);
+            if (lookup.error) {
+                return sendRouteError(res, lookup.error);
             }
 
-            await BlogPosts.delete(post.id);
+            await BlogPosts.delete(lookup.post.id);
 
             res.json({
                 success: true,

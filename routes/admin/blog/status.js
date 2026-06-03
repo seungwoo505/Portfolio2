@@ -1,16 +1,21 @@
 const express = require('express');
 const {
-    BlogPosts,
     authenticateToken,
     buildErrorLog,
     logActivity,
     logger,
-    parseSlugParam,
-    requirePermission,
-    toBooleanOrNull
+    requirePermission
 } = require('./common');
+const { updateBlogPostStatusBySlug } = require('./status-update');
 
 const router = express.Router();
+
+const sendRouteError = (res, error) => (
+    res.status(error.statusCode).json({
+        success: false,
+        message: error.message
+    })
+);
 
 /**
  * @swagger
@@ -50,37 +55,22 @@ router.put('/blog/posts/slug/:slug/publish',
     logActivity('publish_blog_post'),
     async (req, res) => {
         try {
-            const isPublished = toBooleanOrNull(req.body?.is_published);
-            if (isPublished === null) {
-                return res.status(400).json({
-                    success: false,
-                    message: '발행 상태는 boolean 값이어야 합니다.'
-                });
-            }
-            const postSlug = parseSlugParam(req.params.slug);
-            if (!postSlug) {
-                return res.status(400).json({
-                    success: false,
-                    message: '유효한 slug가 필요합니다.'
-                });
-            }
-
-            const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
-            if (!existingPost) {
-                return res.status(404).json({
-                    success: false,
-                    message: '포스트를 찾을 수 없습니다.'
-                });
-            }
-
-            const updatedPost = await BlogPosts.update(existingPost.id, {
-                is_published: isPublished
+            const result = await updateBlogPostStatusBySlug({
+                body: req.body,
+                falseMessage: '포스트 발행이 취소되었습니다.',
+                field: 'is_published',
+                invalidMessage: '발행 상태는 boolean 값이어야 합니다.',
+                slug: req.params.slug,
+                trueMessage: '포스트가 발행되었습니다.'
             });
+            if (result.error) {
+                return sendRouteError(res, result.error);
+            }
 
             res.json({
                 success: true,
-                message: isPublished ? '포스트가 발행되었습니다.' : '포스트 발행이 취소되었습니다.',
-                data: updatedPost
+                message: result.message,
+                data: result.data
             });
         } catch (error) {
             res.status(500).json({
@@ -129,37 +119,22 @@ router.put('/blog/posts/slug/:slug/featured',
     logActivity('feature_blog_post'),
     async (req, res) => {
         try {
-            const isFeatured = toBooleanOrNull(req.body?.is_featured);
-            if (isFeatured === null) {
-                return res.status(400).json({
-                    success: false,
-                    message: '추천 상태는 boolean 값이어야 합니다.'
-                });
-            }
-            const postSlug = parseSlugParam(req.params.slug);
-            if (!postSlug) {
-                return res.status(400).json({
-                    success: false,
-                    message: '유효한 slug가 필요합니다.'
-                });
-            }
-
-            const existingPost = await BlogPosts.getBySlugAdmin(postSlug);
-            if (!existingPost) {
-                return res.status(404).json({
-                    success: false,
-                    message: '포스트를 찾을 수 없습니다.'
-                });
-            }
-
-            const updatedPost = await BlogPosts.update(existingPost.id, {
-                is_featured: isFeatured
+            const result = await updateBlogPostStatusBySlug({
+                body: req.body,
+                falseMessage: '포스트 추천이 해제되었습니다.',
+                field: 'is_featured',
+                invalidMessage: '추천 상태는 boolean 값이어야 합니다.',
+                slug: req.params.slug,
+                trueMessage: '포스트가 추천되었습니다.'
             });
+            if (result.error) {
+                return sendRouteError(res, result.error);
+            }
 
             res.json({
                 success: true,
-                message: isFeatured ? '포스트가 추천되었습니다.' : '포스트 추천이 해제되었습니다.',
-                data: updatedPost
+                message: result.message,
+                data: result.data
             });
         } catch (error) {
             logger.error('블로그 포스트 추천 상태 변경 실패', buildErrorLog(error, req));
