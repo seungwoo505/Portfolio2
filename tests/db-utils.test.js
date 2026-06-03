@@ -8,12 +8,21 @@ const {
     stubRootModule
 } = require('./helpers/module-loader');
 
+const dbUtilsModulePaths = [
+    ['models', 'db-utils.js'],
+    ['models', 'db-utils', 'index.js'],
+    ['models', 'db-utils', 'batch.js'],
+    ['models', 'db-utils', 'execution.js'],
+    ['models', 'db-utils', 'logging.js'],
+    ['models', 'db-utils', 'transaction.js']
+];
+
 const loadDbUtilsWithConnection = (connection, {
     logger = createNoopLogger(),
     execute = async () => [[]]
 } = {}) => {
     clearRootModules([
-        ['models', 'db-utils.js'],
+        ...dbUtilsModulePaths,
         ['db.js'],
         ['log.js'],
         ['utils', 'cache.js']
