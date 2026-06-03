@@ -1,7 +1,6 @@
 require("dotenv").config({ quiet: true });
 
 const http = require("http");
-const expressWs = require("express-ws");
 const logger = require("./log");
 const { validateProductionEnv } = require("./utils/env-validation");
 const { app, port, REQUEST_TIMEOUT, AI_REQUEST_TIMEOUT } = require("./app");
@@ -16,7 +15,6 @@ if (!productionEnvValidation.ok) {
 }
 
 const server = http.createServer(app);
-expressWs(app, server);
 
 logger.info("포트폴리오 서버 시작 중...");
 logger.info("환경 설정", {
