@@ -54,7 +54,9 @@ const adminUsersRouteModules = [
     ['routes', 'admin', 'users', 'index.js'],
     ['routes', 'admin', 'users', 'common.js'],
     ['routes', 'admin', 'users', 'collection.js'],
-    ['routes', 'admin', 'users', 'detail.js']
+    ['routes', 'admin', 'users', 'detail.js'],
+    ['routes', 'admin', 'users', 'lookup.js'],
+    ['routes', 'admin', 'users', 'payload.js']
 ];
 
 const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } }) => {

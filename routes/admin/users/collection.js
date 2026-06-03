@@ -2,18 +2,15 @@ const express = require('express');
 const {
     AdminUsers,
     buildErrorLog,
-    getPasswordPolicyError,
-    getPlainBody,
-    hasRequiredStringFields,
-    isValidAdminRole,
-    isValidEmail,
     logActivity,
     logger,
     superAdminOnly,
-    trimStringFields,
-    userCreateClientErrors,
-    userStringFields
+    userCreateClientErrors
 } = require('./common');
+const {
+    getCreateUserPayload,
+    validateCreateUserPayload
+} = require('./payload');
 
 const router = express.Router();
 
@@ -56,46 +53,16 @@ router.get('/users', ...superAdminOnly, async (req, res) => {
 
 router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req, res) => {
     try {
-        const body = trimStringFields(getPlainBody(req), userStringFields);
-        const { username, email, password, full_name } = body;
-        const role = body.role || 'admin';
-
-        if (!hasRequiredStringFields({ username, email, password }, ['username', 'email', 'password'])) {
+        const payload = getCreateUserPayload(req);
+        const validationError = validateCreateUserPayload(payload);
+        if (validationError) {
             return res.status(400).json({
                 success: false,
-                message: '사용자명, 이메일, 비밀번호는 필수입니다.'
+                message: validationError
             });
         }
 
-        if (!isValidEmail(email)) {
-            return res.status(400).json({
-                success: false,
-                message: '올바른 이메일 형식이 아닙니다.'
-            });
-        }
-
-        if (!isValidAdminRole(role)) {
-            return res.status(400).json({
-                success: false,
-                message: '관리자 역할이 올바르지 않습니다.'
-            });
-        }
-
-        const passwordPolicyError = getPasswordPolicyError(password);
-        if (passwordPolicyError) {
-            return res.status(400).json({
-                success: false,
-                message: passwordPolicyError
-            });
-        }
-
-        const id = await AdminUsers.create({
-            username,
-            email,
-            password,
-            full_name,
-            role
-        });
+        const id = await AdminUsers.create(payload);
 
         const newUser = await AdminUsers.getById(id);
 

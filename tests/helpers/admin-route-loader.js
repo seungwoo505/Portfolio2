@@ -119,6 +119,18 @@ const getRouteModules = (routeSegments) => {
         return adminBlogRouteModules;
     }
 
+    if (routePath === 'routes/admin/users.js') {
+        return [
+            ['routes', 'admin', 'users.js'],
+            ['routes', 'admin', 'users', 'index.js'],
+            ['routes', 'admin', 'users', 'common.js'],
+            ['routes', 'admin', 'users', 'collection.js'],
+            ['routes', 'admin', 'users', 'detail.js'],
+            ['routes', 'admin', 'users', 'lookup.js'],
+            ['routes', 'admin', 'users', 'payload.js']
+        ];
+    }
+
     if (routePath === 'routes/admin/projects.js') {
         return adminProjectRouteModules;
     }
