@@ -20,9 +20,20 @@ const blogPostModelModules = [
     ['models', 'blog-posts', 'tags.js']
 ];
 
+const cacheModules = [
+    ['utils', 'cache.js'],
+    ['utils', 'cache', 'basic.js'],
+    ['utils', 'cache', 'batch.js'],
+    ['utils', 'cache', 'index.js'],
+    ['utils', 'cache', 'invalidation.js'],
+    ['utils', 'cache', 'loader.js'],
+    ['utils', 'cache', 'locks.js'],
+    ['utils', 'cache', 'store.js']
+];
+
 test('resource invalidation clears public blog detail cache keys', () => {
     clearRootModules([
-        ['utils', 'cache.js'],
+        ...cacheModules,
         ['log.js']
     ]);
 
@@ -52,7 +63,7 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
     clearRootModules([
         ...blogPostModelModules,
         ['models', 'db-utils.js'],
-        ['utils', 'cache.js'],
+        ...cacheModules,
         ['utils', 'slug.js']
     ]);
 
@@ -83,7 +94,7 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
 
 test('cacheApiResponse reuses an in-flight loader for the same key', async () => {
     clearRootModules([
-        ['utils', 'cache.js'],
+        ...cacheModules,
         ['log.js']
     ]);
 
