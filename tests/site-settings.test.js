@@ -9,9 +9,18 @@ const {
 
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
+const siteSettingsModules = [
+    ['models', 'site-settings.js'],
+    ['models', 'site-settings', 'index.js'],
+    ['models', 'site-settings', 'common.js'],
+    ['models', 'site-settings', 'reads.js'],
+    ['models', 'site-settings', 'values.js'],
+    ['models', 'site-settings', 'writes.js']
+];
+
 const loadSiteSettingsFixture = () => {
     clearRootModules([
-        ['models', 'site-settings.js'],
+        ...siteSettingsModules,
         ['models', 'db-utils.js']
     ]);
 
@@ -120,7 +129,7 @@ test('SiteSettings.setMany stores null setting values as database null', async (
 
 test('SiteSettings getters preserve null setting values', async () => {
     clearRootModules([
-        ['models', 'site-settings.js'],
+        ...siteSettingsModules,
         ['models', 'db-utils.js']
     ]);
 
