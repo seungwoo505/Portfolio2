@@ -8,9 +8,18 @@ const {
     stubRootModule
 } = require('./helpers/module-loader');
 
+const redisCacheModulePaths = [
+    ['utils', 'redis-cache.js'],
+    ['utils', 'redis-cache', 'index.js'],
+    ['utils', 'redis-cache', 'client.js'],
+    ['utils', 'redis-cache', 'commands.js'],
+    ['utils', 'redis-cache', 'connection.js'],
+    ['utils', 'redis-cache', 'stats.js']
+];
+
 const createRedisCacheFixture = ({ connectError = null, infoError = null } = {}) => {
     clearRootModules([
-        ['utils', 'redis-cache.js'],
+        ...redisCacheModulePaths,
         ['log.js']
     ]);
 
@@ -124,7 +133,7 @@ test('RedisCache retry delay falls back for invalid environment values', () => {
         } else {
             process.env.REDIS_RETRY_DELAY_MS = previousValue;
         }
-        clearRootModules([['utils', 'redis-cache.js']]);
+        clearRootModules(redisCacheModulePaths);
     }
 });
 
