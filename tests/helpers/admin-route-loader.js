@@ -56,7 +56,11 @@ const adminProfileRouteModules = [
     ['routes', 'admin', 'profile.js'],
     ['routes', 'admin', 'profile', 'index.js'],
     ['routes', 'admin', 'profile', 'personal-info.js'],
-    ['routes', 'admin', 'profile', 'social-links.js']
+    ['routes', 'admin', 'profile', 'social-links.js'],
+    ['routes', 'admin', 'profile', 'social-links', 'index.js'],
+    ['routes', 'admin', 'profile', 'social-links', 'collection.js'],
+    ['routes', 'admin', 'profile', 'social-links', 'detail.js'],
+    ['routes', 'admin', 'profile', 'social-links', 'payload.js']
 ];
 
 const adminSettingsRouteModules = [
