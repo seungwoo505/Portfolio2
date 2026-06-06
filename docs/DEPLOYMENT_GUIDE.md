@@ -16,12 +16,12 @@ npm list express mysql2 bcryptjs jsonwebtoken
 ```env
 # .env 파일 생성
 NODE_ENV=production
-PORT=3001
+PORT=3333
 TRUST_PROXY=1
 
 # 데이터베이스 설정
 DB_HOST=your-db-host
-DB_PORT=3306
+DB_PORT=3300
 DB_USER=your-db-user
 DB_PASSWORD=your-secure-password
 DB_SCHEMA=portfolio_db
@@ -94,7 +94,7 @@ docker build -t portfolio-server .
 # 2. Docker 컨테이너 실행
 docker run -d \
   --name portfolio-server \
-  -p 3001:3001 \
+  -p 3333:3333 \
   -v /path/to/.env:/app/.env:ro \
   portfolio-server
 ```
@@ -132,7 +132,7 @@ module.exports = {
       },
       env_production: {
         NODE_ENV: "production",
-        PORT: 3001,
+        PORT: 3333,
       },
       error_file: "./logs/err.log",
       out_file: "./logs/out.log",
@@ -164,7 +164,7 @@ COPY . .
 RUN mkdir -p uploads
 
 # 포트 노출
-EXPOSE 3001
+EXPOSE 3333
 
 # 애플리케이션 시작
 CMD ["node", "server.js"]
@@ -214,7 +214,7 @@ server {
 
     # API 프록시: TLS는 Nginx에서 종료하고 Node 서버는 내부 HTTP로 실행
     location /api {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:3333;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -252,7 +252,7 @@ const http = require("http");
 
 const options = {
   hostname: "localhost",
-  port: process.env.PORT || 3001,
+  port: process.env.PORT || 3333,
   path: "/health",
   method: "GET",
   timeout: 5000,
@@ -309,7 +309,7 @@ mkdir -p logs
 sudo ufw allow ssh
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-sudo ufw deny 3001/tcp  # 직접 접근 차단
+sudo ufw deny 3333/tcp  # 직접 접근 차단
 sudo ufw enable
 ```
 

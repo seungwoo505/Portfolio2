@@ -53,13 +53,13 @@ npm install
 ```env
 # 데이터베이스 설정
 DB_HOST=localhost
-DB_PORT=3306
+DB_PORT=3300
 DB_USER=your_username
 DB_PASSWORD=your_password
 DB_SCHEMA=portfolio_db
 
 # 서버 설정
-PORT=3001
+PORT=3333
 NODE_ENV=development
 
 # 리버스 프록시 설정
@@ -236,7 +236,7 @@ export async function getStaticProps({ params }) {
 
 ```javascript
 // lib/api.js
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333/api";
 
 export const api = {
   // 개인 정보

@@ -206,7 +206,7 @@ npm run dev
 npm start
 ```
 
-서버는 개발/운영 모두 기본적으로 `http://localhost:3001`에서 실행됩니다. 운영 환경의 HTTPS는 Nginx 같은 리버스 프록시에서 처리합니다.
+서버는 개발/운영 모두 기본적으로 `http://localhost:3333`에서 실행됩니다. 운영 환경의 HTTPS는 Nginx 같은 리버스 프록시에서 처리합니다.
 
 ## 환경 설정
 
@@ -215,7 +215,7 @@ npm start
 ```env
 # 서버 설정
 NODE_ENV=development
-PORT=3001
+PORT=3333
 TRUST_PROXY=0
 REQUEST_TIMEOUT=3000
 LOG_LEVEL=info
@@ -224,7 +224,7 @@ SLOW_REQUEST_MS=1000
 
 # 데이터베이스 설정
 DB_HOST=localhost
-DB_PORT=3306
+DB_PORT=3300
 DB_USER=root
 DB_PASSWORD=your_password
 DB_SCHEMA=portfolio_db
@@ -296,7 +296,7 @@ CONTACT_DUPLICATE_TTL_SECONDS=300
 
 서버 실행 후 다음 URL에서 API 문서를 확인할 수 있습니다:
 
-- **개발 환경**: `http://localhost:3001/api-docs`
+- **개발 환경**: `http://localhost:3333/api-docs`
 - **프로덕션**: `https://your-domain.com/api-docs`
 
 ### **주요 API 엔드포인트**
@@ -513,7 +513,7 @@ docker build -t portfolio-server .
 # 컨테이너 실행
 docker run -d \
   --name portfolio-server \
-  -p 3001:3001 \
+  -p 3333:3333 \
   -v /path/to/.env:/app/.env \
   portfolio-server
 ```
@@ -529,7 +529,7 @@ server {
     ssl_certificate_key /path/to/ssl/private.key;
 
     location /api {
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:3333;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -572,8 +572,8 @@ tail -f logs/$(date +%Y-%m-%d).log
 
 ```bash
 # API 테스트 (예시)
-curl -X GET http://localhost:3001/health
-curl -X GET http://localhost:3001/api/public/posts
+curl -X GET http://localhost:3333/health
+curl -X GET http://localhost:3333/api/public/posts
 ```
 
 ### **디버깅**
@@ -592,7 +592,7 @@ SLOW_REQUEST_MS=500 npm run dev
 
 ```bash
 # 서버 상태 확인
-curl http://localhost:3001/health
+curl http://localhost:3333/health
 ```
 
 응답 예시:

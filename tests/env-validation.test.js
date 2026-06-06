@@ -6,7 +6,7 @@ const { validateProductionEnv } = require('../utils/env-validation');
 const validProductionEnv = () => ({
     NODE_ENV: 'production',
     DB_HOST: 'db.internal',
-    DB_PORT: '3306',
+    DB_PORT: '3300',
     DB_USER: 'portfolio_user',
     DB_PASSWORD: 'real-database-password',
     DB_SCHEMA: 'portfolio_db',
@@ -72,7 +72,7 @@ test('production env validation rejects weak bootstrap credentials when provided
 test('production env validation rejects partially numeric DB_PORT values', () => {
     const result = validateProductionEnv({
         ...validProductionEnv(),
-        DB_PORT: '3306abc'
+        DB_PORT: '3300abc'
     });
 
     assert.equal(result.ok, false);

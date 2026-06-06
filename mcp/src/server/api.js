@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = 'http://localhost:3001/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:3333/api';
 
 async function apiGet(path, query = {}) {
     if (typeof fetch !== 'function') {

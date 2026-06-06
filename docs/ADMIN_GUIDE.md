@@ -344,7 +344,7 @@ export default function AdminLogin() {
 ```javascript
 // lib/admin-api.js
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/admin";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333/api/admin";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem("admin_token");

@@ -24,7 +24,7 @@ const { requestLoggingMiddleware } = require("./middleware/request-logging");
 const { notFoundHandler, errorHandler } = require("./middleware/error-handlers");
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3333;
 
 app.use(generalLimiter);
 configureCoreMiddleware(app);
