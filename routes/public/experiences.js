@@ -13,11 +13,11 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/experiences:
+ * /public/experiences:
  *   get:
  *     summary: 공개 경력 목록 조회
  *     tags: ['Public']
- * /api/public/experiences/timeline:
+ * /public/experiences/timeline:
  *   get:
  *     summary: 공개 타임라인 조회
  *     tags: ['Public']

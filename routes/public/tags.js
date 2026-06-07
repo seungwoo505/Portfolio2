@@ -16,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/tags:
+ * /public/tags:
  *   get:
  *     summary: 공개 태그 목록 조회
  *     tags: ['Public']

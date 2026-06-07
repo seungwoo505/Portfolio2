@@ -13,7 +13,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/interests:
+ * /public/interests:
  *   get:
  *     summary: 공개 관심사 목록 조회
  *     tags: ['Public']

@@ -7,7 +7,7 @@ const { authenticateToken, requirePermission } = require('../../middleware/auth'
 
 /**
  * @swagger
- * /api/admin/dashboard:
+ * /admin/dashboard:
  *   get:
  *     summary: 관리자 대시보드 통계
  *     description: 블로그, 프로젝트, 연락처 메시지, 관리자 활동 등의 통계 정보를 조회합니다.

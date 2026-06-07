@@ -8,7 +8,7 @@ const { normalizeSettingsPayload } = require('./settings/validation');
 
 /**
  * @swagger
- * /api/admin/settings:
+ * /admin/settings:
  *   get:
  *     summary: 사이트 설정 조회
  *     tags: ['Admin - Settings']

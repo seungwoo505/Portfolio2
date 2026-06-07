@@ -17,7 +17,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/ai/keywords:
+ * /admin/ai/keywords:
  *   post:
  *     summary: AI 기반 키워드 추출
  *     tags: ['Admin - AI']

@@ -108,56 +108,56 @@ npm start
 
 ### 개인 정보
 
-- `GET /api/public/profile` - 개인 정보 조회
-- `GET /api/admin/personal-info` - 관리자 개인 정보 조회
-- `PUT /api/admin/personal-info` - 개인 정보 수정
+- `GET /public/profile` - 개인 정보 조회
+- `GET /admin/personal-info` - 관리자 개인 정보 조회
+- `PUT /admin/personal-info` - 개인 정보 수정
 
 ### 소셜 링크
 
-- `GET /api/public/social-links` - 모든 소셜 링크 조회
-- `GET /api/admin/social-links` - 관리자 소셜 링크 조회
-- `POST /api/admin/social-links` - 소셜 링크 추가
-- `PUT /api/admin/social-links/:id` - 소셜 링크 수정
-- `DELETE /api/admin/social-links/:id` - 소셜 링크 삭제
+- `GET /public/social-links` - 모든 소셜 링크 조회
+- `GET /admin/social-links` - 관리자 소셜 링크 조회
+- `POST /admin/social-links` - 소셜 링크 추가
+- `PUT /admin/social-links/:id` - 소셜 링크 수정
+- `DELETE /admin/social-links/:id` - 소셜 링크 삭제
 
 ### 스킬
 
-- `GET /api/public/skills` - 모든 스킬 및 카테고리 조회
-- `GET /api/public/skills/featured` - 주요 스킬만 조회
-- `POST /api/admin/skills` - 새 스킬 추가
+- `GET /public/skills` - 모든 스킬 및 카테고리 조회
+- `GET /public/skills/featured` - 주요 스킬만 조회
+- `POST /admin/skills` - 새 스킬 추가
 
 ### 프로젝트
 
-- `GET /api/public/projects` - 프로젝트 목록 조회
-- `GET /api/public/projects/:slug` - 특정 프로젝트 상세 조회
-- `GET /api/admin/projects` - 관리자 프로젝트 목록 조회
-- `POST /api/admin/projects` - 새 프로젝트 생성
-- `GET /api/admin/projects/slug/:slug` - 관리자 프로젝트 상세 조회
-- `PUT /api/admin/projects/slug/:slug` - 프로젝트 수정
-- `DELETE /api/admin/projects/slug/:slug` - 프로젝트 삭제
+- `GET /public/projects` - 프로젝트 목록 조회
+- `GET /public/projects/:slug` - 특정 프로젝트 상세 조회
+- `GET /admin/projects` - 관리자 프로젝트 목록 조회
+- `POST /admin/projects` - 새 프로젝트 생성
+- `GET /admin/projects/slug/:slug` - 관리자 프로젝트 상세 조회
+- `PUT /admin/projects/slug/:slug` - 프로젝트 수정
+- `DELETE /admin/projects/slug/:slug` - 프로젝트 삭제
 
 ### 블로그
 
-- `GET /api/public/posts` - 블로그 포스트 목록
-- `GET /api/public/posts/:slug` - 특정 포스트 조회
-- `GET /api/admin/blog/posts` - 관리자 블로그 포스트 목록 조회
-- `POST /api/admin/blog/posts` - 새 포스트 생성
-- `GET /api/admin/blog/posts/slug/:slug` - 관리자 포스트 상세 조회
-- `PUT /api/admin/blog/posts/slug/:slug` - 포스트 수정
-- `PUT /api/admin/blog/posts/slug/:slug/publish` - 포스트 발행 상태 수정
-- `PUT /api/admin/blog/posts/slug/:slug/featured` - 포스트 추천 상태 수정
-- `DELETE /api/admin/blog/posts/slug/:slug` - 포스트 삭제
+- `GET /public/posts` - 블로그 포스트 목록
+- `GET /public/posts/:slug` - 특정 포스트 조회
+- `GET /admin/blog/posts` - 관리자 블로그 포스트 목록 조회
+- `POST /admin/blog/posts` - 새 포스트 생성
+- `GET /admin/blog/posts/slug/:slug` - 관리자 포스트 상세 조회
+- `PUT /admin/blog/posts/slug/:slug` - 포스트 수정
+- `PUT /admin/blog/posts/slug/:slug/publish` - 포스트 발행 상태 수정
+- `PUT /admin/blog/posts/slug/:slug/featured` - 포스트 추천 상태 수정
+- `DELETE /admin/blog/posts/slug/:slug` - 포스트 삭제
 
 ### 연락처
 
-- `POST /api/public/contact` - 연락처 메시지 전송
-- `GET /api/admin/contacts` - 연락처 메시지 조회
-- `PUT /api/admin/contacts/:id/read` - 연락처 읽음 처리
-- `DELETE /api/admin/contacts/:id` - 연락처 메시지 삭제
+- `POST /public/contact` - 연락처 메시지 전송
+- `GET /admin/contacts` - 연락처 메시지 조회
+- `PUT /admin/contacts/:id/read` - 연락처 읽음 처리
+- `DELETE /admin/contacts/:id` - 연락처 메시지 삭제
 
 ### 설정
 
-- `GET /api/public/settings` - 공개 사이트 설정 조회
+- `GET /public/settings` - 공개 사이트 설정 조회
 
 ### 헬스체크
 
@@ -171,9 +171,9 @@ npm start
 // pages/index.js - 홈페이지
 export async function getStaticProps() {
   const [personalInfo, featuredSkills, featuredProjects] = await Promise.all([
-    fetch(`${process.env.API_URL}/api/public/profile`).then((r) => r.json()),
-    fetch(`${process.env.API_URL}/api/public/skills/featured`).then((r) => r.json()),
-    fetch(`${process.env.API_URL}/api/public/projects?featured=true`).then((r) =>
+    fetch(`${process.env.API_URL}/public/profile`).then((r) => r.json()),
+    fetch(`${process.env.API_URL}/public/skills/featured`).then((r) => r.json()),
+    fetch(`${process.env.API_URL}/public/projects?featured=true`).then((r) =>
       r.json()
     ),
   ]);
@@ -192,7 +192,7 @@ export async function getStaticProps() {
 ```javascript
 // pages/projects/index.js - 프로젝트 목록
 export async function getStaticProps() {
-  const response = await fetch(`${process.env.API_URL}/api/public/projects`);
+  const response = await fetch(`${process.env.API_URL}/public/projects`);
   const { data: projects } = await response.json();
 
   return {
@@ -205,7 +205,7 @@ export async function getStaticProps() {
 ```javascript
 // pages/blog/[slug].js - 개별 블로그 포스트
 export async function getStaticPaths() {
-  const response = await fetch(`${process.env.API_URL}/api/public/posts`);
+  const response = await fetch(`${process.env.API_URL}/public/posts`);
   const { data: posts } = await response.json();
 
   const paths = posts.map((post) => ({
@@ -217,7 +217,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const response = await fetch(
-    `${process.env.API_URL}/api/public/posts/${params.slug}`
+    `${process.env.API_URL}/public/posts/${params.slug}`
   );
 
   if (!response.ok) {
@@ -236,7 +236,7 @@ export async function getStaticProps({ params }) {
 
 ```javascript
 // lib/api.js
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
 
 export const api = {
   // 개인 정보

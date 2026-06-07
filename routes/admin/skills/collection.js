@@ -16,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/skills:
+ * /admin/skills:
  *   get:
  *     summary: 기술 스택 목록 조회 (관리자)
  *     tags: ['Admin - Skills']

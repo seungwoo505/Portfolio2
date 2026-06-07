@@ -9,7 +9,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/logs/export:
+ * /admin/logs/export:
  *   get:
  *     summary: 활동 로그 CSV 내보내기
  *     tags: ['Admin - Logs']

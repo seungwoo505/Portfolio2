@@ -249,7 +249,7 @@ TRUST_PROXY=1
 
 `TRUST_PROXY`는 리버스 프록시 없이 직접 실행하면 `0`으로 둡니다. Nginx 같은 단일 프록시 뒤에서 운영할 때는 `1`로 설정해야 `req.ip`, 관리자 토큰 IP 검증, rate limit이 실제 클라이언트 IP 기준으로 동작합니다.
 
-`REQUEST_TIMEOUT`은 일반 API 요청 제한이고, `/api/admin/ai/*` 경로는 `AI_REQUEST_TIMEOUT`을 사용합니다. 라우트 내부 AI 호출은 `AI_ROUTE_TIMEOUT` 안에 끝나지 않으면 504로 응답합니다.
+`REQUEST_TIMEOUT`은 일반 API 요청 제한이고, `/admin/ai/*` 경로는 `AI_REQUEST_TIMEOUT`을 사용합니다. 라우트 내부 AI 호출은 `AI_ROUTE_TIMEOUT` 안에 끝나지 않으면 504로 응답합니다.
 
 운영 환경에서는 `ENABLE_VERBOSE_LOGS=false`를 유지하면 상세 디버그 로그가 출력되지 않습니다. `SLOW_REQUEST_MS`는 지정한 밀리초보다 오래 걸린 요청만 느린 요청 로그로 남깁니다.
 
@@ -297,7 +297,7 @@ CONTACT_DUPLICATE_TTL_SECONDS=300
 서버 실행 후 다음 URL에서 API 문서를 확인할 수 있습니다:
 
 - **개발 환경**: `http://localhost:3333/api-docs`
-- **프로덕션**: `https://your-domain.com/api-docs`
+- **프로덕션**: `https://api.your-domain.com/api-docs`
 
 ### **주요 API 엔드포인트**
 
@@ -305,83 +305,83 @@ CONTACT_DUPLICATE_TTL_SECONDS=300
 
 ```bash
 # 포트폴리오 정보
-GET /api/public/profile         # 개인 정보
-GET /api/public/social-links    # 소셜 링크
-GET /api/public/skills          # 기술 스택
-GET /api/public/skills/featured # 주요 기술 스택
-GET /api/public/projects        # 프로젝트 목록
-GET /api/public/projects/:slug  # 특정 프로젝트
-POST /api/public/projects/:slug/view # 프로젝트 조회수 증가
-GET /api/public/experiences     # 경력/경험
-GET /api/public/experiences/timeline # 타임라인
-GET /api/public/interests       # 관심사
+GET /public/profile         # 개인 정보
+GET /public/social-links    # 소셜 링크
+GET /public/skills          # 기술 스택
+GET /public/skills/featured # 주요 기술 스택
+GET /public/projects        # 프로젝트 목록
+GET /public/projects/:slug  # 특정 프로젝트
+POST /public/projects/:slug/view # 프로젝트 조회수 증가
+GET /public/experiences     # 경력/경험
+GET /public/experiences/timeline # 타임라인
+GET /public/interests       # 관심사
 
 # 블로그
-GET /api/public/posts           # 발행된 블로그 포스트
-GET /api/public/posts/:slug     # 특정 포스트
-GET /api/public/posts/tag/:tag  # 태그별 포스트
-POST /api/public/posts/:slug/view # 포스트 조회수 증가
+GET /public/posts           # 발행된 블로그 포스트
+GET /public/posts/:slug     # 특정 포스트
+GET /public/posts/tag/:tag  # 태그별 포스트
+POST /public/posts/:slug/view # 포스트 조회수 증가
 
 # 기타
-GET /api/public/tags            # 공개 태그
-GET /api/public/settings        # 공개 사이트 설정
-POST /api/public/contact        # 연락처 메시지
+GET /public/tags            # 공개 태그
+GET /public/settings        # 공개 사이트 설정
+POST /public/contact        # 연락처 메시지
 GET /health                     # 헬스체크
 ```
 
-기존 `/api/projects`, `/api/blog/posts` 등의 공개 경로는 제거되었습니다. 신규 프론트와 MCP는 `/api/public/*` 경로를 기준으로 연동합니다.
+기존 `/api/public/*`, `/api/admin/*` 경로 prefix는 제거되었습니다. 신규 프론트와 MCP는 `/public/*`, `/admin/*` 경로를 기준으로 연동합니다.
 
 #### ** 관리자 API (JWT 인증 필요)**
 
 ```bash
 # 인증
-POST /api/admin/login           # 관리자 로그인
-POST /api/admin/logout          # 로그아웃
-GET /api/admin/me               # 내 정보
-PUT /api/admin/password         # 비밀번호 변경
+POST /admin/login           # 관리자 로그인
+POST /admin/logout          # 로그아웃
+GET /admin/me               # 내 정보
+PUT /admin/password         # 비밀번호 변경
 
 # 대시보드
-GET /api/admin/dashboard        # 대시보드 통계
-GET /api/admin/logs             # 활동 로그
-GET /api/admin/logs/stats       # 활동 로그 통계
-GET /api/admin/logs/export      # 활동 로그 CSV
+GET /admin/dashboard        # 대시보드 통계
+GET /admin/logs             # 활동 로그
+GET /admin/logs/stats       # 활동 로그 통계
+GET /admin/logs/export      # 활동 로그 CSV
 
 # AI 도구
-POST /api/admin/ai/summarize    # AI 요약 생성
-POST /api/admin/ai/keywords     # AI 키워드 추출
+POST /admin/ai/summarize    # AI 요약 생성
+POST /admin/ai/keywords     # AI 키워드 추출
 
 # 블로그 관리
-GET /api/admin/blog/posts       # 모든 포스트 (비공개 포함)
-POST /api/admin/blog/posts      # 새 포스트 생성
-GET /api/admin/blog/posts/slug/:slug # 포스트 상세
-PUT /api/admin/blog/posts/slug/:slug # 포스트 수정
-DELETE /api/admin/blog/posts/slug/:slug # 포스트 삭제
-PUT /api/admin/blog/posts/slug/:slug/publish # 발행/비발행
-PUT /api/admin/blog/posts/slug/:slug/featured # 추천/추천해제
+GET /admin/blog/posts       # 모든 포스트 (비공개 포함)
+POST /admin/blog/posts      # 새 포스트 생성
+GET /admin/blog/posts/slug/:slug # 포스트 상세
+PUT /admin/blog/posts/slug/:slug # 포스트 수정
+DELETE /admin/blog/posts/slug/:slug # 포스트 삭제
+PUT /admin/blog/posts/slug/:slug/publish # 발행/비발행
+PUT /admin/blog/posts/slug/:slug/featured # 추천/추천해제
 
 # 프로젝트 관리
-GET /api/admin/projects         # 모든 프로젝트
-POST /api/admin/projects        # 새 프로젝트 생성
-GET /api/admin/projects/slug/:slug # 프로젝트 상세
-PUT /api/admin/projects/slug/:slug # 프로젝트 수정
-DELETE /api/admin/projects/slug/:slug # 프로젝트 삭제
+GET /admin/projects         # 모든 프로젝트
+POST /admin/projects        # 새 프로젝트 생성
+GET /admin/projects/slug/:slug # 프로젝트 상세
+PUT /admin/projects/slug/:slug # 프로젝트 수정
+DELETE /admin/projects/slug/:slug # 프로젝트 삭제
 
 # 프로필/소셜 링크 관리
-GET /api/admin/personal-info    # 개인 정보 조회
-PUT /api/admin/personal-info    # 개인 정보 수정
-GET /api/admin/social-links     # 소셜 링크 조회
-POST /api/admin/social-links    # 소셜 링크 생성
-PUT /api/admin/social-links/:id # 소셜 링크 수정
-DELETE /api/admin/social-links/:id # 소셜 링크 삭제
+GET /admin/personal-info    # 개인 정보 조회
+PUT /admin/personal-info    # 개인 정보 수정
+GET /admin/social-links     # 소셜 링크 조회
+POST /admin/social-links    # 소셜 링크 생성
+PUT /admin/social-links/:id # 소셜 링크 수정
+DELETE /admin/social-links/:id # 소셜 링크 삭제
 
 # 연락처 관리
-GET /api/admin/contacts         # 연락처 메시지
-PUT /api/admin/contacts/:id/read # 읽음 처리
-DELETE /api/admin/contacts/:id  # 연락처 메시지 삭제
+GET /admin/contacts         # 연락처 메시지
+PUT /admin/contacts/:id/read # 읽음 처리
+DELETE /admin/contacts/:id  # 연락처 메시지 삭제
 
 # 설정 관리
-GET /api/admin/settings         # 사이트 설정
-PUT /api/admin/settings         # 설정 업데이트
+GET /admin/settings         # 사이트 설정
+PUT /admin/settings         # 설정 업데이트
 ```
 
 ## 데이터베이스 스키마
@@ -528,7 +528,7 @@ server {
     ssl_certificate /path/to/ssl/certificate.crt;
     ssl_certificate_key /path/to/ssl/private.key;
 
-    location /api {
+    location / {
         proxy_pass http://localhost:3333;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -573,7 +573,7 @@ tail -f logs/$(date +%Y-%m-%d).log
 ```bash
 # API 테스트 (예시)
 curl -X GET http://localhost:3333/health
-curl -X GET http://localhost:3333/api/public/posts
+curl -X GET http://localhost:3333/public/posts
 ```
 
 ### **디버깅**
@@ -605,7 +605,7 @@ curl http://localhost:3333/health
 }
 ```
 
-메모리, 캐시, DB/Redis 상태 같은 상세 운영 정보는 인증이 필요한 `/api/monitoring/*` 엔드포인트에서 확인합니다.
+메모리, 캐시, DB/Redis 상태 같은 상세 운영 정보는 인증이 필요한 `/monitoring/*` 엔드포인트에서 확인합니다.
 
 ### **로그 관리**
 

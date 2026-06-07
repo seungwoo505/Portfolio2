@@ -10,7 +10,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/logout:
+ * /admin/logout:
  *   post:
  *     summary: 관리자 로그아웃
  *     tags: ['Admin - Auth']

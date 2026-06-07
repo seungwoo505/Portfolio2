@@ -20,7 +20,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/projects:
+ * /admin/projects:
  *   get:
  *     summary: 관리자 프로젝트 목록 조회
  *     tags: ['Admin - Projects']

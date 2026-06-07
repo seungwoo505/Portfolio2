@@ -16,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/users:
+ * /admin/users:
  *   get:
  *     summary: 관리자 계정 목록 조회
  *     tags: ['Admin - Users']

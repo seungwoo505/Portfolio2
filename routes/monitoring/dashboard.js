@@ -11,7 +11,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/monitoring/dashboard:
+ * /monitoring/dashboard:
  *   get:
  *     summary: 시스템 모니터링 대시보드
  *     tags: [Monitoring]

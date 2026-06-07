@@ -15,7 +15,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/projects/slug/{slug}:
+ * /admin/projects/slug/{slug}:
  *   get:
  *     summary: 프로젝트 상세 조회 (관리자)
  *     tags: ['Admin - Projects']

@@ -14,7 +14,7 @@ const AI_REQUEST_TIMEOUT = parseIntegerEnv(process.env.AI_REQUEST_TIMEOUT, {
 });
 
 const getRequestTimeout = (req) => (
-    req.originalUrl && req.originalUrl.startsWith("/api/admin/ai")
+    req.originalUrl && req.originalUrl.startsWith("/admin/ai")
         ? AI_REQUEST_TIMEOUT
         : REQUEST_TIMEOUT
 );

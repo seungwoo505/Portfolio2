@@ -17,7 +17,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/blog/posts:
+ * /admin/blog/posts:
  *   get:
  *     summary: 관리자 블로그 포스트 목록 조회
  *     tags: ['Admin - Blog']

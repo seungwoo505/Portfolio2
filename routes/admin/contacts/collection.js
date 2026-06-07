@@ -9,7 +9,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/contacts:
+ * /admin/contacts:
  *   get:
  *     summary: 문의 메시지 목록 조회
  *     tags: ['Admin - Contacts']

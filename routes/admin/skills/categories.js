@@ -14,14 +14,14 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/skills/categories:
+ * /admin/skills/categories:
  *   post:
  *     summary: 스킬 카테고리 생성
  *     tags: ['Admin - Skills']
  *   get:
  *     summary: 스킬 카테고리 목록 조회
  *     tags: ['Admin - Skills']
- * /api/admin/skills/categories/{id}:
+ * /admin/skills/categories/{id}:
  *   delete:
  *     summary: 스킬 카테고리 삭제
  *     tags: ['Admin - Skills']

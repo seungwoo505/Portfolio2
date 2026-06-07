@@ -11,7 +11,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/refresh:
+ * /admin/refresh:
  *   post:
  *     summary: 액세스 토큰 재발급
  *     tags: ['Admin - Auth']

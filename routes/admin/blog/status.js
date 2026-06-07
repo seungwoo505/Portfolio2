@@ -19,7 +19,7 @@ const sendRouteError = (res, error) => (
 
 /**
  * @swagger
- * /api/admin/blog/posts/slug/{slug}/publish:
+ * /admin/blog/posts/slug/{slug}/publish:
  *   put:
  *     summary: 블로그 포스트 발행 상태 변경
  *     tags: ['Admin - Blog']
@@ -83,7 +83,7 @@ router.put('/blog/posts/slug/:slug/publish',
 
 /**
  * @swagger
- * /api/admin/blog/posts/slug/{slug}/featured:
+ * /admin/blog/posts/slug/{slug}/featured:
  *   put:
  *     summary: 블로그 포스트 추천 상태 변경
  *     tags: ['Admin - Blog']

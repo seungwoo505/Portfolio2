@@ -11,7 +11,7 @@ const {
 
 /**
  * @swagger
- * /api/admin/upload/image:
+ * /admin/upload/image:
  *   post:
  *     summary: 이미지 업로드
  *     tags: ['Admin - Files']
@@ -34,7 +34,7 @@ const {
  *         description: 잘못된 요청
  *       500:
  *         description: 서버 오류
- * /api/admin/upload/image/{filename}:
+ * /admin/upload/image/{filename}:
  *   delete:
  *     summary: 업로드 이미지 삭제
  *     tags: ['Admin - Files']

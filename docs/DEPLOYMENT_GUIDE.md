@@ -213,7 +213,7 @@ server {
     client_max_body_size 10M;
 
     # API 프록시: TLS는 Nginx에서 종료하고 Node 서버는 내부 HTTP로 실행
-    location /api {
+    location / {
         proxy_pass http://localhost:3333;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -404,7 +404,7 @@ node --max-old-space-size=2048 server.js
 ```bash
 # API 엔드포인트 테스트
 curl https://yourdomain.com/health
-curl https://yourdomain.com/api/public/posts
+curl https://yourdomain.com/public/posts
 ```
 
 ### **2. 보안 테스트**

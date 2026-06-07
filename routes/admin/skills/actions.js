@@ -14,11 +14,11 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/skills/{id}/featured:
+ * /admin/skills/{id}/featured:
  *   patch:
  *     summary: 기술 추천 상태 변경
  *     tags: ['Admin - Skills']
- * /api/admin/skills/{id}/order:
+ * /admin/skills/{id}/order:
  *   patch:
  *     summary: 기술 표시 순서 변경
  *     tags: ['Admin - Skills']

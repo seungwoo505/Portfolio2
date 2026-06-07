@@ -3,9 +3,9 @@
 서버 로그는 Winston과 `winston-daily-rotate-file`을 사용합니다. 현재 포맷은 JSON 로그가 아니라 사람이 바로 읽기 쉬운 한 줄 로그입니다.
 
 ```text
-2026-05-25 14:30:25 INFO request.ok req=... method=GET path=/api/public/profile status=200 duration=12ms ip=...
-2026-05-25 14:31:10 WARN request.warn req=... method=POST path=/api/admin/login status=401 duration=43ms ip=...
-2026-05-25 14:32:03 ERROR 서버 오류 req=... method=POST path=/api/admin/projects status=500 details={...}
+2026-05-25 14:30:25 INFO request.ok req=... method=GET path=/public/profile status=200 duration=12ms ip=...
+2026-05-25 14:31:10 WARN request.warn req=... method=POST path=/admin/login status=401 duration=43ms ip=...
+2026-05-25 14:32:03 ERROR 서버 오류 req=... method=POST path=/admin/projects status=500 details={...}
 ```
 
 ## 로그 출력 위치
@@ -52,17 +52,17 @@
 ### 요청 요약
 
 ```text
-2026-05-25 14:30:25 INFO request.ok req=2b51... method=GET path=/api/public/profile status=200 duration=12ms ip=203.0.113.10
-2026-05-25 14:31:10 WARN request.warn req=91cc... method=POST path=/api/admin/login status=401 duration=43ms ip=203.0.113.10
-2026-05-25 14:32:40 WARN request.slow req=778a... method=GET path=/api/admin/dashboard status=200 duration=1250ms admin=admin#1
-2026-05-25 14:33:02 ERROR request.error req=3f2d... method=POST path=/api/admin/projects status=500 duration=80ms admin=admin#1
+2026-05-25 14:30:25 INFO request.ok req=2b51... method=GET path=/public/profile status=200 duration=12ms ip=203.0.113.10
+2026-05-25 14:31:10 WARN request.warn req=91cc... method=POST path=/admin/login status=401 duration=43ms ip=203.0.113.10
+2026-05-25 14:32:40 WARN request.slow req=778a... method=GET path=/admin/dashboard status=200 duration=1250ms admin=admin#1
+2026-05-25 14:33:02 ERROR request.error req=3f2d... method=POST path=/admin/projects status=500 duration=80ms admin=admin#1
 ```
 
 ### 보안 이벤트
 
 ```text
 2026-05-25 14:35:01 WARN security.warn details={"message":"로그인 실패 - 잘못된 비밀번호","username":"admin","ipAddress":"203.0.113.10"}
-2026-05-25 14:36:15 WARN Admin rate limit exceeded ip=203.0.113.10 details={"userAgent":"Mozilla/5.0","url":"/api/admin/users","method":"GET"}
+2026-05-25 14:36:15 WARN Admin rate limit exceeded ip=203.0.113.10 details={"userAgent":"Mozilla/5.0","url":"/admin/users","method":"GET"}
 ```
 
 ### 감사 로그
@@ -122,7 +122,7 @@ grep "audit.admin" logs/*.log
 grep "req=2b51" logs/*.log
 
 # 특정 경로 확인
-grep "path=/api/admin/login" logs/*.log
+grep "path=/admin/login" logs/*.log
 ```
 
 ## 일일 요약 예시

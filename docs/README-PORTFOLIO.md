@@ -6,7 +6,7 @@
 
 개인 포트폴리오를 위한 현대적인 풀스택 웹 애플리케이션입니다.
 
-🌐 **라이브 사이트**: [https://seungwoo.i234.me](https://seungwoo.i234.me) | 📚 **API 문서**: [https://seungwoo.i234.me:3333/api-docs](https://seungwoo.i234.me:3333/api-docs)
+🌐 **라이브 사이트**: [https://seungwoo.i234.me](https://seungwoo.i234.me) | 📚 **API 문서**: [https://api.seungwoo.i234.me/api-docs](https://api.seungwoo.i234.me/api-docs)
 
 ## 📋 목차
 
@@ -78,8 +78,8 @@ npm run dev
 ### 4. 접속
 
 - **프론트엔드**: http://localhost:3000 (개발) / https://seungwoo.i234.me (프로덕션)
-- **백엔드 API**: http://localhost:3333/api (개발) / https://seungwoo.i234.me:3333/api (프로덕션)
-- **API 문서**: http://localhost:3333/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
+- **백엔드 API**: http://localhost:3333 (개발) / https://api.seungwoo.i234.me (프로덕션)
+- **API 문서**: http://localhost:3333/api-docs (개발) / https://api.seungwoo.i234.me/api-docs (프로덕션)
 
 ## 📁 프로젝트 구조
 
@@ -162,9 +162,9 @@ pm2 start server.js
 
 ### API 문서
 
-- **Swagger UI**: http://localhost:3333/api-docs (개발) / https://seungwoo.i234.me:3333/api-docs (프로덕션)
+- **Swagger UI**: http://localhost:3333/api-docs (개발) / https://api.seungwoo.i234.me/api-docs (프로덕션)
 - **API 엔드포인트**:
-  - `GET /api/public/profile` - 개인 정보
-  - `GET /api/public/projects` - 프로젝트 목록
-  - `GET /api/public/posts` - 블로그 포스트
-  - `POST /api/public/contact` - 연락처 메시지
+  - `GET /public/profile` - 개인 정보
+  - `GET /public/projects` - 프로젝트 목록
+  - `GET /public/posts` - 블로그 포스트
+  - `POST /public/contact` - 연락처 메시지

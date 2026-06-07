@@ -15,7 +15,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/me:
+ * /admin/me:
  *   get:
  *     summary: 내 관리자 정보 조회
  *     tags: ['Admin - Profile']
@@ -76,7 +76,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 /**
  * @swagger
- * /api/admin/password:
+ * /admin/password:
  *   put:
  *     summary: 관리자 비밀번호 변경
  *     tags: ['Admin - Profile']

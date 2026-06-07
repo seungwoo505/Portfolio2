@@ -24,7 +24,7 @@ const sendRouteError = (res, error) => (
 
 /**
  * @swagger
- * /api/admin/blog/posts/slug/{slug}:
+ * /admin/blog/posts/slug/{slug}:
  *   get:
  *     summary: 블로그 포스트 상세 조회 (관리자)
  *     tags: ['Admin - Blog']

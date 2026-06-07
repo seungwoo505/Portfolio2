@@ -6,8 +6,8 @@
 
 - Node.js 18 이상
 - `portfolio-server` API가 실행 중이어야 합니다.
-- 기본 API 주소는 `http://localhost:3333/api`입니다.
-- MCP 도구는 신규 공개 API인 `/api/public/*` 경로를 호출합니다.
+- 기본 API 주소는 `http://localhost:3333`입니다.
+- MCP 도구는 신규 공개 API인 `/public/*` 경로를 호출합니다.
 
 ## 실행
 
@@ -19,7 +19,7 @@ npm start
 다른 API 주소를 쓰려면 환경 변수를 지정합니다.
 
 ```bash
-PORTFOLIO_API_BASE_URL=https://your-domain.com/api npm start
+PORTFOLIO_API_BASE_URL=https://your-domain.com npm start
 ```
 
 ## 제공 도구
@@ -44,7 +44,7 @@ PORTFOLIO_API_BASE_URL=https://your-domain.com/api npm start
         "/Users/seungwoo/Portfolio2/portfolio-server/mcp/src/server.js"
       ],
       "env": {
-        "PORTFOLIO_API_BASE_URL": "http://localhost:3333/api"
+        "PORTFOLIO_API_BASE_URL": "http://localhost:3333"
       }
     }
   }

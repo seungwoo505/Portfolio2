@@ -16,7 +16,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/contact:
+ * /public/contact:
  *   post:
  *     summary: 문의 메시지 접수
  *     tags: ['Public']

@@ -6,11 +6,11 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/skills:
+ * /public/skills:
  *   get:
  *     summary: 공개 기술 스택 조회
  *     tags: ['Public']
- * /api/public/skills/featured:
+ * /public/skills/featured:
  *   get:
  *     summary: 주요 기술 스택 조회
  *     tags: ['Public']

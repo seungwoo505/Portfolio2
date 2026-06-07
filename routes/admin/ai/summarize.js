@@ -18,7 +18,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/ai/summarize:
+ * /admin/ai/summarize:
  *   post:
  *     summary: AI 기반 요약 생성
  *     tags: ['Admin - AI']

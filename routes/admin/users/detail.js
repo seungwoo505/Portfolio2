@@ -55,7 +55,7 @@ router.get('/users/:id', ...superAdminOnly, async (req, res) => {
 
 /**
  * @swagger
- * /api/admin/users/{id}:
+ * /admin/users/{id}:
  *   put:
  *     summary: 관리자 계정 수정
  *     tags: ['Admin - Users']

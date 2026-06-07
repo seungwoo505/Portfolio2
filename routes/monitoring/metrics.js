@@ -10,7 +10,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/monitoring/metrics:
+ * /monitoring/metrics:
  *   get:
  *     summary: 시스템 메트릭 조회
  *     tags: [Monitoring]

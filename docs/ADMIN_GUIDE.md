@@ -64,28 +64,28 @@
 
 ```bash
 # 관리자 로그인
-POST /api/admin/login
+POST /admin/login
 {
     "username": "<관리자 사용자명>",
     "password": "<관리자 비밀번호>"
 }
 
 # 로그아웃
-POST /api/admin/logout
+POST /admin/logout
 # Headers: Authorization: Bearer <token>
 
 # 액세스 토큰 재발급
-POST /api/admin/refresh
+POST /admin/refresh
 {
     "refreshToken": "<refresh-token>"
 }
 
 # 내 정보 조회
-GET /api/admin/me
+GET /admin/me
 # Headers: Authorization: Bearer <token>
 
 # 비밀번호 변경
-PUT /api/admin/password
+PUT /admin/password
 {
     "oldPassword": "CurrentStrongPass!2026",
     "newPassword": "NewStrongPass!2026"
@@ -96,10 +96,10 @@ PUT /api/admin/password
 
 ```bash
 # 모든 관리자 조회
-GET /api/admin/users
+GET /admin/users
 
 # 새 관리자 생성
-POST /api/admin/users
+POST /admin/users
 {
     "username": "newadmin",
     "email": "admin@company.com",
@@ -109,7 +109,7 @@ POST /api/admin/users
 }
 
 # 관리자 정보 수정
-PUT /api/admin/users/:id
+PUT /admin/users/:id
 {
     "full_name": "수정된 이름",
     "role": "editor",
@@ -121,83 +121,83 @@ PUT /api/admin/users/:id
 
 ```bash
 # 대시보드 메인 통계
-GET /api/admin/dashboard
+GET /admin/dashboard
 
 # 활동 로그 조회
-GET /api/admin/logs?limit=50&page=1
+GET /admin/logs?limit=50&page=1
 
 # 활동 통계
-GET /api/admin/logs/stats?days=30
+GET /admin/logs/stats?days=30
 ```
 
 ###  **블로그 관리**
 
 ```bash
 # 모든 포스트 조회 (비공개 포함)
-GET /api/admin/blog/posts?limit=20&page=1
+GET /admin/blog/posts?limit=20&page=1
 
 # 포스트 상세 조회
-GET /api/admin/blog/posts/slug/:slug
+GET /admin/blog/posts/slug/:slug
 
 # 포스트 수정
-PUT /api/admin/blog/posts/slug/:slug
+PUT /admin/blog/posts/slug/:slug
 
 # 포스트 발행/발행취소
-PUT /api/admin/blog/posts/slug/:slug/publish
+PUT /admin/blog/posts/slug/:slug/publish
 {
     "is_published": true
 }
 
 # 포스트 추천/추천해제
-PUT /api/admin/blog/posts/slug/:slug/featured
+PUT /admin/blog/posts/slug/:slug/featured
 {
     "is_featured": true
 }
 
 # 포스트 삭제
-DELETE /api/admin/blog/posts/slug/:slug
+DELETE /admin/blog/posts/slug/:slug
 ```
 
 ###  **프로필 및 소셜 링크 관리**
 
 ```bash
 # 개인 정보 조회
-GET /api/admin/personal-info
+GET /admin/personal-info
 
 # 개인 정보 수정
-PUT /api/admin/personal-info
+PUT /admin/personal-info
 
 # 소셜 링크 조회
-GET /api/admin/social-links
+GET /admin/social-links
 
 # 소셜 링크 생성
-POST /api/admin/social-links
+POST /admin/social-links
 
 # 소셜 링크 수정
-PUT /api/admin/social-links/:id
+PUT /admin/social-links/:id
 
 # 소셜 링크 삭제
-DELETE /api/admin/social-links/:id
+DELETE /admin/social-links/:id
 ```
 
 ###  **연락처 관리**
 
 ```bash
 # 모든 메시지 조회
-GET /api/admin/contacts?limit=50&unread=true
+GET /admin/contacts?limit=50&unread=true
 
 # 메시지 읽음 처리
-PUT /api/admin/contacts/:id/read
+PUT /admin/contacts/:id/read
 ```
 
 ###  **사이트 설정**
 
 ```bash
 # 모든 설정 조회
-GET /api/admin/settings
+GET /admin/settings
 
 # 설정 업데이트
-PUT /api/admin/settings
+PUT /admin/settings
 {
     "settings": {
         "site_title": {
@@ -295,7 +295,7 @@ export default function AdminLogin() {
     e.preventDefault();
 
     try {
-      const response = await fetch("/api/admin/login", {
+      const response = await fetch("/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
@@ -344,7 +344,7 @@ export default function AdminLogin() {
 ```javascript
 // lib/admin-api.js
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333/api/admin";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333/admin";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem("admin_token");

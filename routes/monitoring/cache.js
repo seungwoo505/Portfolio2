@@ -14,7 +14,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/monitoring/cache/clear:
+ * /monitoring/cache/clear:
  *   post:
  *     summary: 캐시 초기화
  *     tags: [Monitoring]

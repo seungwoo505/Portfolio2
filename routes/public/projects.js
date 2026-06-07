@@ -19,15 +19,15 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/projects:
+ * /public/projects:
  *   get:
  *     summary: 공개 프로젝트 목록 조회
  *     tags: ['Public']
- * /api/public/projects/{slug}:
+ * /public/projects/{slug}:
  *   get:
  *     summary: 공개 프로젝트 상세 조회
  *     tags: ['Public']
- * /api/public/projects/{slug}/view:
+ * /public/projects/{slug}/view:
  *   post:
  *     summary: 프로젝트 조회수 증가
  *     tags: ['Public']

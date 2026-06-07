@@ -38,11 +38,11 @@ app.get("/health", (req, res) => {
     res.json(buildHealthResponse());
 });
 
-app.use("/api/public/contact", contactLimiter);
-app.use("/api/public", publicRoutes);
-app.use("/api/admin/login", loginLimiter);
-app.use("/api/admin", adminLimiter, adminRoutes);
-app.use("/api/monitoring", monitoringRoutes);
+app.use("/public/contact", contactLimiter);
+app.use("/public", publicRoutes);
+app.use("/admin/login", loginLimiter);
+app.use("/admin", adminLimiter, adminRoutes);
+app.use("/monitoring", monitoringRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

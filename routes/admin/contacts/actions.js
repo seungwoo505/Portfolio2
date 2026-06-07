@@ -8,11 +8,11 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/contacts/{id}/read:
+ * /admin/contacts/{id}/read:
  *   put:
  *     summary: 문의 메시지 읽음 처리
  *     tags: ['Admin - Contacts']
- * /api/admin/contacts/{id}:
+ * /admin/contacts/{id}:
  *   delete:
  *     summary: 문의 메시지 삭제
  *     tags: ['Admin - Contacts']

@@ -8,15 +8,15 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/public/profile:
+ * /public/profile:
  *   get:
  *     summary: 공개 프로필 조회
  *     tags: ['Public']
- * /api/public/settings:
+ * /public/settings:
  *   get:
  *     summary: 공개 사이트 설정 조회
  *     tags: ['Public']
- * /api/public/social-links:
+ * /public/social-links:
  *   get:
  *     summary: 공개 소셜 링크 조회
  *     tags: ['Public']

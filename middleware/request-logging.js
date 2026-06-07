@@ -4,7 +4,7 @@ const requestLoggingMiddleware = (req, res, next) => {
     const start = Date.now();
     res.on("finish", () => {
         const duration = Date.now() - start;
-        const isAdminApi = req.path.startsWith("/api/admin");
+        const isAdminApi = req.path.startsWith("/admin");
         const isDataModifying = ["POST", "PUT", "DELETE", "PATCH"].includes(req.method);
         const isAuthEndpoint = req.path.includes("/login") || req.path.includes("/logout");
         const isSlow = duration >= logger.getSlowRequestMs();

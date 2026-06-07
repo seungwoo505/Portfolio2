@@ -12,7 +12,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/tags:
+ * /admin/tags:
  *   get:
  *     summary: 태그 목록 조회 (관리자)
  *     tags: ['Admin - Tags']
