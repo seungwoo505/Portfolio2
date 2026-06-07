@@ -54,6 +54,9 @@ jspm_packages/
 .env.test
 .env.production
 
+# Local-only MCP tools
+mcp-db/
+
 # parcel-bundler cache
 .cache
 .parcel-cache
