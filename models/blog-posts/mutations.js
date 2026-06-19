@@ -5,6 +5,18 @@ const {
     executeTransaction
 } = require('./common');
 
+const serializeContentJson = (value) => {
+    if (value === undefined) return undefined;
+    if (value === null || value === '') return null;
+    if (typeof value === 'string') return value;
+    return JSON.stringify(value);
+};
+
+const calculateReadingTime = (content) => {
+    const words = String(content || '').split(/\s+/).filter(Boolean);
+    return Math.max(1, Math.ceil(words.length / 200));
+};
+
 module.exports = {
     /**
      * @description 블로그 글을 생성하는 내부 헬퍼.
@@ -12,7 +24,7 @@ module.exports = {
      * @returns {Promise<number>} 생성된 글 ID
      */
     async _create(data) {
-        const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
+        const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         const uuid = crypto.randomUUID();
 
         return await executeTransaction(async (connection) => {
@@ -28,15 +40,15 @@ module.exports = {
                 ))
             });
 
-            const reading_time = Math.ceil(content.split(' ').length / 200);
+            const reading_time = calculateReadingTime(content_text || content);
 
             const query = `
-                INSERT INTO blog_posts (uuid, title, slug, excerpt, content, featured_image, is_published, is_featured, reading_time, meta_title, meta_description, meta_keywords, published_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO blog_posts (uuid, title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, reading_time, meta_title, meta_description, meta_keywords, published_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
             const published_at = is_published ? new Date() : null;
-            const result = await db.query(query, [uuid, title, finalSlug, excerpt, content, featured_image, is_published || false, is_featured || false, reading_time, meta_title, meta_description, meta_keywords, published_at]);
+            const result = await db.query(query, [uuid, title, finalSlug, excerpt, content, serializeContentJson(content_json), content_html, content_text, featured_image, is_published || false, is_featured || false, reading_time, meta_title, meta_description, meta_keywords, published_at]);
 
             if (tags && tags.length > 0) {
                 await this.updateTags(result.insertId, tags, db);
@@ -53,7 +65,7 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async _update(id, data) {
-        const { title, slug, excerpt, content, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
+        const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
 
         await executeTransaction(async (connection) => {
             const db = createQueryContext(connection);
@@ -86,6 +98,9 @@ module.exports = {
                 pushField('slug', finalSlug);
             }
             pushField('excerpt', excerpt);
+            pushField('content_json', serializeContentJson(content_json));
+            pushField('content_html', content_html);
+            pushField('content_text', content_text);
             pushField('featured_image', featured_image);
             pushField('is_published', is_published);
             pushField('is_featured', is_featured);
@@ -95,7 +110,7 @@ module.exports = {
 
             if (content !== undefined) {
                 pushField('content', content);
-                pushField('reading_time', content ? Math.ceil(content.split(' ').length / 200) : null);
+                pushField('reading_time', content ? calculateReadingTime(content_text || content) : null);
             }
 
             if (is_published !== undefined) {

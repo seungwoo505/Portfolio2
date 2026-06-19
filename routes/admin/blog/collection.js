@@ -10,8 +10,11 @@ const {
     logger,
     parsePagination,
     requirePermission,
-    trimStringFields
 } = require('./common');
+const {
+    hasUsableContent,
+    normalizeBlogContentFields
+} = require('./payload');
 
 const router = express.Router();
 
@@ -91,9 +94,9 @@ router.post('/blog/posts',
     logActivity('create_blog_post'),
     async (req, res) => {
         try {
-            const body = trimStringFields(getPlainBody(req), ['title', 'content']);
+            const body = normalizeBlogContentFields(getPlainBody(req));
 
-            if (!hasRequiredStringFields(body, ['title', 'content'])) {
+            if (!hasRequiredStringFields(body, ['title']) || !hasUsableContent(body)) {
                 return res.status(400).json({
                     success: false,
                     message: '제목과 내용은 필수입니다.'

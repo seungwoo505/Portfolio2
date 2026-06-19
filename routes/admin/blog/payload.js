@@ -4,10 +4,27 @@ const {
     trimStringFields
 } = require('./common');
 
-const blogRequiredStringFields = ['title', 'content'];
+const hasUsableContent = (body) => (
+    (typeof body.content === 'string' && body.content.trim().length > 0)
+    || (typeof body.content_text === 'string' && body.content_text.trim().length > 0)
+);
+
+const normalizeBlogContentFields = (body) => {
+    const normalizedBody = trimStringFields(body, ['title', 'content', 'content_text']);
+
+    if (
+        (typeof normalizedBody.content !== 'string' || normalizedBody.content.trim().length === 0)
+        && typeof normalizedBody.content_text === 'string'
+        && normalizedBody.content_text.trim().length > 0
+    ) {
+        normalizedBody.content = normalizedBody.content_text;
+    }
+
+    return normalizedBody;
+};
 
 const normalizeBlogUpdatePayload = (req) => {
-    const body = trimStringFields(getPlainBody(req), blogRequiredStringFields);
+    const body = normalizeBlogContentFields(getPlainBody(req));
 
     if (Object.keys(body).length === 0) {
         return {
@@ -15,7 +32,13 @@ const normalizeBlogUpdatePayload = (req) => {
         };
     }
 
-    if (hasInvalidProvidedStringFields(body, blogRequiredStringFields)) {
+    if (hasInvalidProvidedStringFields(body, ['title'])) {
+        return {
+            error: '제목과 내용은 비어 있을 수 없습니다.'
+        };
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'content') && !hasUsableContent(body)) {
         return {
             error: '제목과 내용은 비어 있을 수 없습니다.'
         };
@@ -25,5 +48,7 @@ const normalizeBlogUpdatePayload = (req) => {
 };
 
 module.exports = {
+    hasUsableContent,
+    normalizeBlogContentFields,
     normalizeBlogUpdatePayload
 };

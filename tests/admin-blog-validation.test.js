@@ -27,6 +27,34 @@ test('admin blog create rejects blank required strings', async () => {
     assert.equal(createCalled, false);
 });
 
+test('admin blog create accepts block content text without legacy markdown', async () => {
+    let createPayload = null;
+    const router = loadAdminRoute(['routes', 'admin', 'blog.js'], [{
+        segments: ['models', 'blog-posts.js'],
+        moduleExports: {
+            create: async (payload) => {
+                createPayload = payload;
+                return 1;
+            },
+            getById: async () => ({ id: 1 })
+        }
+    }]);
+
+    const { status } = await requestJson(router, '/blog/posts', {
+        method: 'POST',
+        body: {
+            title: '블록 글',
+            content: '',
+            content_text: '블록 에디터 본문',
+            content_json: [{ type: 'paragraph', content: '블록 에디터 본문' }]
+        }
+    });
+
+    assert.equal(status, 201);
+    assert.equal(createPayload.content, '블록 에디터 본문');
+    assert.equal(createPayload.content_text, '블록 에디터 본문');
+});
+
 test('admin blog delete rejects malformed slug before model calls', async () => {
     let getBySlugAdminCalled = false;
     const router = loadAdminRoute(['routes', 'admin', 'blog.js'], [{
