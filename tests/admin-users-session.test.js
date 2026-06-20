@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const bcrypt = require('bcryptjs');
 const { createAdminUsersFixture } = require('./helpers/admin-auth-fixture');
 
 test('AdminUsers.login creates a server session with a hashed refresh token', async () => {
@@ -144,4 +145,30 @@ test('AdminUsers.update can explicitly clear nullable profile fields', async () 
     assert.equal(updateCall.sql.includes('is_active = ?'), true);
     assert.equal(updateCall.sql.includes('username = ?'), false);
     assert.deepEqual(updateCall.params, [null, false, 1]);
+});
+
+test('AdminUsers.update hashes password and revokes active sessions', async () => {
+    const { AdminUsers, queryCalls, sessions } = await createAdminUsersFixture();
+    sessions.push({
+        session_id: 'active-session',
+        admin_id: 1,
+        refresh_token_hash: 'active-token',
+        expires_at: new Date(Date.now() + 100000),
+        revoked_at: null
+    });
+
+    await AdminUsers.update(1, {
+        password: 'NewStrongPass123'
+    });
+
+    const updateCall = queryCalls.find((call) => (
+        call.sql.startsWith('update admin_users') && call.sql.includes('password_hash = ?')
+    ));
+
+    assert.ok(updateCall);
+    assert.equal(updateCall.params.length, 2);
+    assert.notEqual(updateCall.params[0], 'NewStrongPass123');
+    assert.equal(await bcrypt.compare('NewStrongPass123', updateCall.params[0]), true);
+    assert.equal(updateCall.params[1], 1);
+    assert.equal(sessions[0].revoked_at instanceof Date, true);
 });

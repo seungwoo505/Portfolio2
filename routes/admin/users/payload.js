@@ -72,6 +72,13 @@ const validateUpdateUserPayload = (body) => {
         return '활성 상태는 boolean 값이어야 합니다.';
     }
 
+    if (Object.prototype.hasOwnProperty.call(body, 'password')) {
+        const passwordPolicyError = getPasswordPolicyError(body.password);
+        if (passwordPolicyError) {
+            return passwordPolicyError;
+        }
+    }
+
     return null;
 };
 

@@ -86,12 +86,20 @@ module.exports = {
         ];
         const updateFields = [];
         const updateValues = [];
+        let shouldRevokeSessions = false;
 
         for (const field of allowedFields) {
             if (hasOwn(data, field) && data[field] !== undefined) {
                 updateFields.push(`${field} = ?`);
                 updateValues.push(data[field]);
             }
+        }
+
+        if (hasOwn(data, 'password') && data.password !== undefined) {
+            const passwordHash = await bcrypt.hash(data.password, 10);
+            updateFields.push('password_hash = ?');
+            updateValues.push(passwordHash);
+            shouldRevokeSessions = true;
         }
 
         if (updateFields.length === 0) {
@@ -105,6 +113,10 @@ module.exports = {
             `UPDATE admin_users SET ${updateFields.join(', ')} WHERE id = ?`,
             updateValues
         );
+
+        if (shouldRevokeSessions) {
+            await this.revokeUserSessions(id);
+        }
 
         return await this.getById(id);
     },

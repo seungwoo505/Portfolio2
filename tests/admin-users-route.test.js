@@ -127,6 +127,51 @@ test('admin user update normalizes boolean-like active status', async () => {
     }]);
 });
 
+test('admin user update forwards strong password changes', async () => {
+    const updatedPayloads = [];
+    const router = loadUsersRoute({
+        getById: async (id) => ({ id }),
+        update: async (_id, payload) => {
+            updatedPayloads.push(payload);
+            return { id: 5 };
+        }
+    });
+
+    const { status } = await requestJson(router, '/users/5', {
+        method: 'PUT',
+        body: {
+            password: 'NewStrongPass123'
+        }
+    });
+
+    assert.equal(status, 200);
+    assert.deepEqual(updatedPayloads, [{
+        password: 'NewStrongPass123'
+    }]);
+});
+
+test('admin user update rejects weak passwords before model call', async () => {
+    let updateCalled = false;
+    const router = loadUsersRoute({
+        getById: async (id) => ({ id }),
+        update: async () => {
+            updateCalled = true;
+            return { id: 5 };
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/users/5', {
+        method: 'PUT',
+        body: {
+            password: 'short'
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '비밀번호는 최소 12자 이상이어야 합니다.');
+    assert.equal(updateCalled, false);
+});
+
 test('admin user update rejects invalid ids before model calls', async () => {
     let getByIdCalled = false;
     let updateCalled = false;
