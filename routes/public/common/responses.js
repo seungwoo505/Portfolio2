@@ -1,5 +1,11 @@
 const logger = require('../../../log');
 const {
+    sendBadRequest,
+    sendNotFound,
+    sendServerError,
+    sendSuccess
+} = require('../../../utils/api-response');
+const {
     PUBLIC_HTTP_MAX_AGE_SECONDS,
     PUBLIC_HTTP_STALE_SECONDS
 } = require('./config');
@@ -13,25 +19,15 @@ const setPublicCacheHeaders = (res) => {
 
 const ok = (res, data, extra = {}) => {
     setPublicCacheHeaders(res);
-    return res.json({
-        success: true,
-        data,
-        ...extra
-    });
+    return sendSuccess(res, data, extra);
 };
 
 const notFound = (res, message = '요청한 공개 리소스를 찾을 수 없습니다.') => (
-    res.status(404).json({
-        success: false,
-        message
-    })
+    sendNotFound(res, message)
 );
 
 const badRequest = (res, message) => (
-    res.status(400).json({
-        success: false,
-        message
-    })
+    sendBadRequest(res, message)
 );
 
 const fail = (res, error, req, message) => {
@@ -43,10 +39,7 @@ const fail = (res, error, req, message) => {
         stack: error.stack
     });
 
-    return res.status(500).json({
-        success: false,
-        message
-    });
+    return sendServerError(res, message);
 };
 
 module.exports = {

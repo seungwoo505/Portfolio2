@@ -79,9 +79,14 @@ const swaggerComponents = {
                     type: "boolean",
                     example: false
                 },
-                error: {
+                message: {
                     type: "string",
                     example: "에러 메시지"
+                },
+                error: {
+                    type: "string",
+                    example: "에러 메시지",
+                    deprecated: true
                 }
             }
         },

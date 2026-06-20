@@ -1,5 +1,6 @@
 const logger = require("../log");
 const { parseIntegerEnv } = require("../utils/env-number");
+const { sendError } = require("../utils/api-response");
 
 const REQUEST_TIMEOUT = parseIntegerEnv(process.env.REQUEST_TIMEOUT, {
     fallback: 2000,
@@ -34,9 +35,8 @@ const requestTimeoutMiddleware = (req, res, next) => {
                 timeout: requestTimeout
             });
 
-            res.status(408).json({
-                success: false,
-                error: "요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.",
+            sendError(res, 408, "요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.", {
+                error: true,
                 timeout: requestTimeout
             });
         }

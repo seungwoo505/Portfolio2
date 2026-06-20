@@ -25,6 +25,7 @@ const {
 } = require("./middleware/request-timeout");
 const { requestLoggingMiddleware } = require("./middleware/request-logging");
 const { notFoundHandler, errorHandler } = require("./middleware/error-handlers");
+const { apiResponseNormalizer } = require("./utils/api-response");
 
 const app = express();
 const port = process.env.PORT || 3333;
@@ -36,6 +37,7 @@ configureSecurityMiddleware(app);
 mountStaticAssets(app);
 mountSwaggerDocs(app, { port });
 app.use(requestLoggingMiddleware);
+app.use(apiResponseNormalizer);
 
 app.get("/health", (req, res) => {
     res.json(buildHealthResponse());

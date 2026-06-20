@@ -6,6 +6,7 @@ const {
     uploadImageDir
 } = require('./paths');
 const { validateImageFile } = require('./validation');
+const { sendError } = require('../api-response');
 
 const defaultUploadMaxFileSize = 5 * 1024 * 1024;
 const uploadMaxFileSize = parseIntegerEnv(process.env.UPLOAD_MAX_FILE_SIZE, {
@@ -55,10 +56,7 @@ const sendUploadError = (res, error) => {
         ? `이미지 파일 크기는 ${Math.floor(uploadMaxFileSize / 1024 / 1024)}MB를 초과할 수 없습니다.`
         : error.message || '이미지 업로드 요청이 올바르지 않습니다.';
 
-    return res.status(statusCode).json({
-        success: false,
-        message
-    });
+    return sendError(res, statusCode, message);
 };
 
 const uploadImage = (req, res, next) => {

@@ -2,6 +2,7 @@ const rateLimit = require("express-rate-limit");
 const logger = require("../log");
 const { getRetryAfterSeconds } = require("../utils/rate-limit");
 const { parseIntegerEnv } = require("../utils/env-number");
+const { sendTooManyRequests } = require("../utils/api-response");
 
 const CONTACT_RATE_LIMIT_MAX = parseIntegerEnv(process.env.CONTACT_RATE_LIMIT_MAX, {
     fallback: 5,
@@ -49,8 +50,7 @@ const createRateLimitHandler = ({
         includeUserAgent
     }));
 
-    res.status(429).json({
-        success: false,
+    sendTooManyRequests(res, error, {
         error,
         retryAfter: getRetryAfterSeconds(req.rateLimit, retryAfterSeconds)
     });

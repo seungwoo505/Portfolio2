@@ -1,10 +1,9 @@
 const logger = require("../log");
 const { buildErrorResponse } = require("../utils/error-response");
+const { sendJson, sendNotFound } = require("../utils/api-response");
 
 const notFoundHandler = (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "요청하신 리소스를 찾을 수 없습니다.",
+    sendNotFound(res, "요청하신 리소스를 찾을 수 없습니다.", {
         path: req.originalUrl
     });
 };
@@ -31,7 +30,7 @@ const errorHandler = (error, req, res, next) => {
         logger.error("서버 오류", errorInfo);
     }
 
-    res.status(errorResponse.statusCode).json(errorResponse.body);
+    sendJson(res, errorResponse.statusCode, errorResponse.body);
 };
 
 module.exports = {

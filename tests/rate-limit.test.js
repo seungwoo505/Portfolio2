@@ -113,6 +113,8 @@ test('public, AI, and monitoring limiters count successful requests', async () =
                 assert.equal(first.body.success, true);
                 assert.equal(second.status, 429);
                 assert.equal(second.body.success, false);
+                assert.equal(typeof second.body.message, 'string');
+                assert.equal(second.body.message.length > 0, true);
                 assert.equal(typeof second.body.retryAfter, 'number');
             });
         }
