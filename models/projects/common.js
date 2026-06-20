@@ -31,7 +31,7 @@ const normalizeOptionalUrl = (value) => (value === '' ? null : value);
 const mapProjectListItem = (project) => ({
     ...project,
     featured: Boolean(project.is_featured),
-    long_description: project.content || project.detailed_description,
+    long_description: project.content_text || project.content || project.detailed_description,
     skills: project.skills ? project.skills.split(',') : [],
     tags: project.tags ? project.tags.split(',') : [],
     images: project.images ? project.images.split(',') : []

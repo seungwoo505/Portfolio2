@@ -5,7 +5,7 @@ const {
     getPlainBody,
     hasInvalidProvidedStringFields,
     logger,
-    normalizeUndefinedFields,
+    normalizeProjectContentFields,
     parseSlugParam,
     trimStringFields,
     verboseDebug
@@ -34,7 +34,17 @@ const parseProjectUpdateRequest = (req) => {
         };
     }
 
-    if (hasInvalidProvidedStringFields(body, ['title', 'description'])) {
+    const hasProjectDescription = [
+        body.description,
+        body.excerpt,
+        body.meta_description,
+        body.content_text,
+        body.content
+    ].some((value) => typeof value === 'string' && value.trim());
+    const hasInvalidTitle = hasInvalidProvidedStringFields(body, ['title']);
+    const hasInvalidDescription = hasInvalidProvidedStringFields(body, ['description']);
+
+    if (hasInvalidTitle || (hasInvalidDescription && !hasProjectDescription)) {
         return {
             error: {
                 statusCode: 400,
@@ -43,7 +53,7 @@ const parseProjectUpdateRequest = (req) => {
         };
     }
 
-    const sanitizedData = normalizeUndefinedFields(body);
+    const sanitizedData = normalizeProjectContentFields(body);
     verboseDebug('프로젝트 수정 - 원본 데이터:', body);
     verboseDebug('프로젝트 수정 - 정규화된 데이터:', sanitizedData);
     verboseDebug('프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));

@@ -30,6 +30,33 @@ test('admin project create trims required strings before model call', async () =
     }]);
 });
 
+test('admin project create accepts block content text without explicit description', async () => {
+    const createdPayloads = [];
+    const router = loadAdminRoute(['routes', 'admin', 'projects.js'], [{
+        segments: ['models', 'projects.js'],
+        moduleExports: {
+            create: async (payload) => {
+                createdPayloads.push(payload);
+                return 4;
+            },
+            getById: async (id) => ({ id })
+        }
+    }]);
+
+    const { status } = await requestJson(router, '/projects', {
+        method: 'POST',
+        body: {
+            title: '블록 프로젝트',
+            content_text: '블록 기반 프로젝트 설명입니다.',
+            content_html: '<p>블록 기반 프로젝트 설명입니다.</p>'
+        }
+    });
+
+    assert.equal(status, 201);
+    assert.equal(createdPayloads[0].description, '블록 기반 프로젝트 설명입니다.');
+    assert.equal(createdPayloads[0].content_html, '<p>블록 기반 프로젝트 설명입니다.</p>');
+});
+
 test('admin project detail rejects malformed slug before model calls', async () => {
     let getBySlugCalled = false;
     const router = loadAdminRoute(['routes', 'admin', 'projects.js'], [{

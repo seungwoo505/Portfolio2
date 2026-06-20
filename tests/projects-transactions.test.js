@@ -21,6 +21,28 @@ test('Projects.create writes the project and tags inside one transaction connect
     assert.equal(fixture.operations.some((operation) => operation.sql.startsWith('pool:')), false);
 });
 
+test('Projects.create stores block content fields', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.create({
+        title: 'Block Project',
+        description: '블록 프로젝트',
+        content: '# Legacy',
+        content_json: [{ type: 'paragraph', content: '블록 내용' }],
+        content_html: '<p>블록 내용</p>',
+        content_text: '블록 내용'
+    });
+
+    const insertQuery = fixture.operations.find((operation) => operation.sql.includes('insert into projects'));
+    assert.ok(insertQuery);
+    assert.equal(insertQuery.sql.includes('content_json'), true);
+    assert.equal(insertQuery.sql.includes('content_html'), true);
+    assert.equal(insertQuery.sql.includes('content_text'), true);
+    assert.equal(insertQuery.params[5], JSON.stringify([{ type: 'paragraph', content: '블록 내용' }]));
+    assert.equal(insertQuery.params[6], '<p>블록 내용</p>');
+    assert.equal(insertQuery.params[7], '블록 내용');
+});
+
 test('Projects.getAll binds pagination values instead of interpolating them', async () => {
     const fixture = createModelFixture(['models', 'projects.js']);
 
@@ -71,6 +93,28 @@ test('Projects.update can explicitly clear demo_url through project_url', async 
     assert.ok(updateQuery);
     assert.equal(updateQuery.sql.includes('demo_url = ?'), true);
     assert.deepEqual(updateQuery.params, [null, 20]);
+});
+
+test('Projects.update can store block content fields', async () => {
+    const fixture = createModelFixture(['models', 'projects.js']);
+
+    await fixture.model.update(20, {
+        content_json: [{ type: 'paragraph', content: '수정 내용' }],
+        content_html: '<p>수정 내용</p>',
+        content_text: '수정 내용'
+    });
+
+    const updateQuery = fixture.operations.find((operation) => operation.sql.startsWith('update projects set'));
+    assert.ok(updateQuery);
+    assert.equal(updateQuery.sql.includes('content_json = ?'), true);
+    assert.equal(updateQuery.sql.includes('content_html = ?'), true);
+    assert.equal(updateQuery.sql.includes('content_text = ?'), true);
+    assert.deepEqual(updateQuery.params, [
+        JSON.stringify([{ type: 'paragraph', content: '수정 내용' }]),
+        '<p>수정 내용</p>',
+        '수정 내용',
+        20
+    ]);
 });
 
 test('Projects.update normalizes string tags and can clear all tags', async () => {

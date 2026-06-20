@@ -7,6 +7,18 @@ const {
     toCsvStringArray
 } = require('./common');
 
+const serializeContentJson = (value) => {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    return JSON.stringify(value);
+};
+
 module.exports = {
     /**
      * @description 새 프로젝트를 생성하고 생성된 ID를 반환한다.
@@ -14,7 +26,7 @@ module.exports = {
      * @returns {Promise<number>} 신규 프로젝트 ID
      */
     async create(data) {
-        const { title, slug: providedSlug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        const { title, slug: providedSlug, description, detailed_description, content, content_json, content_html, content_text, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         const finalDemoUrl = demo_url || project_url;
 
         return await executeTransaction(async (connection) => {
@@ -36,6 +48,9 @@ module.exports = {
                 description || null,
                 detailed_description || null,
                 content || null,
+                serializeContentJson(content_json),
+                content_html || null,
+                content_text || null,
                 excerpt || null,
                 meta_description || null,
                 thumbnail_image || null,
@@ -53,8 +68,8 @@ module.exports = {
             ];
 
             const query = `
-                INSERT INTO projects (title, slug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO projects (title, slug, description, detailed_description, content, content_json, content_html, content_text, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             const result = await db.query(query, sanitizedData);
             const projectId = result.insertId;
@@ -75,7 +90,7 @@ module.exports = {
      * @returns {Promise<Object>} 갱신된 프로젝트 정보
      */
     async update(id, data) {
-        const { title, slug: providedSlug, description, detailed_description, content, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
+        const { title, slug: providedSlug, description, detailed_description, content, content_json, content_html, content_text, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         const finalDemoUrl = hasOwn(data, 'demo_url')
             ? demo_url
             : (hasOwn(data, 'project_url') ? project_url : undefined);
@@ -111,6 +126,9 @@ module.exports = {
             if (description !== undefined) updateFields.push('description = ?'), updateValues.push(description);
             if (detailed_description !== undefined) updateFields.push('detailed_description = ?'), updateValues.push(detailed_description);
             if (content !== undefined) updateFields.push('content = ?'), updateValues.push(content);
+            if (content_json !== undefined) updateFields.push('content_json = ?'), updateValues.push(serializeContentJson(content_json));
+            if (content_html !== undefined) updateFields.push('content_html = ?'), updateValues.push(content_html);
+            if (content_text !== undefined) updateFields.push('content_text = ?'), updateValues.push(content_text);
             if (excerpt !== undefined) updateFields.push('excerpt = ?'), updateValues.push(excerpt);
             if (meta_description !== undefined) updateFields.push('meta_description = ?'), updateValues.push(meta_description);
             if (thumbnail_image !== undefined) updateFields.push('thumbnail_image = ?'), updateValues.push(thumbnail_image);

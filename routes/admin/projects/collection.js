@@ -8,7 +8,7 @@ const {
     hasRequiredStringFields,
     logActivity,
     logger,
-    normalizeUndefinedFields,
+    normalizeProjectContentFields,
     parsePagination,
     requirePermission,
     toOptionalBoolean,
@@ -121,14 +121,22 @@ router.post('/projects',
         try {
             const body = trimStringFields(getPlainBody(req), ['title', 'description']);
 
-            if (!hasRequiredStringFields(body, ['title', 'description'])) {
+            const hasProjectDescription = [
+                body.description,
+                body.excerpt,
+                body.meta_description,
+                body.content_text,
+                body.content
+            ].some((value) => typeof value === 'string' && value.trim());
+
+            if (!hasRequiredStringFields(body, ['title']) || !hasProjectDescription) {
                 return res.status(400).json({
                     success: false,
                     message: '제목과 설명은 필수입니다.'
                 });
             }
 
-            const sanitizedData = normalizeUndefinedFields(body);
+            const sanitizedData = normalizeProjectContentFields(body);
 
             verboseDebug('원본 데이터:', body);
             verboseDebug('정규화된 데이터:', sanitizedData);
