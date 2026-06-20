@@ -76,6 +76,10 @@ const configureSecurityMiddleware = (app) => {
                 process.env.MY_HOST
             ],
             credentials: true,
+            exposedHeaders: [
+                "X-New-Token",
+                "X-New-Refresh-Token"
+            ],
         })
     );
 
