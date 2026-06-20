@@ -64,6 +64,7 @@ router.post('/login', async (req, res) => {
             req.ip,
             req.headers['user-agent']
         );
+        const permissions = await AdminUsers.getUserPermissions(result.user.id);
 
         await logAuthActivitySafe(req, {
             adminId: result.user.id,
@@ -83,7 +84,10 @@ router.post('/login', async (req, res) => {
         res.json({
             success: true,
             message: '로그인되었습니다.',
-            data: result
+            data: {
+                ...result,
+                permissions
+            }
         });
     } catch (error) {
         await logAuthActivitySafe(req, {

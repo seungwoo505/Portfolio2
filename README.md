@@ -268,6 +268,11 @@ PUBLIC_HTTP_MAX_AGE_SECONDS=60
 PUBLIC_HTTP_STALE_SECONDS=300
 PUBLIC_VIEW_DEDUPE_TTL_SECONDS=300
 
+# API 요청 제한
+PUBLIC_RATE_LIMIT_MAX=600
+AI_RATE_LIMIT_MAX=10
+MONITORING_RATE_LIMIT_MAX=60
+
 # AI 서비스 (선택사항)
 GEMINI_API_KEY=your_gemini_api_key_here
 AI_REQUEST_TIMEOUT=15000
@@ -288,6 +293,7 @@ CONTACT_DUPLICATE_TTL_SECONDS=300
 ```
 
 `PUBLIC_VIEW_DEDUPE_TTL_SECONDS`는 같은 IP/User-Agent가 같은 글이나 프로젝트 조회수를 다시 증가시킬 수 있는 최소 간격입니다.
+`PUBLIC_RATE_LIMIT_MAX`는 `/public/*` 공개 API의 1분당 IP별 최대 요청 수입니다. `AI_RATE_LIMIT_MAX`는 `/admin/ai/*`, `MONITORING_RATE_LIMIT_MAX`는 `/monitoring/*`의 1분당 IP별 최대 요청 수입니다.
 `CONTACT_DUPLICATE_TTL_SECONDS`는 같은 IP/User-Agent가 같은 이메일/메시지 문의를 다시 제출할 수 있는 최소 간격입니다.
 
 ## API 문서

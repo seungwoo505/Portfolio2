@@ -66,7 +66,10 @@ test('admin login succeeds even when activity logging fails', async () => {
                 },
                 token: 'access-token',
                 refreshToken: 'refresh-token'
-            })
+            }),
+            getUserPermissions: async () => [
+                { name: 'dashboard.read', resource: 'dashboard', action: 'read' }
+            ]
         },
         AdminActivityLogs: {
             log: async () => {
@@ -86,6 +89,9 @@ test('admin login succeeds even when activity logging fails', async () => {
     assert.equal(status, 200);
     assert.equal(body.message, '로그인되었습니다.');
     assert.equal(body.data.token, 'access-token');
+    assert.deepEqual(body.data.permissions, [
+        { name: 'dashboard.read', resource: 'dashboard', action: 'read' }
+    ]);
 });
 
 test('admin login failure still returns 401 when activity logging fails', async () => {

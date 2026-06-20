@@ -7,6 +7,18 @@ const CONTACT_RATE_LIMIT_MAX = parseIntegerEnv(process.env.CONTACT_RATE_LIMIT_MA
     fallback: 5,
     max: 100
 });
+const PUBLIC_RATE_LIMIT_MAX = parseIntegerEnv(process.env.PUBLIC_RATE_LIMIT_MAX, {
+    fallback: 600,
+    max: 5000
+});
+const AI_RATE_LIMIT_MAX = parseIntegerEnv(process.env.AI_RATE_LIMIT_MAX, {
+    fallback: 10,
+    max: 100
+});
+const MONITORING_RATE_LIMIT_MAX = parseIntegerEnv(process.env.MONITORING_RATE_LIMIT_MAX, {
+    fallback: 60,
+    max: 300
+});
 
 const buildRateLimitLogMeta = (req, { includeMethod = true, includeUserAgent = false } = {}) => {
     const meta = {
@@ -81,12 +93,38 @@ const generalLimiter = createServerRateLimiter({
     skipSuccessfulRequests: true
 });
 
+const publicReadLimiter = createServerRateLimiter({
+    windowMs: 1 * 60 * 1000,
+    max: PUBLIC_RATE_LIMIT_MAX,
+    error: "공개 API 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    logMessage: "Public API rate limit exceeded",
+    retryAfterSeconds: 60
+});
+
 const adminLimiter = createServerRateLimiter({
     windowMs: 1 * 60 * 1000,
     max: 100,
     error: "관리자 API 요청이 너무 많습니다. 1분 후 다시 시도해주세요.",
     includeUserAgent: true,
     logMessage: "Admin rate limit exceeded",
+    retryAfterSeconds: 60
+});
+
+const aiLimiter = createServerRateLimiter({
+    windowMs: 1 * 60 * 1000,
+    max: AI_RATE_LIMIT_MAX,
+    error: "AI API 요청이 너무 많습니다. 1분 후 다시 시도해주세요.",
+    includeUserAgent: true,
+    logMessage: "AI rate limit exceeded",
+    retryAfterSeconds: 60
+});
+
+const monitoringLimiter = createServerRateLimiter({
+    windowMs: 1 * 60 * 1000,
+    max: MONITORING_RATE_LIMIT_MAX,
+    error: "모니터링 API 요청이 너무 많습니다. 1분 후 다시 시도해주세요.",
+    includeUserAgent: true,
+    logMessage: "Monitoring rate limit exceeded",
     retryAfterSeconds: 60
 });
 
@@ -97,7 +135,8 @@ const loginLimiter = createServerRateLimiter({
     includeMethod: false,
     includeUserAgent: true,
     logMessage: "Login rate limit exceeded",
-    retryAfterSeconds: 15 * 60
+    retryAfterSeconds: 15 * 60,
+    skipSuccessfulRequests: true
 });
 
 const contactLimiter = createServerRateLimiter({
@@ -111,7 +150,10 @@ const contactLimiter = createServerRateLimiter({
 
 module.exports = {
     generalLimiter,
+    publicReadLimiter,
     adminLimiter,
+    aiLimiter,
+    monitoringLimiter,
     loginLimiter,
     contactLimiter
 };

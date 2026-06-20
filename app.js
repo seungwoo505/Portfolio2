@@ -11,7 +11,10 @@ const {
 const { mountSwaggerDocs } = require("./config/swagger");
 const {
     generalLimiter,
+    publicReadLimiter,
     adminLimiter,
+    aiLimiter,
+    monitoringLimiter,
     loginLimiter,
     contactLimiter
 } = require("./middleware/rate-limiters");
@@ -39,10 +42,11 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/public/contact", contactLimiter);
-app.use("/public", publicRoutes);
+app.use("/public", publicReadLimiter, publicRoutes);
 app.use("/admin/login", loginLimiter);
+app.use("/admin/ai", aiLimiter);
 app.use("/admin", adminLimiter, adminRoutes);
-app.use("/monitoring", monitoringRoutes);
+app.use("/monitoring", monitoringLimiter, monitoringRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
