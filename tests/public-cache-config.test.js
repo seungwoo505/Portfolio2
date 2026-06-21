@@ -62,7 +62,7 @@ const loadPublicRoute = ({ PersonalInfo, CacheUtils }) => {
         ['models', 'experiences.js'],
         ['models', 'interests.js'],
         ['models', 'site-settings.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['log.js']
     ]);
 
@@ -77,7 +77,7 @@ const loadPublicRoute = ({ PersonalInfo, CacheUtils }) => {
     stubRootModule(['models', 'experiences.js'], {});
     stubRootModule(['models', 'interests.js'], {});
     stubRootModule(['models', 'site-settings.js'], {});
-    stubRootModule(['utils', 'cache.js'], CacheUtils);
+    stubRootModule(['utils', 'cache.ts'], CacheUtils);
 
     return require(resolveFromRoot(['routes', 'public.js']));
 };

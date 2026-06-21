@@ -20,7 +20,7 @@ const loadSkillsRoute = (Skills) => {
         ['routes', 'admin', 'skills', 'actions.js'],
         ['routes', 'admin', 'common.js'],
         ['models', 'skills.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'request-body.js'],
         ['middleware', 'auth.js'],
@@ -32,7 +32,7 @@ const loadSkillsRoute = (Skills) => {
         buildErrorLog: (error) => ({ error: error.message })
     });
     stubRootModule(['models', 'skills.js'], Skills);
-    stubRootModule(['utils', 'cache.js'], { invalidateResources: () => 0 });
+    stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubRootModule(['middleware', 'auth.js'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };

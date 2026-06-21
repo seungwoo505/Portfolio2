@@ -137,7 +137,7 @@ portfolio-server/
 │   └──  error-handlers.js        # 공통 에러 처리
 │
 ├──  utils/                       # 유틸리티
-│   ├──  cache.js                 # 메모리 캐시 호환 엔트리
+│   ├──  cache.ts                 # 메모리 캐시 호환 엔트리
 │   ├──  cache/                   # 캐시 저장소, 로더, 무효화, 락
 │   ├──  redis-cache.js           # Redis 캐시 호환 엔트리
 │   ├──  redis-cache/             # Redis 연결, 명령, 통계

@@ -48,7 +48,7 @@ const createModelFixture = (modelPath) => {
         ...getModelModules(modelPath),
         ['models', 'db-utils.js'],
         ['utils', 'slug.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['log.js']
     ]);
@@ -117,7 +117,7 @@ const createModelFixture = (modelPath) => {
             return candidate;
         }
     });
-    stubRootModule(['utils', 'cache.js'], {
+    stubRootModule(['utils', 'cache.ts'], {
         delPattern: () => 0,
         invalidateResources: () => 0,
         generateKey: (...parts) => parts.join(':'),

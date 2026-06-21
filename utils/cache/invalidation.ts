@@ -1,4 +1,10 @@
-const patternMap = {
+type CacheInvalidationContext = {
+    delPattern: (pattern: string) => number;
+};
+
+type ResourceInput = string | string[] | null | undefined | false;
+
+const patternMap: Record<string, string[]> = {
     blog: ['^blog_posts:', '^blog_post:', '^blog_post_admin:'],
     projects: ['^projects:', '^project:'],
     skills: ['^skills:', '^skill:'],
@@ -15,17 +21,21 @@ module.exports = {
      * @param {...string|string[]} resources 캐시를 비울 리소스 이름
      * @returns {number} 삭제된 캐시 키 개수
      */
-    invalidateResources(...resources) {
-        const normalizedResources = resources.flat().filter(Boolean);
+    invalidateResources(this: CacheInvalidationContext, ...resources: ResourceInput[]): number {
+        const normalizedResources = resources
+            .flat()
+            .filter((resource): resource is string => Boolean(resource));
         const patterns = new Set(
-            normalizedResources.flatMap(resource => patternMap[resource] || [`^${resource}:`])
+            normalizedResources.flatMap((resource) => patternMap[resource] || [`^${resource}:`])
         );
 
         let deletedCount = 0;
-        patterns.forEach(pattern => {
+        patterns.forEach((pattern) => {
             deletedCount += this.delPattern(pattern);
         });
 
         return deletedCount;
     }
 };
+
+export {};

@@ -21,14 +21,14 @@ const blogPostModelModules = [
 ];
 
 const cacheModules = [
-    ['utils', 'cache.js'],
-    ['utils', 'cache', 'basic.js'],
-    ['utils', 'cache', 'batch.js'],
-    ['utils', 'cache', 'index.js'],
-    ['utils', 'cache', 'invalidation.js'],
-    ['utils', 'cache', 'loader.js'],
-    ['utils', 'cache', 'locks.js'],
-    ['utils', 'cache', 'store.js']
+    ['utils', 'cache.ts'],
+    ['utils', 'cache', 'basic.ts'],
+    ['utils', 'cache', 'batch.ts'],
+    ['utils', 'cache', 'index.ts'],
+    ['utils', 'cache', 'invalidation.ts'],
+    ['utils', 'cache', 'loader.ts'],
+    ['utils', 'cache', 'locks.ts'],
+    ['utils', 'cache', 'store.ts']
 ];
 
 test('resource invalidation clears public blog detail cache keys', () => {
@@ -39,7 +39,7 @@ test('resource invalidation clears public blog detail cache keys', () => {
 
     stubRootModule(['log.js'], createNoopLogger());
 
-    const CacheUtils = require(resolveFromRoot(['utils', 'cache.js']));
+    const CacheUtils = require(resolveFromRoot(['utils', 'cache.ts']));
     CacheUtils.flush();
 
     try {
@@ -74,7 +74,7 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
         executeConnectionQuerySingle: async () => null,
         executeTransaction: async () => null
     });
-    stubRootModule(['utils', 'cache.js'], {
+    stubRootModule(['utils', 'cache.ts'], {
         invalidateResources: (...resources) => {
             invalidations.push(resources);
             return 0;
@@ -100,7 +100,7 @@ test('cacheApiResponse reuses an in-flight loader for the same key', async () =>
 
     stubRootModule(['log.js'], createNoopLogger());
 
-    const CacheUtils = require(resolveFromRoot(['utils', 'cache.js']));
+    const CacheUtils = require(resolveFromRoot(['utils', 'cache.ts']));
     CacheUtils.flush();
 
     let loaderCalls = 0;

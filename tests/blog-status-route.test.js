@@ -53,7 +53,7 @@ const loadBlogRoute = (BlogPosts) => {
         ...adminBlogRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'blog-posts.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.js'],
@@ -65,7 +65,7 @@ const loadBlogRoute = (BlogPosts) => {
         buildErrorLog: (error) => ({ error: error.message })
     });
     stubRootModule(['models', 'blog-posts.js'], BlogPosts);
-    stubRootModule(['utils', 'cache.js'], { invalidateResources: () => 0 });
+    stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubRootModule(['middleware', 'auth.js'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };

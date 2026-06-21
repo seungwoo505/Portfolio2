@@ -25,7 +25,7 @@ const loadDbUtilsWithConnection = (connection, {
         ...dbUtilsModulePaths,
         ['db.js'],
         ['log.js'],
-        ['utils', 'cache.js']
+        ['utils', 'cache.ts']
     ]);
 
     stubRootModule(['db.js'], {
@@ -33,7 +33,7 @@ const loadDbUtilsWithConnection = (connection, {
         execute
     });
     stubRootModule(['log.js'], logger);
-    stubRootModule(['utils', 'cache.js'], {
+    stubRootModule(['utils', 'cache.ts'], {
         get: () => undefined,
         set: () => true
     });

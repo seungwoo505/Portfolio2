@@ -11,3 +11,5 @@ module.exports = {
     ...lockMethods,
     ...batchMethods
 };
+
+export {};

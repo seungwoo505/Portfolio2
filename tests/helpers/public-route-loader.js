@@ -57,7 +57,7 @@ const loadPublicRoute = ({
     clearRootModules([
         ...publicRouteModules,
         ...modelModules,
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'slug.js'],
         ['log.js']
     ]);
@@ -73,7 +73,7 @@ const loadPublicRoute = ({
     stubRootModule(['models', 'experiences.js'], Experiences);
     stubRootModule(['models', 'interests.js'], Interests);
     stubRootModule(['models', 'site-settings.js'], SiteSettings);
-    stubRootModule(['utils', 'cache.js'], CacheUtils);
+    stubRootModule(['utils', 'cache.ts'], CacheUtils);
 
     return require(resolveFromRoot(['routes', 'public.js']));
 };

@@ -64,7 +64,7 @@ test('admin blog list returns count-based pagination total', async () => {
         ...adminBlogRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'blog-posts.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.js'],
         ['log.js']
@@ -82,7 +82,7 @@ test('admin blog list returns count-based pagination total', async () => {
             return 42;
         }
     });
-    stubRootModule(['utils', 'cache.js'], { invalidateResources: () => 0 });
+    stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubAdminMiddleware();
 
     const router = require(resolveFromRoot(['routes', 'admin', 'blog.js']));
@@ -103,7 +103,7 @@ test('admin featured project list returns count-based pagination total', async (
         ...adminProjectRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'projects.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.js'],
@@ -128,7 +128,7 @@ test('admin featured project list returns count-based pagination total', async (
             return 7;
         }
     });
-    stubRootModule(['utils', 'cache.js'], { invalidateResources: () => 0 });
+    stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubAdminMiddleware();
 
     const router = require(resolveFromRoot(['routes', 'admin', 'projects.js']));
@@ -154,7 +154,7 @@ test('admin project list rejects invalid featured filters before model calls', a
         ...adminProjectRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'projects.js'],
-        ['utils', 'cache.js'],
+        ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.js'],
@@ -179,7 +179,7 @@ test('admin project list rejects invalid featured filters before model calls', a
         },
         getCountWithFilters: async () => 0
     });
-    stubRootModule(['utils', 'cache.js'], { invalidateResources: () => 0 });
+    stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubAdminMiddleware();
 
     const router = require(resolveFromRoot(['routes', 'admin', 'projects.js']));

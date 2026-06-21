@@ -1,5 +1,9 @@
 const { cache, logger } = require('./store');
 
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
+
 module.exports = {
     /**
      * @description 캐시 유틸에 값을 저장한다.
@@ -8,11 +12,11 @@ module.exports = {
      * @param {*} ttl 입력값
      * @returns {any} 처리 결과
      */
-    set(key, value, ttl = 300) {
+    set(key: string, value: unknown, ttl = 300): boolean {
         try {
             return cache.set(key, value, ttl);
         } catch (error) {
-            logger.error('캐시 설정 실패', { key, error: error.message });
+            logger.error('캐시 설정 실패', { key, error: getErrorMessage(error) });
             return false;
         }
     },
@@ -22,11 +26,11 @@ module.exports = {
      * @param {*} key 입력값
      * @returns {any} 처리 결과
      */
-    get(key) {
+    get(key: string): unknown {
         try {
             return cache.get(key);
         } catch (error) {
-            logger.error('캐시 조회 실패', { key, error: error.message });
+            logger.error('캐시 조회 실패', { key, error: getErrorMessage(error) });
             return undefined;
         }
     },
@@ -36,11 +40,11 @@ module.exports = {
      * @param {*} key 입력값
      * @returns {any} 처리 결과
      */
-    del(key) {
+    del(key: string): boolean {
         try {
             return cache.del(key);
         } catch (error) {
-            logger.error('캐시 삭제 실패', { key, error: error.message });
+            logger.error('캐시 삭제 실패', { key, error: getErrorMessage(error) });
             return false;
         }
     },
@@ -50,7 +54,7 @@ module.exports = {
      * @param {*} key 입력값
      * @returns {any} 처리 결과
      */
-    has(key) {
+    has(key: string): boolean {
         return cache.has(key);
     },
 
@@ -62,7 +66,7 @@ module.exports = {
      * @description 캐시 유틸의 모든 항목을 삭제한다.
      * @returns {any} 처리 결과
      */
-    flush() {
+    flush(): void {
         return cache.flushAll();
     },
 
@@ -71,12 +75,12 @@ module.exports = {
      * @param {*} pattern 입력값
      * @returns {any} 처리 결과
      */
-    delPattern(pattern) {
-        const keys = cache.keys();
+    delPattern(pattern: string): number {
+        const keys: string[] = cache.keys();
         const regex = new RegExp(pattern);
         let deletedCount = 0;
 
-        keys.forEach(key => {
+        keys.forEach((key) => {
             if (regex.test(key)) {
                 if (cache.del(key)) {
                     deletedCount++;
@@ -94,7 +98,9 @@ module.exports = {
      * @param {*} params 입력값
      * @returns {any} 처리 결과
      */
-    generateKey(prefix, ...params) {
+    generateKey(prefix: string, ...params: unknown[]): string {
         return `${prefix}:${params.join(':')}`;
     }
 };
+
+export {};
