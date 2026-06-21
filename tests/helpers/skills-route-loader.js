@@ -23,7 +23,7 @@ const loadSkillsRoute = (Skills) => {
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'request-body.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -33,7 +33,7 @@ const loadSkillsRoute = (Skills) => {
     });
     stubRootModule(['models', 'skills.js'], Skills);
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();

@@ -1,3 +1,5 @@
+import type { RequestHandler } from 'express';
+
 const { logActivity } = require('./activity');
 const {
     requirePermission,
@@ -6,8 +8,8 @@ const {
 } = require('./authorization');
 const { authenticateToken } = require('./token');
 
-const adminOnly = [authenticateToken, requireRole(['super_admin', 'admin'])];
-const superAdminOnly = [authenticateToken, requireRole('super_admin')];
+const adminOnly: RequestHandler[] = [authenticateToken, requireRole(['super_admin', 'admin'])];
+const superAdminOnly: RequestHandler[] = [authenticateToken, requireRole('super_admin')];
 
 module.exports = {
     authenticateToken,

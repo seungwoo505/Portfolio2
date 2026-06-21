@@ -1,9 +1,11 @@
-const getClientIp = (req) => {
+import type { Request } from 'express';
+
+const getClientIp = (req: Request): string | null => {
     const ip = req.ip || req.connection.remoteAddress || null;
     return ip && ip.startsWith('::ffff:') ? ip.substring(7) : ip;
 };
 
-const summarizeUserAgent = (userAgent = '') => {
+const summarizeUserAgent = (userAgent = ''): string | null => {
     if (!userAgent) {
         return null;
     }
@@ -24,7 +26,7 @@ const summarizeUserAgent = (userAgent = '') => {
     return `${os} | ${browser}`;
 };
 
-const inferResourceType = (req) => {
+const inferResourceType = (req: Request): string => {
     const pathSegments = String(req.originalUrl || '')
         .split('?')[0]
         .split('/')
@@ -42,7 +44,7 @@ const inferResourceType = (req) => {
     return req.baseUrl.split('/').pop() || 'unknown';
 };
 
-const getResourceId = (req) => (
+const getResourceId = (req: Request): unknown => (
     req.params.id ||
     req.params.slug ||
     req.params.postId ||

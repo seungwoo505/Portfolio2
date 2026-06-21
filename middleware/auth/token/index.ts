@@ -1,16 +1,27 @@
+import type { RequestHandler, Response } from 'express';
+
 const { logger } = require('../common');
 const { authenticateAccessToken } = require('./access');
 const { extractAuthTokens, getClientIp } = require('./context');
 const { refreshAccessToken } = require('./refresh');
 
-const sendAuthError = (res, { statusCode, message }) => (
+type AuthError = {
+    statusCode: number;
+    message: string;
+};
+
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
+
+const sendAuthError = (res: Response, { statusCode, message }: AuthError) => (
     res.status(statusCode).json({
         success: false,
         message
     })
 );
 
-const sendExpiredTokenError = (res) => sendAuthError(res, {
+const sendExpiredTokenError = (res: Response) => sendAuthError(res, {
     statusCode: 401,
     message: '토큰이 만료되었습니다. 다시 로그인해주세요.'
 });
@@ -22,7 +33,7 @@ const sendExpiredTokenError = (res) => sendAuthError(res, {
  * @param {*} next 입력값
  * @returns {Promise<any>} 처리 결과
  */
-const authenticateToken = async (req, res, next) => {
+const authenticateToken: RequestHandler = async (req, res, next) => {
     try {
         const { token, refreshToken } = extractAuthTokens(req);
 
@@ -41,7 +52,7 @@ const authenticateToken = async (req, res, next) => {
 
             req.admin = result.admin;
             return next();
-        } catch (tokenError) {
+        } catch (_tokenError) {
             if (!refreshToken) {
                 return sendExpiredTokenError(res);
             }
@@ -56,7 +67,7 @@ const authenticateToken = async (req, res, next) => {
                 return next();
             } catch (refreshError) {
                 logger.warn('토큰 재발급 실패', {
-                    error: refreshError.message,
+                    error: getErrorMessage(refreshError),
                     ip: getClientIp(req)
                 });
 
@@ -64,7 +75,7 @@ const authenticateToken = async (req, res, next) => {
             }
         }
     } catch (error) {
-        logger.error('인증 미들웨어 오류', { error: error.message });
+        logger.error('인증 미들웨어 오류', { error: getErrorMessage(error) });
         return res.status(500).json({
             success: false,
             message: '인증 처리 중 오류가 발생했습니다.'

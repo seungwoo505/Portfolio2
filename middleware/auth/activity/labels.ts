@@ -1,4 +1,4 @@
-const actionLabels = {
+const actionLabels: Record<string, string> = {
     admin_login: '로그인',
     admin_login_failed: '로그인 실패',
     admin_logout: '로그아웃',
@@ -41,7 +41,7 @@ const actionLabels = {
     delete_interest: '관심사 삭제'
 };
 
-const actionVerbs = {
+const actionVerbs: Record<string, string> = {
     create: '생성',
     update: '수정',
     delete: '삭제',
@@ -53,7 +53,7 @@ const actionVerbs = {
     change: '변경'
 };
 
-const resourceLabels = {
+const resourceLabels: Record<string, string> = {
     admin: '관리자',
     users: '관리자',
     projects: '프로젝트',
@@ -71,12 +71,12 @@ const resourceLabels = {
     interests: '관심사'
 };
 
-const getActionLabel = (action) => {
+const getActionLabel = (action: string): string => {
     const actionPrefix = action.split('_')[0];
     return actionVerbs[actionPrefix] || actionLabels[action] || action.replace(/_/g, ' ');
 };
 
-const getResourceLabel = (resourceType) => resourceLabels[resourceType] || resourceType;
+const getResourceLabel = (resourceType: string): string => resourceLabels[resourceType] || resourceType;
 
 module.exports = {
     actionLabels,
@@ -85,3 +85,5 @@ module.exports = {
     getResourceLabel,
     resourceLabels
 };
+
+export {};

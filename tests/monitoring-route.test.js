@@ -47,7 +47,7 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
         ['routes', 'monitoring', 'metrics.js'],
         ['utils', 'cache.ts'],
         ['utils', 'redis-cache.ts'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -66,7 +66,7 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
         get: async () => null,
         isConnected: false
     });
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         adminOnly: [
             (req, _res, next) => {
                 req.admin = { id: 1, role: 'admin' };

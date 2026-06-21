@@ -1,3 +1,5 @@
+import type { Request, Response } from 'express';
+
 const {
     AdminUsers,
     logger
@@ -7,7 +9,14 @@ const {
     getClientIp
 } = require('./context');
 
-const refreshAccessToken = async (req, res, refreshToken) => {
+type AuthFailure = {
+    error: {
+        statusCode: number;
+        message: string;
+    };
+};
+
+const refreshAccessToken = async (req: Request, res: Response, refreshToken: string) => {
     const refreshDecoded = AdminUsers.verifyRefreshToken(refreshToken);
     const clientIP = getClientIp(req);
 
@@ -17,7 +26,7 @@ const refreshAccessToken = async (req, res, refreshToken) => {
                 statusCode: 401,
                 message: 'Refresh Token이 다른 IP에서 발급되었습니다.'
             }
-        };
+        } satisfies AuthFailure;
     }
 
     const user = await AdminUsers.getById(refreshDecoded.id);
@@ -27,7 +36,7 @@ const refreshAccessToken = async (req, res, refreshToken) => {
                 statusCode: 401,
                 message: '비활성화된 사용자입니다.'
             }
-        };
+        } satisfies AuthFailure;
     }
 
     const newRefreshToken = await AdminUsers.rotateRefreshSession(
@@ -58,3 +67,5 @@ const refreshAccessToken = async (req, res, refreshToken) => {
 module.exports = {
     refreshAccessToken
 };
+
+export {};

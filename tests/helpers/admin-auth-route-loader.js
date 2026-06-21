@@ -14,7 +14,7 @@ const stubCommon = () => {
 };
 
 const stubAuthMiddleware = () => {
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = {
                 id: 1,
@@ -65,7 +65,7 @@ const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } 
         ['routes', 'admin', 'common.js'],
         ['models', 'admin-users.js'],
         ['models', 'admin-activity-logs.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -82,7 +82,7 @@ const loadUsersRoute = (AdminUsers) => {
         ...adminUsersRouteModules,
         ['routes', 'admin', 'common.js'],
         ['models', 'admin-users.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 

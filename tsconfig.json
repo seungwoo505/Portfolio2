@@ -19,6 +19,7 @@
     "config/**/*.js",
     "logger/**/*.js",
     "middleware/**/*.js",
+    "middleware/**/*.ts",
     "migrations/**/*.js",
     "models/**/*.js",
     "routes/**/*.js",

@@ -38,7 +38,7 @@ const loadDashboardRoute = ({ executeQuery, contactStats, activityStats, activit
         ['models', 'admin-activity-logs.js'],
         ['models', 'contact-messages.js'],
         ['models', 'db-utils.js'],
-        ['middleware', 'auth.js']
+        ['middleware', 'auth.ts']
     ]);
 
     stubRootModule(['models', 'admin-activity-logs.js'], {
@@ -51,7 +51,7 @@ const loadDashboardRoute = ({ executeQuery, contactStats, activityStats, activit
         getStats: async () => contactStats
     });
     stubRootModule(['models', 'db-utils.js'], { executeQuery });
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();

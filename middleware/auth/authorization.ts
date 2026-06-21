@@ -1,14 +1,28 @@
+import type { Request, RequestHandler } from 'express';
+
 const {
     AdminUsers,
     logger
 } = require('./common');
+
+type AdminRoleInput = string | string[];
+
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
+
+const getErrorStack = (error: unknown): string | undefined => (
+    error instanceof Error ? error.stack : undefined
+);
+
+const getClientIp = (req: Request): string | undefined => req.ip || req.connection.remoteAddress;
 
 /**
  * @description 특정 권한이 있는지 검사한다.
  * @param {*} permissionName 입력값
  * @returns {any} 처리 결과
  */
-const requirePermission = (permissionName) => {
+const requirePermission = (permissionName: string): RequestHandler => {
     return async (req, res, next) => {
         try {
             if (!req.admin) {
@@ -43,8 +57,8 @@ const requirePermission = (permissionName) => {
                 requestId: req.requestId,
                 adminId: req.admin?.id,
                 permission: permissionName,
-                error: error.message,
-                stack: error.stack
+                error: getErrorMessage(error),
+                stack: getErrorStack(error)
             });
 
             return res.status(500).json({
@@ -60,7 +74,7 @@ const requirePermission = (permissionName) => {
  * @param {*} roles 입력값
  * @returns {any} 처리 결과
  */
-const requireRole = (roles) => {
+const requireRole = (roles: AdminRoleInput): RequestHandler => {
     return (req, res, next) => {
         if (!req.admin) {
             return res.status(401).json({
@@ -71,7 +85,7 @@ const requireRole = (roles) => {
 
         const allowedRoles = Array.isArray(roles) ? roles : [roles];
 
-        if (!allowedRoles.includes(req.admin.role)) {
+        if (!req.admin.role || !allowedRoles.includes(req.admin.role)) {
             logger.warn('역할 인가 실패', {
                 requestId: req.requestId,
                 adminId: req.admin.id,
@@ -94,11 +108,11 @@ const requireRole = (roles) => {
  * @param {*} allowedIPs 입력값
  * @returns {any} 처리 결과
  */
-const restrictToIPs = (allowedIPs) => {
+const restrictToIPs = (allowedIPs: string[]): RequestHandler => {
     return (req, res, next) => {
-        const clientIP = req.ip || req.connection.remoteAddress;
+        const clientIP = getClientIp(req);
 
-        if (!allowedIPs.includes(clientIP)) {
+        if (!clientIP || !allowedIPs.includes(clientIP)) {
             logger.warn('IP 접근 차단', {
                 requestId: req.requestId,
                 ip: clientIP

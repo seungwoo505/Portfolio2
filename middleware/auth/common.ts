@@ -7,3 +7,5 @@ module.exports = {
     AdminUsers,
     logger
 };
+
+export {};

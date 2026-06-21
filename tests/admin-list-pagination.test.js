@@ -32,7 +32,7 @@ const requestJson = async (router, path) => {
 };
 
 const stubAdminMiddleware = () => {
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();
@@ -66,7 +66,7 @@ test('admin blog list returns count-based pagination total', async () => {
         ['models', 'blog-posts.js'],
         ['utils', 'cache.ts'],
         ['utils', 'pagination.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -106,7 +106,7 @@ test('admin featured project list returns count-based pagination total', async (
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -157,7 +157,7 @@ test('admin project list rejects invalid featured filters before model calls', a
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 

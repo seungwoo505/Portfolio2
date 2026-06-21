@@ -175,7 +175,7 @@ const loadAdminRoute = (routeSegments, moduleStubs) => {
         ['utils', 'request-body.js'],
         ['utils', 'route-params.js'],
         ['utils', 'slug.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js'],
         ...moduleStubs.map(({ segments }) => segments)
     ]);
@@ -186,7 +186,7 @@ const loadAdminRoute = (routeSegments, moduleStubs) => {
         buildErrorLog: (error) => ({ error: error.message })
     });
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();

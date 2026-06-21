@@ -131,7 +131,7 @@ portfolio-server/
 │   └──  monitoring.js            # 모니터링 API
 │
 ├──  middleware/                  # 미들웨어
-│   ├──  auth.js                  # 인증 미들웨어 호환 엔트리
+│   ├──  auth.ts                  # 인증 미들웨어 호환 엔트리
 │   ├──  auth/                    # 토큰, 권한, 활동 로그 미들웨어
 │   ├──  rate-limiters.ts         # 요청 제한 미들웨어
 │   └──  error-handlers.ts        # 공통 에러 처리

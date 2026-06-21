@@ -56,7 +56,7 @@ const loadBlogRoute = (BlogPosts) => {
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -66,7 +66,7 @@ const loadBlogRoute = (BlogPosts) => {
     });
     stubRootModule(['models', 'blog-posts.js'], BlogPosts);
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();

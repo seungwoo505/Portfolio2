@@ -51,7 +51,7 @@ const loadAiRoute = (geminiService, logger = createNoopLogger()) => {
         ...adminAiRouteModules,
         ['routes', 'admin', 'common.js'],
         ['services', 'gemini-ai.js'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -61,7 +61,7 @@ const loadAiRoute = (geminiService, logger = createNoopLogger()) => {
         buildErrorLog: (error) => ({ error: error.message })
     });
     stubRootModule(['services', 'gemini-ai.js'], geminiService);
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();

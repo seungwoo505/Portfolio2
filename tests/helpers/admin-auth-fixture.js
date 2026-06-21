@@ -23,18 +23,18 @@ const adminUsersModules = [
 ];
 
 const authMiddlewareModules = [
-    ['middleware', 'auth.js'],
-    ['middleware', 'auth', 'index.js'],
-    ['middleware', 'auth', 'common.js'],
-    ['middleware', 'auth', 'token', 'index.js'],
-    ['middleware', 'auth', 'token', 'access.js'],
-    ['middleware', 'auth', 'token', 'context.js'],
-    ['middleware', 'auth', 'token', 'refresh.js'],
-    ['middleware', 'auth', 'authorization.js'],
-    ['middleware', 'auth', 'activity.js'],
-    ['middleware', 'auth', 'activity', 'details.js'],
-    ['middleware', 'auth', 'activity', 'labels.js'],
-    ['middleware', 'auth', 'activity', 'request.js']
+    ['middleware', 'auth.ts'],
+    ['middleware', 'auth', 'index.ts'],
+    ['middleware', 'auth', 'common.ts'],
+    ['middleware', 'auth', 'token', 'index.ts'],
+    ['middleware', 'auth', 'token', 'access.ts'],
+    ['middleware', 'auth', 'token', 'context.ts'],
+    ['middleware', 'auth', 'token', 'refresh.ts'],
+    ['middleware', 'auth', 'authorization.ts'],
+    ['middleware', 'auth', 'activity.ts'],
+    ['middleware', 'auth', 'activity', 'details.ts'],
+    ['middleware', 'auth', 'activity', 'labels.ts'],
+    ['middleware', 'auth', 'activity', 'request.ts']
 ];
 
 const createAdminUsersFixture = async () => {
@@ -186,7 +186,7 @@ const loadAuthMiddleware = (AdminUsers, logger = createNoopLogger()) => {
     stubRootModule(['models', 'admin-activity-logs.js'], {});
     stubRootModule(['log.js'], logger);
 
-    return require(resolveFromRoot(['middleware', 'auth.js']));
+    return require(resolveFromRoot(['middleware', 'auth.ts']));
 };
 
 const createResponse = () => ({

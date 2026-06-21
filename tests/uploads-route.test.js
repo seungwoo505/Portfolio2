@@ -40,7 +40,7 @@ const loadUploadsRoute = (filePath, options = {}) => {
         ['routes', 'admin', 'uploads', 'images.js'],
         ['routes', 'admin', 'common.js'],
         ['utils', 'upload.ts'],
-        ['middleware', 'auth.js'],
+        ['middleware', 'auth.ts'],
         ['log.js']
     ]);
 
@@ -54,7 +54,7 @@ const loadUploadsRoute = (filePath, options = {}) => {
         getUploadedImagePath: () => filePath,
         isSafeUploadedImageFilename: () => true
     });
-    stubRootModule(['middleware', 'auth.js'], {
+    stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
             next();

@@ -1,12 +1,19 @@
+import type { Request } from 'express';
+
 const { logger } = require('../common');
 const { getActionLabel, getResourceLabel } = require('./labels');
 
-const buildActivityDetails = (action, req, resourceType, resourceId) => {
+const buildActivityDetails = (
+    action: string,
+    req: Request,
+    resourceType: string,
+    resourceId: unknown
+): string => {
     const resourceLabel = getResourceLabel(resourceType);
     const label = getActionLabel(action);
-    const safeBody = logger.redact(req.body || {});
+    const safeBody = logger.redact(req.body || {}) as Record<string, unknown>;
     const changedFields = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)
-        ? Object.keys(safeBody).filter(key => safeBody[key] !== undefined)
+        ? Object.keys(safeBody).filter((key) => safeBody[key] !== undefined)
         : [];
 
     const targetName = safeBody.title || safeBody.name || safeBody.username || safeBody.platform;
