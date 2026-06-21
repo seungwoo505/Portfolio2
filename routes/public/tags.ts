@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const Tags = require('../../models/tags');
 const {
@@ -12,7 +14,7 @@ const {
     toStringValue
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -21,7 +23,7 @@ const router = express.Router();
  *     summary: 공개 태그 목록 조회
  *     tags: ['Public']
  */
-router.get('/tags', async (req, res) => {
+router.get('/tags', async (req: Request, res: Response) => {
     try {
         const { limit } = parsePagination(req.query, {
             defaultLimit: 20,

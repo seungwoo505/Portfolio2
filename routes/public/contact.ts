@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const ContactMessages = require('../../models/contact-messages');
 const {
@@ -18,7 +20,7 @@ const {
     validateContactLength
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -27,7 +29,7 @@ const router = express.Router();
  *     summary: 문의 메시지 접수
  *     tags: ['Public']
  */
-router.post('/contact', async (req, res) => {
+router.post('/contact', async (req: Request, res: Response) => {
     try {
         const name = normalizeContactField(req.body?.name);
         const email = normalizeContactField(req.body?.email).toLowerCase();
@@ -38,7 +40,7 @@ router.post('/contact', async (req, res) => {
             return badRequest(res, '이름, 이메일, 메시지는 필수입니다.');
         }
 
-        for (const [field, value] of Object.entries({ name, email, subject, message })) {
+        for (const [field, value] of Object.entries({ name, email, subject, message }) as Array<[keyof typeof CONTACT_FIELD_LABELS, string]>) {
             if (!validateContactLength(field, value)) {
                 return badRequest(res, `${CONTACT_FIELD_LABELS[field]} 길이가 허용 범위를 초과했습니다.`);
             }

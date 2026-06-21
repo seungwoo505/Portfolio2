@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const BlogPosts = require('../../models/blog-posts');
 const { isValidSlug } = require('../../utils/slug');
@@ -15,7 +17,7 @@ const {
     ok
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -36,7 +38,7 @@ const router = express.Router();
  *     summary: 블로그 글 조회수 증가
  *     tags: ['Public']
  */
-router.get('/posts', async (req, res) => {
+router.get('/posts', async (req: Request, res: Response) => {
     try {
         const filters = buildPostFilters(req.query);
         if (filters.error) {
@@ -57,7 +59,7 @@ router.get('/posts', async (req, res) => {
     }
 });
 
-router.get('/posts/tag/:tagSlug', async (req, res) => {
+router.get('/posts/tag/:tagSlug', async (req: Request, res: Response) => {
     try {
         const { tagSlug } = req.params;
         if (!isValidSlug(tagSlug)) {
@@ -88,7 +90,7 @@ router.get('/posts/tag/:tagSlug', async (req, res) => {
     }
 });
 
-router.post('/posts/:slug/view', async (req, res) => {
+router.post('/posts/:slug/view', async (req: Request, res: Response) => {
     try {
         const { slug } = req.params;
         if (!isValidSlug(slug)) {
@@ -121,7 +123,7 @@ router.post('/posts/:slug/view', async (req, res) => {
     }
 });
 
-router.get('/posts/:slug', async (req, res) => {
+router.get('/posts/:slug', async (req: Request, res: Response) => {
     try {
         const { slug } = req.params;
         if (!isValidSlug(slug)) {

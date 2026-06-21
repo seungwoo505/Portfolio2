@@ -1,7 +1,9 @@
+import type { ParsedQs } from 'qs';
+
 const { parsePagination } = require('../../../utils/pagination');
 const { toOptionalBoolean, toCsvStringArray, toStringValue } = require('../../../utils/filter-values');
 
-const buildProjectFilters = (query) => {
+const buildProjectFilters = (query: ParsedQs) => {
     const featured = toOptionalBoolean(query.featured);
     if (!featured.isValid) {
         return {
@@ -29,7 +31,7 @@ const buildProjectFilters = (query) => {
     };
 };
 
-const buildPostFilters = (query) => {
+const buildPostFilters = (query: ParsedQs) => {
     const featured = toOptionalBoolean(query.featured);
     if (!featured.isValid) {
         return {

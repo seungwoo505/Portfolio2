@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const Interests = require('../../models/interests');
 const {
@@ -9,7 +11,7 @@ const {
     toStringValue
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -18,7 +20,7 @@ const router = express.Router();
  *     summary: 공개 관심사 목록 조회
  *     tags: ['Public']
  */
-router.get('/interests', async (req, res) => {
+router.get('/interests', async (req: Request, res: Response) => {
     try {
         const category = toStringValue(req.query.category).trim() || null;
         const key = cacheKey('interests', stableStringify({ category }));

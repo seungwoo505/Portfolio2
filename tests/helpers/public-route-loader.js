@@ -7,25 +7,25 @@ const {
 const { createCacheStub } = require('./cache-stub');
 
 const publicRouteModules = [
-    ['routes', 'public.js'],
-    ['routes', 'public', 'index.js'],
-    ['routes', 'public', 'common.js'],
-    ['routes', 'public', 'common', 'cache.js'],
-    ['routes', 'public', 'common', 'config.js'],
-    ['routes', 'public', 'common', 'contact.js'],
-    ['routes', 'public', 'common', 'filters.js'],
-    ['routes', 'public', 'common', 'index.js'],
-    ['routes', 'public', 'common', 'resources.js'],
-    ['routes', 'public', 'common', 'responses.js'],
-    ['routes', 'public', 'common', 'views.js'],
-    ['routes', 'public', 'profile.js'],
-    ['routes', 'public', 'contact.js'],
-    ['routes', 'public', 'skills.js'],
-    ['routes', 'public', 'projects.js'],
-    ['routes', 'public', 'posts.js'],
-    ['routes', 'public', 'tags.js'],
-    ['routes', 'public', 'experiences.js'],
-    ['routes', 'public', 'interests.js']
+    ['routes', 'public.ts'],
+    ['routes', 'public', 'index.ts'],
+    ['routes', 'public', 'common.ts'],
+    ['routes', 'public', 'common', 'cache.ts'],
+    ['routes', 'public', 'common', 'config.ts'],
+    ['routes', 'public', 'common', 'contact.ts'],
+    ['routes', 'public', 'common', 'filters.ts'],
+    ['routes', 'public', 'common', 'index.ts'],
+    ['routes', 'public', 'common', 'resources.ts'],
+    ['routes', 'public', 'common', 'responses.ts'],
+    ['routes', 'public', 'common', 'views.ts'],
+    ['routes', 'public', 'profile.ts'],
+    ['routes', 'public', 'contact.ts'],
+    ['routes', 'public', 'skills.ts'],
+    ['routes', 'public', 'projects.ts'],
+    ['routes', 'public', 'posts.ts'],
+    ['routes', 'public', 'tags.ts'],
+    ['routes', 'public', 'experiences.ts'],
+    ['routes', 'public', 'interests.ts']
 ];
 
 const modelModules = [
@@ -75,7 +75,7 @@ const loadPublicRoute = ({
     stubRootModule(['models', 'site-settings.js'], SiteSettings);
     stubRootModule(['utils', 'cache.ts'], CacheUtils);
 
-    return require(resolveFromRoot(['routes', 'public.js']));
+    return require(resolveFromRoot(['routes', 'public.ts']));
 };
 
 module.exports = {

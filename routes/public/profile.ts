@@ -1,10 +1,12 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const PersonalInfo = require('../../models/personal-info');
 const SocialLinks = require('../../models/social-links');
 const SiteSettings = require('../../models/site-settings');
 const { cacheKey, cached, fail, ok } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -21,7 +23,7 @@ const router = express.Router();
  *     summary: 공개 소셜 링크 조회
  *     tags: ['Public']
  */
-router.get('/profile', async (req, res) => {
+router.get('/profile', async (req: Request, res: Response) => {
     try {
         const data = await cached(cacheKey('personal_info', 'profile'), () => PersonalInfo.get());
         return ok(res, data);
@@ -30,7 +32,7 @@ router.get('/profile', async (req, res) => {
     }
 });
 
-router.get('/settings', async (req, res) => {
+router.get('/settings', async (req: Request, res: Response) => {
     try {
         const data = await cached(cacheKey('settings', 'public'), () => SiteSettings.getPublicSettings());
         return ok(res, data);
@@ -39,7 +41,7 @@ router.get('/settings', async (req, res) => {
     }
 });
 
-router.get('/social-links', async (req, res) => {
+router.get('/social-links', async (req: Request, res: Response) => {
     try {
         const data = await cached(cacheKey('social_links', 'all'), () => SocialLinks.getAll());
         return ok(res, data);

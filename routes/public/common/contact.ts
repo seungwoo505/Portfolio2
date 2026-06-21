@@ -12,6 +12,8 @@ const CONTACT_FIELD_LIMITS = {
     subject: 255,
     message: 5000
 };
+type ContactField = keyof typeof CONTACT_FIELD_LIMITS;
+
 const CONTACT_FIELD_LABELS = {
     name: '이름',
     email: '이메일',
@@ -19,14 +21,14 @@ const CONTACT_FIELD_LABELS = {
     message: '메시지'
 };
 
-const normalizeContactField = (value) => String(value ?? '').trim();
+const normalizeContactField = (value: unknown): string => String(value ?? '').trim();
 
-const validateContactLength = (field, value) => {
+const validateContactLength = (field: ContactField, value: string): boolean => {
     const maxLength = CONTACT_FIELD_LIMITS[field];
     return !maxLength || value.length <= maxLength;
 };
 
-const getContactDuplicateKey = ({ email, message, req }) => cacheKey(
+const getContactDuplicateKey = ({ email, message, req }: { email: string; message: string; req: Request }): string => cacheKey(
     'contact_duplicate',
     hashCachePart([
         email,
@@ -44,3 +46,4 @@ module.exports = {
     normalizeContactField,
     validateContactLength
 };
+import type { Request } from 'express';

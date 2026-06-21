@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const Projects = require('../../models/projects');
 const { isValidSlug } = require('../../utils/slug');
@@ -15,7 +17,7 @@ const {
     ok
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -32,7 +34,7 @@ const router = express.Router();
  *     summary: 프로젝트 조회수 증가
  *     tags: ['Public']
  */
-router.get('/projects', async (req, res) => {
+router.get('/projects', async (req: Request, res: Response) => {
     try {
         const filters = buildProjectFilters(req.query);
         if (filters.error) {
@@ -53,7 +55,7 @@ router.get('/projects', async (req, res) => {
     }
 });
 
-router.post('/projects/:slug/view', async (req, res) => {
+router.post('/projects/:slug/view', async (req: Request, res: Response) => {
     try {
         const { slug } = req.params;
         if (!isValidSlug(slug)) {
@@ -86,7 +88,7 @@ router.post('/projects/:slug/view', async (req, res) => {
     }
 });
 
-router.get('/projects/:slug', async (req, res) => {
+router.get('/projects/:slug', async (req: Request, res: Response) => {
     try {
         const { slug } = req.params;
         if (!isValidSlug(slug)) {

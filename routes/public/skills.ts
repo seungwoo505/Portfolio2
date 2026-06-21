@@ -1,8 +1,10 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const Skills = require('../../models/skills');
 const { cacheKey, cached, fail, ok } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -15,7 +17,7 @@ const router = express.Router();
  *     summary: 주요 기술 스택 조회
  *     tags: ['Public']
  */
-router.get('/skills', async (req, res) => {
+router.get('/skills', async (req: Request, res: Response) => {
     try {
         const data = await cached(cacheKey('skills', 'all'), async () => {
             const [skills, categories] = await Promise.all([
@@ -41,7 +43,7 @@ router.get('/skills', async (req, res) => {
     }
 });
 
-router.get('/skills/featured', async (req, res) => {
+router.get('/skills/featured', async (req: Request, res: Response) => {
     try {
         const data = await cached(cacheKey('skills', 'featured'), () => Skills.getFeatured());
         return ok(res, data);

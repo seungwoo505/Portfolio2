@@ -125,7 +125,7 @@ portfolio-server/
 │   └──  admin-users/             # 인증, 세션, 토큰, 권한, 사용자 로직
 │
 ├──  routes/                      # API 라우트
-│   ├──  public.js                # 공개 API 호환 엔트리
+│   ├──  public.ts                # 공개 API 호환 엔트리
 │   ├──  public/                  # 공개 프로필, 프로젝트, 블로그, 문의 라우트
 │   ├──  admin.js                 # 관리자 라우트 호환 엔트리
 │   ├──  admin/                   # 관리자 도메인별 라우트

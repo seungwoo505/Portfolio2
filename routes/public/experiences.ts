@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const Experiences = require('../../models/experiences');
 const {
@@ -9,7 +11,7 @@ const {
     toStringValue
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -22,7 +24,7 @@ const router = express.Router();
  *     summary: 공개 타임라인 조회
  *     tags: ['Public']
  */
-router.get('/experiences', async (req, res) => {
+router.get('/experiences', async (req: Request, res: Response) => {
     try {
         const type = toStringValue(req.query.type).trim() || null;
         const key = cacheKey('experiences', stableStringify({ type }));
@@ -36,7 +38,7 @@ router.get('/experiences', async (req, res) => {
     }
 });
 
-router.get('/experiences/timeline', async (req, res) => {
+router.get('/experiences/timeline', async (req: Request, res: Response) => {
     try {
         const data = await cached(cacheKey('experiences', 'timeline'), () => Experiences.getTimeline());
         return ok(res, data);
