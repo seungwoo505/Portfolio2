@@ -1,12 +1,26 @@
 const redis = require('redis');
 const logger = require('../../log');
 
-const createRedisClient = ({ onConnect, onError, onEnd } = {}) => {
+type RedisClientCallbacks = {
+    onConnect?: () => void;
+    onError?: (error: Error) => void;
+    onEnd?: () => void;
+};
+
+type RedisReconnectCause = {
+    code?: string;
+} | null | undefined;
+
+const createRedisClient = ({
+    onConnect,
+    onError,
+    onEnd
+}: RedisClientCallbacks = {}) => {
     const socketPath = process.env.REDIS_SOCKET || '/run/synocached.sock';
     const redisConfig = {
         socket: {
             path: socketPath,
-            reconnectStrategy: (retries, cause) => {
+            reconnectStrategy: (retries: number, cause: RedisReconnectCause) => {
                 if (cause?.code === 'ECONNREFUSED') {
                     logger.warn('Redis Unix 소켓 연결 실패, 메모리 캐시를 사용합니다.');
                     return false;
@@ -28,7 +42,7 @@ const createRedisClient = ({ onConnect, onError, onEnd } = {}) => {
         onConnect?.();
     });
 
-    client.on('error', (err) => {
+    client.on('error', (err: Error) => {
         logger.warn('Redis Unix 소켓 연결 오류', { error: err.message });
         onError?.(err);
     });
@@ -44,3 +58,5 @@ const createRedisClient = ({ onConnect, onError, onEnd } = {}) => {
 module.exports = {
     createRedisClient
 };
+
+export {};

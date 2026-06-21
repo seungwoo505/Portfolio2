@@ -11,3 +11,5 @@ Object.assign(
 );
 
 module.exports = new RedisCache();
+
+export {};

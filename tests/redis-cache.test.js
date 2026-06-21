@@ -9,12 +9,12 @@ const {
 } = require('./helpers/module-loader');
 
 const redisCacheModulePaths = [
-    ['utils', 'redis-cache.js'],
-    ['utils', 'redis-cache', 'index.js'],
-    ['utils', 'redis-cache', 'client.js'],
-    ['utils', 'redis-cache', 'commands.js'],
-    ['utils', 'redis-cache', 'connection.js'],
-    ['utils', 'redis-cache', 'stats.js']
+    ['utils', 'redis-cache.ts'],
+    ['utils', 'redis-cache', 'index.ts'],
+    ['utils', 'redis-cache', 'client.ts'],
+    ['utils', 'redis-cache', 'commands.ts'],
+    ['utils', 'redis-cache', 'connection.ts'],
+    ['utils', 'redis-cache', 'stats.ts']
 ];
 
 const createRedisCacheFixture = ({ connectError = null, infoError = null } = {}) => {
@@ -81,7 +81,7 @@ const createRedisCacheFixture = ({ connectError = null, infoError = null } = {})
     stubRootModule(['log.js'], createNoopLogger());
 
     return {
-        redisCache: require(resolveFromRoot(['utils', 'redis-cache.js'])),
+        redisCache: require(resolveFromRoot(['utils', 'redis-cache.ts'])),
         calls
     };
 };

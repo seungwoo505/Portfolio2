@@ -46,7 +46,7 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
         ['routes', 'monitoring', 'dashboard.js'],
         ['routes', 'monitoring', 'metrics.js'],
         ['utils', 'cache.ts'],
-        ['utils', 'redis-cache.js'],
+        ['utils', 'redis-cache.ts'],
         ['middleware', 'auth.js'],
         ['log.js']
     ]);
@@ -58,7 +58,7 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
         },
         getStats: () => ({ keys: 0 })
     });
-    stubRootModule(['utils', 'redis-cache.js'], {
+    stubRootModule(['utils', 'redis-cache.ts'], {
         flush: async () => {
             redisFlushes.push('redis');
         },

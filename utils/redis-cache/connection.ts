@@ -2,7 +2,23 @@ const logger = require('../../log');
 const { parseIntegerEnv } = require('../env-number');
 const { createRedisClient } = require('./client');
 
+type RedisClientLike = {
+    isOpen?: boolean;
+    connect: () => Promise<void>;
+    quit: () => Promise<void>;
+};
+
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
+
 class RedisCacheConnection {
+    client: RedisClientLike | null;
+    isConnected: boolean;
+    connectPromise: Promise<boolean> | null;
+    lastConnectAttemptAt: number;
+    retryDelayMs: number;
+
     constructor() {
         this.client = null;
         this.isConnected = false;
@@ -15,7 +31,7 @@ class RedisCacheConnection {
         });
     }
 
-    createClient() {
+    createClient(): RedisClientLike {
         return createRedisClient({
             onConnect: () => {
                 this.isConnected = true;
@@ -29,7 +45,7 @@ class RedisCacheConnection {
         });
     }
 
-    async connect({ force = false } = {}) {
+    async connect({ force = false }: { force?: boolean } = {}): Promise<boolean> {
         if (this.isConnected && this.client?.isOpen) {
             return true;
         }
@@ -54,7 +70,7 @@ class RedisCacheConnection {
                 this.isConnected = true;
                 return true;
             } catch (error) {
-                logger.warn('Redis Unix 소켓 초기화 실패', { error: error.message });
+                logger.warn('Redis Unix 소켓 초기화 실패', { error: getErrorMessage(error) });
                 this.isConnected = false;
                 this.client = null;
                 return false;
@@ -66,15 +82,15 @@ class RedisCacheConnection {
         return await this.connectPromise;
     }
 
-    async init() {
+    async init(): Promise<boolean> {
         return await this.connect({ force: true });
     }
 
-    async ensureConnected() {
+    async ensureConnected(): Promise<boolean> {
         return await this.connect();
     }
 
-    async disconnect() {
+    async disconnect(): Promise<void> {
         if (this.client) {
             if (this.client.isOpen) {
                 await this.client.quit();
@@ -88,3 +104,5 @@ class RedisCacheConnection {
 module.exports = {
     RedisCacheConnection
 };
+
+export {};

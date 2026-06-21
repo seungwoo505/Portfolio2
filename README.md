@@ -139,7 +139,7 @@ portfolio-server/
 ├──  utils/                       # 유틸리티
 │   ├──  cache.ts                 # 메모리 캐시 호환 엔트리
 │   ├──  cache/                   # 캐시 저장소, 로더, 무효화, 락
-│   ├──  redis-cache.js           # Redis 캐시 호환 엔트리
+│   ├──  redis-cache.ts           # Redis 캐시 호환 엔트리
 │   ├──  redis-cache/             # Redis 연결, 명령, 통계
 │   ├──  upload.ts                # 업로드 유틸 호환 엔트리
 │   └──  upload/                  # 업로드 경로, 검증, 저장소
