@@ -133,8 +133,8 @@ portfolio-server/
 ├──  middleware/                  # 미들웨어
 │   ├──  auth.js                  # 인증 미들웨어 호환 엔트리
 │   ├──  auth/                    # 토큰, 권한, 활동 로그 미들웨어
-│   ├──  rate-limiters.js         # 요청 제한 미들웨어
-│   └──  error-handlers.js        # 공통 에러 처리
+│   ├──  rate-limiters.ts         # 요청 제한 미들웨어
+│   └──  error-handlers.ts        # 공통 에러 처리
 │
 ├──  utils/                       # 유틸리티
 │   ├──  cache.ts                 # 메모리 캐시 호환 엔트리

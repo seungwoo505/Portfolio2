@@ -17,7 +17,7 @@ const loadRateLimitersWithEnv = (env) => {
     }
 
     clearRootModules([
-        ['middleware', 'rate-limiters.js'],
+        ['middleware', 'rate-limiters.ts'],
         ['log.js']
     ]);
     stubRootModule(['log.js'], createNoopLogger());
@@ -27,7 +27,7 @@ const loadRateLimitersWithEnv = (env) => {
         limiters,
         restore: () => {
             clearRootModules([
-                ['middleware', 'rate-limiters.js'],
+                ['middleware', 'rate-limiters.ts'],
                 ['log.js']
             ]);
             for (const key of Object.keys(env)) {

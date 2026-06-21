@@ -1,14 +1,23 @@
+import type { NextFunction, Request, Response } from 'express';
+
 const logger = require("../log");
 const { buildErrorResponse } = require("../utils/error-response");
 const { sendJson, sendNotFound } = require("../utils/api-response");
 
-const notFoundHandler = (req, res) => {
+type ErrorLike = Error & {
+    status?: unknown;
+    statusCode?: unknown;
+    type?: unknown;
+    body?: unknown;
+};
+
+const notFoundHandler = (req: Request, res: Response) => {
     sendNotFound(res, "요청하신 리소스를 찾을 수 없습니다.", {
         path: req.originalUrl
     });
 };
 
-const errorHandler = (error, req, res, next) => {
+const errorHandler = (error: ErrorLike, req: Request, res: Response, _next: NextFunction) => {
     const errorResponse = buildErrorResponse(error, {
         nodeEnv: process.env.NODE_ENV
     });

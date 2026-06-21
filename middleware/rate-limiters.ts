@@ -1,8 +1,27 @@
+import type { Request, Response } from 'express';
+
 const rateLimit = require("express-rate-limit");
 const logger = require("../log");
 const { getRetryAfterSeconds } = require("../utils/rate-limit");
 const { parseIntegerEnv } = require("../utils/env-number");
 const { sendTooManyRequests } = require("../utils/api-response");
+
+type RateLimitLogOptions = {
+    includeMethod?: boolean;
+    includeUserAgent?: boolean;
+};
+
+type RateLimitHandlerOptions = RateLimitLogOptions & {
+    error: string;
+    logMessage: string;
+    retryAfterSeconds: number;
+};
+
+type ServerRateLimiterOptions = RateLimitHandlerOptions & {
+    max: number;
+    skipSuccessfulRequests?: boolean;
+    windowMs: number;
+};
 
 const CONTACT_RATE_LIMIT_MAX = parseIntegerEnv(process.env.CONTACT_RATE_LIMIT_MAX, {
     fallback: 5,
@@ -21,8 +40,11 @@ const MONITORING_RATE_LIMIT_MAX = parseIntegerEnv(process.env.MONITORING_RATE_LI
     max: 300
 });
 
-const buildRateLimitLogMeta = (req, { includeMethod = true, includeUserAgent = false } = {}) => {
-    const meta = {
+const buildRateLimitLogMeta = (req: Request, {
+    includeMethod = true,
+    includeUserAgent = false
+}: RateLimitLogOptions = {}) => {
+    const meta: Record<string, unknown> = {
         ip: req.ip,
         url: req.originalUrl
     };
@@ -44,7 +66,7 @@ const createRateLimitHandler = ({
     includeUserAgent,
     logMessage,
     retryAfterSeconds
-}) => (req, res) => {
+}: RateLimitHandlerOptions) => (req: Request, res: Response) => {
     logger.warn(logMessage, buildRateLimitLogMeta(req, {
         includeMethod,
         includeUserAgent
@@ -65,7 +87,7 @@ const createServerRateLimiter = ({
     retryAfterSeconds,
     skipSuccessfulRequests = false,
     windowMs
-}) => rateLimit({
+}: ServerRateLimiterOptions) => rateLimit({
     windowMs,
     max,
     message: {
