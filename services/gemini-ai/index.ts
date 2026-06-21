@@ -1,3 +1,6 @@
+import type { GenerativeModel, GoogleGenerativeAI as GoogleGenerativeAIClient } from "@google/generative-ai";
+import type { GeminiServiceContext } from "./types";
+
 const fallbackSummaryMethods = require('./fallback-summary');
 const keywordMethods = require('./keywords');
 const markdownMethods = require('./markdown');
@@ -9,6 +12,10 @@ const {
 } = require('./common');
 
 class GeminiService {
+    apiKey: string | null;
+    genAI?: GoogleGenerativeAIClient;
+    model?: GenerativeModel;
+
     /**
      * @description Gemini AI 서비스 인스턴스를 초기화한다.
      * @returns {any} 처리 결과
@@ -36,6 +43,8 @@ class GeminiService {
         }
     }
 }
+
+interface GeminiService extends GeminiServiceContext {}
 
 Object.assign(
     GeminiService.prototype,

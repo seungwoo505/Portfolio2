@@ -1,4 +1,6 @@
-const handleShortContent = (text, maxLength) => {
+import type { GeminiServiceContext } from "../types";
+
+const handleShortContent = (text: string, maxLength: number): string => {
     let summary = text.trim();
 
     if (summary && !summary.match(/[.!?]$/)) {
@@ -12,7 +14,7 @@ const handleShortContent = (text, maxLength) => {
     return summary.substring(0, maxLength);
 };
 
-const findNaturalCutPoint = (text, maxLength) => {
+const findNaturalCutPoint = (text: string, maxLength: number): number => {
     if (text.length <= maxLength) return text.length;
 
     const cutPoints = [' ', ',', '.', '!', '?', ')', ']', '}'];
@@ -26,7 +28,7 @@ const findNaturalCutPoint = (text, maxLength) => {
     return maxLength;
 };
 
-const formatSingleSentence = (sentence, maxLength) => {
+const formatSingleSentence = (sentence: string, maxLength: number): string => {
     let formatted = sentence.trim();
     if (!formatted.match(/[.!?]$/)) {
         formatted += '.';
@@ -40,7 +42,7 @@ const formatSingleSentence = (sentence, maxLength) => {
     return formatted;
 };
 
-const createKeywordBasedSummary = (text) => {
+const createKeywordBasedSummary = (text: string, _maxLength?: number): string => {
     const words = text.match(/[가-힣A-Za-z]+/g) || [];
     const techKeywords = words.filter(word =>
         ['React', 'Next', 'JavaScript', 'TypeScript', 'Node', 'CSS', 'HTML'].includes(word)
@@ -53,7 +55,7 @@ const createKeywordBasedSummary = (text) => {
     return '개발 관련 내용입니다.';
 };
 
-function handleNoSentences(text, maxLength) {
+function handleNoSentences(this: GeminiServiceContext, text: string, maxLength: number): string {
     const phrases = this.extractPhrases(text, []);
     if (phrases.length > 0) {
         return this.createKeywordBasedSummary(text, maxLength);

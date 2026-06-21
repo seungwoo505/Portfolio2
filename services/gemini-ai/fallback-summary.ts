@@ -1,9 +1,11 @@
+import type { GeminiServiceContext } from "./types";
+
 const { verboseDebug } = require('./common');
 const formattingMethods = require('./fallback-summary/formatting');
 const scoringMethods = require('./fallback-summary/scoring');
 const sentenceMethods = require('./fallback-summary/sentences');
 
-const fallbackSummary = function (content, maxLength = 160) {
+const fallbackSummary = function (this: GeminiServiceContext, content: string, maxLength = 160): string {
     verboseDebug('fallbackSummary 호출됨, content 길이:', content.length);
 
     const cleanText = this.cleanMarkdown(content);

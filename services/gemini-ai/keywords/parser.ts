@@ -1,4 +1,6 @@
-const parseAndCleanKeywords = function (keywordsText, maxKeywords) {
+import type { GeminiServiceContext } from "../types";
+
+const parseAndCleanKeywords = function (this: GeminiServiceContext, keywordsText: string, maxKeywords: number): string[] {
     const delimiters = /[,\n\r\-•|]/;
     const keywords = keywordsText.split(delimiters)
         .map(k => k.trim())
@@ -10,11 +12,11 @@ const parseAndCleanKeywords = function (keywordsText, maxKeywords) {
     return [...new Set(keywords)];
 };
 
-const cleanSingleKeyword = (keyword) => (
+const cleanSingleKeyword = (keyword: string): string => (
     keyword.replace(/^[\d\.\-\*\+\s]*/, '').replace(/['""`]/g, '').trim()
 );
 
-const isInvalidKeyword = (keyword) => {
+const isInvalidKeyword = (keyword: string): boolean => {
     const invalid = ['입니다', '있습니다', '했습니다', '됩니다', '기반의', 'js', 'css'];
     return invalid.some(inv => keyword.includes(inv)) || keyword.length < 2;
 };

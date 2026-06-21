@@ -1,13 +1,20 @@
+import type { GeminiServiceContext, SummaryKeywordsResult, TechTag } from "./types";
+
 const {
     logger,
     verboseDebug
 } = require('./common');
 
+const buildErrorMetadata = (error: unknown) => ({
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined
+});
+
 module.exports = {
     /**
      * Gemini API를 사용한 텍스트 요약
      */
-    async generateSummary(content, maxLength = 160, techTags = []) {
+    async generateSummary(this: GeminiServiceContext, content: string, maxLength = 160, techTags: TechTag[] = []): Promise<string> {
         verboseDebug('=== generateSummary 시작 ===');
         verboseDebug('content 길이:', content.length);
         verboseDebug('maxLength:', maxLength);
@@ -103,7 +110,7 @@ ${cleanText}
             return summary;
 
         } catch (error) {
-            logger.error('Gemini API 요약 생성 실패', { error: error.message, stack: error.stack });
+            logger.error('Gemini API 요약 생성 실패', buildErrorMetadata(error));
             return this.fallbackSummary(content, maxLength);
         }
     },
@@ -114,7 +121,7 @@ ${cleanText}
      * @param {*} techTags 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async generateSummaryAndKeywords(content, techTags = []) {
+    async generateSummaryAndKeywords(this: GeminiServiceContext, content: string, techTags: TechTag[] = []): Promise<SummaryKeywordsResult> {
         const summary = await this.generateSummary(content, 160, techTags);
         const keywords = await this.extractKeywords(content, 10, techTags);
 

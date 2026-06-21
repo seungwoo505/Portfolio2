@@ -1,4 +1,12 @@
-const buildKeywordPrompt = ({ cleanText, maxKeywords, protectedTerms }) => `다음 텍스트에서 SEO에 효과적인 키워드를 ${maxKeywords}개 이하로 추출해주세요.
+import type { ProtectedTerms } from "../types";
+
+type KeywordPromptOptions = {
+    cleanText: string;
+    maxKeywords: number;
+    protectedTerms: ProtectedTerms;
+};
+
+const buildKeywordPrompt = ({ cleanText, maxKeywords, protectedTerms }: KeywordPromptOptions): string => `다음 텍스트에서 SEO에 효과적인 키워드를 ${maxKeywords}개 이하로 추출해주세요.
 
 키워드 선별 기준:
 - 핵심 주제와 직접 관련된 구체적인 명사나 기술명

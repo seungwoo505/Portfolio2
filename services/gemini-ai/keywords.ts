@@ -1,3 +1,5 @@
+import type { GeminiServiceContext, TechTag } from "./types";
+
 const {
     logger,
     verboseDebug
@@ -6,7 +8,12 @@ const fallbackKeywordMethods = require('./keywords/fallback');
 const parserMethods = require('./keywords/parser');
 const { buildKeywordPrompt } = require('./keywords/prompt');
 
-const extractKeywords = async function (content, maxKeywords = 10, techTags = []) {
+const buildErrorMetadata = (error: unknown) => ({
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined
+});
+
+const extractKeywords = async function (this: GeminiServiceContext, content: string, maxKeywords = 10, techTags: TechTag[] = []): Promise<string[]> {
     if (!this.model) {
         return this.fallbackKeywords(content, maxKeywords);
     }
@@ -47,7 +54,7 @@ const extractKeywords = async function (content, maxKeywords = 10, techTags = []
         return keywords.length > 0 ? keywords : this.fallbackKeywords(content, maxKeywords);
 
     } catch (error) {
-        logger.error('Gemini API 키워드 추출 실패', { error: error.message, stack: error.stack });
+        logger.error('Gemini API 키워드 추출 실패', buildErrorMetadata(error));
         return this.fallbackKeywords(content, maxKeywords);
     }
 };

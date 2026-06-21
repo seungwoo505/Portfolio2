@@ -1,11 +1,11 @@
-const isConnectorSentence = (sentence) => {
+const isConnectorSentence = (sentence: string): boolean => {
     const connectors = ['그리고', '또한', '하지만', '그러나', '따라서', '그러므로'];
     return connectors.some(conn => sentence.trim().startsWith(conn));
 };
 
-const cleanSentence = (sentence) => sentence.replace(/^\s*[,-]\s*/, '').trim();
+const cleanSentence = (sentence: string): string => sentence.replace(/^\s*[,-]\s*/, '').trim();
 
-const extractCleanSentences = (text) => (
+const extractCleanSentences = (text: string): string[] => (
     text
         .split(/[.!?]+/)
         .map(s => s.trim())

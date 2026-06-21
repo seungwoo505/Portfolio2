@@ -1,10 +1,12 @@
-const importantKeywords = [
+import type { GeminiServiceContext } from "../types";
+
+const importantKeywords: string[] = [
     '개발', '구현', '사용', '적용', '설계', '최적화', '향상',
     '문제', '해결', '분석', '설정', '배포', '테스트',
     'React', 'Next.js', 'JavaScript', 'TypeScript'
 ];
 
-const calculateSentenceScore = (sentence, keywords, isFirst) => {
+const calculateSentenceScore = (sentence: string, keywords: string[], isFirst: boolean): number => {
     let score = 0;
 
     keywords.forEach(keyword => {
@@ -18,7 +20,7 @@ const calculateSentenceScore = (sentence, keywords, isFirst) => {
     return score;
 };
 
-const prioritizeSentences = (sentences) => (
+const prioritizeSentences = (sentences: string[]): string[] => (
     sentences
         .map(sentence => ({
             text: sentence,
@@ -35,7 +37,7 @@ const prioritizeSentences = (sentences) => (
         .map(item => item.text)
 );
 
-function summarizeMultipleSentences(sentences, maxLength) {
+function summarizeMultipleSentences(this: GeminiServiceContext, sentences: string[], maxLength: number): string {
     const prioritized = this.prioritizeSentences(sentences);
     let summary = '';
     let remainingLength = maxLength;

@@ -1,10 +1,16 @@
+import type { CleanMarkdownResult, ProtectedTerms, TechTag } from "./types";
+
 const { verboseDebug } = require('./common');
+
+type TagRow = {
+    name: string;
+};
 
 module.exports = {
     /**
      * 마크다운 텍스트에서 순수 텍스트 추출 (기술 명칭 보호 없음)
      */
-    cleanMarkdown(content) {
+    cleanMarkdown(content: string): string {
         const cleaned = content
             .replace(/```[\s\S]*?```/g, '')
             .replace(/`([^`]*)`/g, '$1')
@@ -30,7 +36,7 @@ module.exports = {
     /**
      * 마크다운 텍스트에서 순수 텍스트 추출 (기술 명칭 보호 포함)
      */
-    async cleanMarkdownWithProtection(content, techTags = []) {
+    async cleanMarkdownWithProtection(content: string, techTags: TechTag[] = []): Promise<CleanMarkdownResult> {
         let techTerms = [
             'Next.js', 'React.js', 'Vue.js', 'Angular', 'Svelte',
             'Node.js', 'Express.js', 'JavaScript', 'TypeScript',
@@ -41,7 +47,7 @@ module.exports = {
 
         try {
             if (techTags && techTags.length > 0) {
-                const tagNames = techTags.map(tag => tag.name || tag);
+                const tagNames = techTags.map(tag => (typeof tag === 'string' ? tag : tag.name || tag)) as string[];
                 techTerms = [...new Set([...techTerms, ...tagNames])];
                 verboseDebug('클라이언트 태그와 결합된 기술 명칭:', techTerms.length, '개');
             }
@@ -52,7 +58,7 @@ module.exports = {
                     SELECT name FROM tags
                     WHERE type IN ('project', 'general')
                     AND name NOT IN (${techTerms.map(() => '?').join(',')})
-                `, techTerms);
+                `, techTerms) as [TagRow[], unknown];
 
                 if (rows && rows.length > 0) {
                     const dbTechTerms = rows.map(row => row.name);
@@ -66,7 +72,7 @@ module.exports = {
             verboseDebug('기본 기술 명칭 사용 (태그 시스템 연동 실패):', error);
         }
 
-        const protectedTerms = {};
+        const protectedTerms: ProtectedTerms = {};
         let protectedContent = content;
         techTerms.forEach((term, index) => {
             const placeholder = `__TECH_TERM_${index}__`;

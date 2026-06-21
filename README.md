@@ -157,7 +157,7 @@ portfolio-server/
 │   └──  run-ip-useragent-migration.js
 │
 ├──  services/                    # 외부 서비스
-│   └──  gemini-ai.js             # Google Gemini AI 서비스
+│   └──  gemini-ai.ts             # Google Gemini AI 서비스
 │
 ├──  uploads/                     # 업로드된 파일
 │   └──  images/                  # 이미지 파일들
