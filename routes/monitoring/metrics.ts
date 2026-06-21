@@ -1,3 +1,6 @@
+import type { Request, Response, Router } from 'express';
+import type { RowDataPacket } from 'mysql2';
+
 const express = require('express');
 const {
     adminOnly,
@@ -6,7 +9,15 @@ const {
     redisCache
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
+
+type DbHealthRow = RowDataPacket & {
+    test: number;
+};
+
+type DbPool = {
+    execute<T = unknown>(sql: string, values?: unknown[]): Promise<[T, unknown]>;
+};
 
 /**
  * @swagger
@@ -61,12 +72,12 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/metrics', ...adminOnly, async (req, res) => {
+router.get('/metrics', ...adminOnly, async (req: Request, res: Response) => {
     try {
         const startTime = Date.now();
 
-        const db = require('../../db');
-        const [dbResult] = await db.execute('SELECT 1 as test');
+        const db = require('../../db') as DbPool;
+        const [dbResult] = await db.execute<DbHealthRow[]>('SELECT 1 as test');
         const dbResponseTime = Date.now() - startTime;
 
         const redisStartTime = Date.now();

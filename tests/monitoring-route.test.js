@@ -39,12 +39,12 @@ const requestJson = async (router, path, { method = 'GET', body = undefined } = 
 
 const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
     clearRootModules([
-        ['routes', 'monitoring.js'],
-        ['routes', 'monitoring', 'index.js'],
-        ['routes', 'monitoring', 'common.js'],
-        ['routes', 'monitoring', 'cache.js'],
-        ['routes', 'monitoring', 'dashboard.js'],
-        ['routes', 'monitoring', 'metrics.js'],
+        ['routes', 'monitoring.ts'],
+        ['routes', 'monitoring', 'index.ts'],
+        ['routes', 'monitoring', 'common.ts'],
+        ['routes', 'monitoring', 'cache.ts'],
+        ['routes', 'monitoring', 'dashboard.ts'],
+        ['routes', 'monitoring', 'metrics.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'redis-cache.ts'],
         ['middleware', 'auth.ts'],
@@ -75,7 +75,7 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
         ]
     });
 
-    return require(resolveFromRoot(['routes', 'monitoring.js']));
+    return require(resolveFromRoot(['routes', 'monitoring.ts']));
 };
 
 test('monitoring cache clear rejects missing cache type before flushing', async () => {

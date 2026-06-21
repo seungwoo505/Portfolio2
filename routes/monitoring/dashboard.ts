@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     CacheUtils,
@@ -7,7 +9,7 @@ const {
     redisCache
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -60,7 +62,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/dashboard', ...adminOnly, async (req, res) => {
+router.get('/dashboard', ...adminOnly, async (req: Request, res: Response) => {
     try {
         const memoryUsage = process.memoryUsage();
         const uptime = process.uptime();

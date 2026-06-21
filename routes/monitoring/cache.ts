@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     CacheUtils,
@@ -10,7 +12,7 @@ const {
 const { toStringValue } = require('../../utils/filter-values');
 const { getPlainBody } = require('../../utils/request-body');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -60,7 +62,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/cache/clear', ...adminOnly, async (req, res) => {
+router.post('/cache/clear', ...adminOnly, async (req: Request, res: Response) => {
     try {
         const type = toStringValue(getPlainBody(req).type).trim().toLowerCase();
 
