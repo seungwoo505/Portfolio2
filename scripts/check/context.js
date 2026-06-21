@@ -28,12 +28,11 @@ const collectJsFiles = (directory) => collectFiles(directory, jsExtensions);
 const rootSourceFiles = [
     'server.ts',
     'app.ts',
-    'db.js'
+    'db.ts'
 ].filter((file) => fs.existsSync(path.join(rootDir, file)));
 
 const sourceCheckFiles = Array.from(new Set([
     ...rootSourceFiles,
-    'db.js',
     ...collectSourceFiles('routes'),
     ...collectSourceFiles('models'),
     ...collectSourceFiles('utils'),

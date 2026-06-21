@@ -23,12 +23,12 @@ const loadDbUtilsWithConnection = (connection, {
 } = {}) => {
     clearRootModules([
         ...dbUtilsModulePaths,
-        ['db.js'],
+        ['db.ts'],
         ['log.ts'],
         ['utils', 'cache.ts']
     ]);
 
-    stubRootModule(['db.js'], {
+    stubRootModule(['db.ts'], {
         getConnection: async () => connection,
         execute
     });

@@ -111,7 +111,7 @@ portfolio-server/
 ├──  app.ts                       # Express 앱 조립
 ├──  package.json                 # 프로젝트 설정 및 의존성
 ├──  .env.example                 # 환경 변수 예시 파일
-├──  db.js                        # 데이터베이스 연결 설정
+├──  db.ts                        # 데이터베이스 연결 설정
 ├──  log.ts                       # 로깅 설정
 │
 ├──  models/                      # 데이터베이스 모델
