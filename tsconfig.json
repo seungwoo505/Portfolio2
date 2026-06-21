@@ -18,6 +18,7 @@
     "*.js",
     "*.ts",
     "config/**/*.js",
+    "config/**/*.ts",
     "logger/**/*.js",
     "logger/**/*.ts",
     "middleware/**/*.js",

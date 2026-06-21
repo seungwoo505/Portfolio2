@@ -1,3 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
+
 const crypto = require("crypto");
 const path = require("path");
 const express = require("express");
@@ -6,7 +8,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const helmet = require("helmet");
 
-const parseTrustProxy = (value) => {
+const parseTrustProxy = (value: unknown) => {
     const normalized = String(value || "").trim().toLowerCase();
     if (!normalized || ["0", "false", "off", "no"].includes(normalized)) {
         return false;
@@ -23,7 +25,7 @@ const parseTrustProxy = (value) => {
     return value;
 };
 
-const requestIdMiddleware = (req, res, next) => {
+const requestIdMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     const incomingRequestId = req.headers["x-request-id"];
     req.requestId = typeof incomingRequestId === "string" && incomingRequestId.trim()
         ? incomingRequestId.trim()
@@ -32,14 +34,14 @@ const requestIdMiddleware = (req, res, next) => {
     next();
 };
 
-const configureCoreMiddleware = (app) => {
+const configureCoreMiddleware = (app: any): void => {
     const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
     app.set("trust proxy", trustProxy);
 
     app.use(compression({
         level: 7,
         threshold: 512,
-        filter: (req, res) => {
+        filter: (req: Request, res: Response) => {
             if (req.headers["x-no-compression"]) {
                 return false;
             }
@@ -68,7 +70,7 @@ const configureCoreMiddleware = (app) => {
     app.use(requestIdMiddleware);
 };
 
-const configureSecurityMiddleware = (app) => {
+const configureSecurityMiddleware = (app: any): void => {
     app.use(
         cors({
             origin: [
@@ -108,7 +110,7 @@ const configureSecurityMiddleware = (app) => {
     }));
 };
 
-const mountStaticAssets = (app) => {
+const mountStaticAssets = (app: any): void => {
     app.use("/uploads/images", express.static(path.join(__dirname, "..", "uploads", "images"), {
         dotfiles: "deny",
         immutable: true,
