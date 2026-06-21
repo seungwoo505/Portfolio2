@@ -48,10 +48,10 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
         ['utils', 'cache.ts'],
         ['utils', 'redis-cache.ts'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
     stubRootModule(['utils', 'cache.ts'], {
         flush: () => {
             cacheFlushes.push('memory');

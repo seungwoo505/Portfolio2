@@ -3,7 +3,15 @@ const { attachDomainLoggers } = require('./domain');
 const { attachRequestLoggers } = require('./request');
 const { attachStats } = require('./stats');
 
-const attachLoggerExtensions = (logger, { isVerboseEnabled, slowRequestMs }) => {
+type LoggerRuntimeOptions = {
+    isVerboseEnabled: boolean;
+    slowRequestMs: number;
+};
+
+const attachLoggerExtensions = (logger: any, {
+    isVerboseEnabled,
+    slowRequestMs
+}: LoggerRuntimeOptions): void => {
     logger.redact = redact;
     logger.isVerboseEnabled = () => isVerboseEnabled;
     logger.getSlowRequestMs = () => slowRequestMs;
@@ -16,3 +24,5 @@ const attachLoggerExtensions = (logger, { isVerboseEnabled, slowRequestMs }) => 
 module.exports = {
     attachLoggerExtensions
 };
+
+export {};

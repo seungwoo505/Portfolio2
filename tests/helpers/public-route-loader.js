@@ -59,10 +59,10 @@ const loadPublicRoute = ({
         ...modelModules,
         ['utils', 'cache.ts'],
         ['utils', 'slug.js'],
-        ['log.js']
+        ['log.ts']
     ]);
 
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
     stubRootModule(['models', 'personal-info.js'], PersonalInfo);
     stubRootModule(['models', 'social-links.js'], SocialLinks);
     stubRootModule(['models', 'skills.js'], Skills);

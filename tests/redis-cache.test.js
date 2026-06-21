@@ -20,7 +20,7 @@ const redisCacheModulePaths = [
 const createRedisCacheFixture = ({ connectError = null, infoError = null } = {}) => {
     clearRootModules([
         ...redisCacheModulePaths,
-        ['log.js']
+        ['log.ts']
     ]);
 
     const redisModulePath = require.resolve('redis', {
@@ -78,7 +78,7 @@ const createRedisCacheFixture = ({ connectError = null, infoError = null } = {})
         }
     };
 
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
 
     return {
         redisCache: require(resolveFromRoot(['utils', 'redis-cache.ts'])),

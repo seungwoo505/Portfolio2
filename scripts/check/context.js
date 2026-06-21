@@ -23,7 +23,6 @@ const collectJsFiles = (directory) => {
 const syntaxCheckFiles = Array.from(new Set([
     'server.js',
     'app.js',
-    'log.js',
     'db.js',
     ...collectJsFiles('routes'),
     ...collectJsFiles('models'),

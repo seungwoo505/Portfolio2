@@ -1,3 +1,9 @@
+type ErrorLike = Error & {
+    code?: unknown;
+    errno?: unknown;
+    sqlState?: unknown;
+};
+
 const sensitiveKeys = new Set([
     'authorization',
     'cookie',
@@ -16,7 +22,7 @@ const sensitiveKeys = new Set([
 ]);
 const sensitiveKeyFragments = ['password', 'token', 'secret', 'authorization', 'cookie'];
 
-const normalizeError = (error) => ({
+const normalizeError = (error: ErrorLike) => ({
     name: error.name,
     message: error.message,
     stack: error.stack,
@@ -25,7 +31,7 @@ const normalizeError = (error) => ({
     sqlState: error.sqlState
 });
 
-const redact = (value, seen = new WeakSet()) => {
+const redact = (value: unknown, seen = new WeakSet<object>()): unknown => {
     if (value === null || value === undefined) {
         return value;
     }
@@ -39,7 +45,7 @@ const redact = (value, seen = new WeakSet()) => {
     }
 
     if (Array.isArray(value)) {
-        return value.map(item => redact(item, seen));
+        return value.map((item) => redact(item, seen));
     }
 
     if (typeof value !== 'object') {
@@ -56,7 +62,7 @@ const redact = (value, seen = new WeakSet()) => {
             const normalizedKey = key.toLowerCase().replace(/[-_\s]/g, '');
             const isSensitive = sensitiveKeys.has(key.toLowerCase()) ||
                 sensitiveKeys.has(normalizedKey) ||
-                sensitiveKeyFragments.some(fragment => normalizedKey.includes(fragment));
+                sensitiveKeyFragments.some((fragment) => normalizedKey.includes(fragment));
 
             if (isSensitive) {
                 return [key, '[REDACTED]'];
@@ -69,3 +75,5 @@ const redact = (value, seen = new WeakSet()) => {
 module.exports = {
     redact
 };
+
+export {};

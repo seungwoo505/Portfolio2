@@ -34,10 +34,10 @@ const cacheModules = [
 test('resource invalidation clears public blog detail cache keys', () => {
     clearRootModules([
         ...cacheModules,
-        ['log.js']
+        ['log.ts']
     ]);
 
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
 
     const CacheUtils = require(resolveFromRoot(['utils', 'cache.ts']));
     CacheUtils.flush();
@@ -95,10 +95,10 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
 test('cacheApiResponse reuses an in-flight loader for the same key', async () => {
     clearRootModules([
         ...cacheModules,
-        ['log.js']
+        ['log.ts']
     ]);
 
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
 
     const CacheUtils = require(resolveFromRoot(['utils', 'cache.ts']));
     CacheUtils.flush();

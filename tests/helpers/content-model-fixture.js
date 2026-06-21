@@ -50,7 +50,7 @@ const createModelFixture = (modelPath) => {
         ['utils', 'slug.js'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     const operations = [];
@@ -123,7 +123,7 @@ const createModelFixture = (modelPath) => {
         generateKey: (...parts) => parts.join(':'),
         cacheApiResponse: async (_key, fetcher) => fetcher()
     });
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
 
     const model = require(resolveFromRoot(modelPath));
     return {

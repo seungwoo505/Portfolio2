@@ -1,7 +1,17 @@
+import type { Request, Response } from 'express';
+
 const { requestMeta } = require('./request-meta');
 
-const attachRequestLoggers = (logger, { isVerboseEnabled, slowRequestMs }) => {
-    logger.request = (req, message = 'API 요청') => {
+type RequestLoggerOptions = {
+    isVerboseEnabled: boolean;
+    slowRequestMs: number;
+};
+
+const attachRequestLoggers = (logger: any, {
+    isVerboseEnabled,
+    slowRequestMs
+}: RequestLoggerOptions): void => {
+    logger.request = (req: Request, message = 'API 요청') => {
         if (!isVerboseEnabled) {
             return;
         }
@@ -12,7 +22,7 @@ const attachRequestLoggers = (logger, { isVerboseEnabled, slowRequestMs }) => {
         }));
     };
 
-    logger.response = (req, res, message = 'API 응답') => {
+    logger.response = (req: Request, res: Response, message = 'API 응답') => {
         if (!isVerboseEnabled) {
             return;
         }
@@ -23,7 +33,7 @@ const attachRequestLoggers = (logger, { isVerboseEnabled, slowRequestMs }) => {
         }));
     };
 
-    logger.requestSummary = (req, res, { durationMs }) => {
+    logger.requestSummary = (req: Request, res: Response, { durationMs }: { durationMs: number }) => {
         const statusCode = res.statusCode;
         const isAdminApi = req.path.startsWith('/admin');
         const isDataModifying = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);

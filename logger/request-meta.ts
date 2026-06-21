@@ -1,4 +1,8 @@
-const adminFromRequest = (req) => {
+import type { Request } from 'express';
+
+type RequestMetaExtra = Record<string, unknown>;
+
+const adminFromRequest = (req: Request | null | undefined) => {
     if (!req?.admin) {
         return null;
     }
@@ -10,7 +14,7 @@ const adminFromRequest = (req) => {
     };
 };
 
-const requestMeta = (req, extra = {}) => ({
+const requestMeta = (req: Request | null | undefined, extra: RequestMetaExtra = {}) => ({
     requestId: req?.requestId,
     method: req?.method,
     path: req?.originalUrl || req?.url,

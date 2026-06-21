@@ -176,7 +176,7 @@ const loadAdminRoute = (routeSegments, moduleStubs) => {
         ['utils', 'route-params.js'],
         ['utils', 'slug.js'],
         ['middleware', 'auth.ts'],
-        ['log.js'],
+        ['log.ts'],
         ...moduleStubs.map(({ segments }) => segments)
     ]);
 

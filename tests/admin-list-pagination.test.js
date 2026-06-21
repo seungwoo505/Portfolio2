@@ -67,7 +67,7 @@ test('admin blog list returns count-based pagination total', async () => {
         ['utils', 'cache.ts'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     const countFilters = [];
@@ -107,7 +107,7 @@ test('admin featured project list returns count-based pagination total', async (
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     const featuredCalls = [];
@@ -158,7 +158,7 @@ test('admin project list rejects invalid featured filters before model calls', a
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     let getAllCalled = false;

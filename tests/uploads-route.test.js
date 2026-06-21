@@ -41,7 +41,7 @@ const loadUploadsRoute = (filePath, options = {}) => {
         ['routes', 'admin', 'common.js'],
         ['utils', 'upload.ts'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubRootModule(['routes', 'admin', 'common.js'], {

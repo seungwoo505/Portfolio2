@@ -52,7 +52,7 @@ const loadAiRoute = (geminiService, logger = createNoopLogger()) => {
         ['routes', 'admin', 'common.js'],
         ['services', 'gemini-ai.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubRootModule(['routes', 'admin', 'common.js'], {

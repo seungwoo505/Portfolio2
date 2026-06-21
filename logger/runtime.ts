@@ -7,7 +7,7 @@ const { parseIntegerEnv } = require('../utils/env-number');
 
 const logDir = path.join(__dirname, '..', 'logs');
 fs.promises.mkdir(logDir, { recursive: true })
-    .catch(error => {
+    .catch((error: unknown) => {
         console.error(`Failed to create log directory ${logDir}`, error);
     });
 
@@ -32,3 +32,5 @@ module.exports = {
     slowRequestMs,
     transport
 };
+
+export {};

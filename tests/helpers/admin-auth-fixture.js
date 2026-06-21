@@ -41,7 +41,7 @@ const createAdminUsersFixture = async () => {
     clearRootModules([
         ...adminUsersModules,
         ['models', 'db-utils.js'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     const sessions = [];
@@ -168,7 +168,7 @@ const createAdminUsersFixture = async () => {
     };
 
     stubRootModule(['models', 'db-utils.js'], dbUtils);
-    stubRootModule(['log.js'], createNoopLogger());
+    stubRootModule(['log.ts'], createNoopLogger());
 
     const AdminUsers = require(resolveFromRoot(['models', 'admin-users.js']));
     return { AdminUsers, sessions, queryCalls };
@@ -179,12 +179,12 @@ const loadAuthMiddleware = (AdminUsers, logger = createNoopLogger()) => {
         ...authMiddlewareModules,
         ...adminUsersModules,
         ['models', 'admin-activity-logs.js'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubRootModule(['models', 'admin-users.js'], AdminUsers);
     stubRootModule(['models', 'admin-activity-logs.js'], {});
-    stubRootModule(['log.js'], logger);
+    stubRootModule(['log.ts'], logger);
 
     return require(resolveFromRoot(['middleware', 'auth.ts']));
 };

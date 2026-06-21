@@ -1,5 +1,12 @@
-const attachStats = (logger, isVerboseEnabled) => {
-    logger.stats = {
+type LoggerStats = {
+    counters: Record<string, number>;
+    updateStats: (type: string, value?: number) => void;
+    resetStats: () => void;
+    logStats: () => void;
+};
+
+const attachStats = (logger: any, isVerboseEnabled: boolean): void => {
+    const stats: LoggerStats = {
         counters: {
             totalRequests: 0,
             adminRequests: 0,
@@ -18,7 +25,7 @@ const attachStats = (logger, isVerboseEnabled) => {
         },
 
         resetStats() {
-            Object.keys(this.counters).forEach(key => {
+            Object.keys(this.counters).forEach((key) => {
                 this.counters[key] = 0;
             });
         },
@@ -31,7 +38,9 @@ const attachStats = (logger, isVerboseEnabled) => {
         }
     };
 
-    logger.incrementCounter = (type, value = 1) => {
+    logger.stats = stats;
+
+    logger.incrementCounter = (type: string, value = 1) => {
         logger.stats.updateStats(type, value);
     };
 
@@ -47,3 +56,5 @@ const attachStats = (logger, isVerboseEnabled) => {
 module.exports = {
     attachStats
 };
+
+export {};

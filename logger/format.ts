@@ -1,7 +1,14 @@
 const winston = require('winston');
 const { redact } = require('./redaction');
 
-const formatAdmin = (admin) => {
+type LogIdentity = {
+    id?: number | string;
+    username?: string;
+};
+
+type LogMeta = Record<string, any>;
+
+const formatAdmin = (admin: LogIdentity | null | undefined): string | null => {
     if (!admin) {
         return null;
     }
@@ -10,7 +17,7 @@ const formatAdmin = (admin) => {
     return admin.id ? `${username}#${admin.id}` : username;
 };
 
-const formatLogValue = (value) => {
+const formatLogValue = (value: unknown): string | null => {
     if (value === undefined || value === null || value === '') {
         return null;
     }
@@ -19,7 +26,7 @@ const formatLogValue = (value) => {
     return /\s/.test(stringValue) ? JSON.stringify(stringValue) : stringValue;
 };
 
-const pickLineFields = (meta) => {
+const pickLineFields = (meta: LogMeta): string[] => {
     const fieldOrder = [
         ['requestId', 'req'],
         ['method', 'method'],
@@ -50,10 +57,10 @@ const pickLineFields = (meta) => {
             const formattedValue = formatLogValue(value);
             return formattedValue ? `${outputKey}=${formattedValue}` : null;
         })
-        .filter(Boolean);
+        .filter((value): value is string => Boolean(value));
 };
 
-const compactMeta = (meta) => {
+const compactMeta = (meta: LogMeta): LogMeta => {
     const compactKeys = new Set([
         'requestId',
         'method',
@@ -80,8 +87,8 @@ const createLogFormat = () => {
         winston.format.errors({ stack: true })
     ];
 
-    formats.push(winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
-        const cleanMeta = redact(meta);
+    formats.push(winston.format.printf(({ timestamp, level, message, stack, ...meta }: LogMeta) => {
+        const cleanMeta = redact(meta) as LogMeta;
         const lineFields = pickLineFields(cleanMeta);
         const remainingMeta = compactMeta(cleanMeta);
 
@@ -104,3 +111,5 @@ const createLogFormat = () => {
 module.exports = {
     createLogFormat
 };
+
+export {};

@@ -57,7 +57,7 @@ const loadBlogRoute = (BlogPosts) => {
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubRootModule(['routes', 'admin', 'common.js'], {

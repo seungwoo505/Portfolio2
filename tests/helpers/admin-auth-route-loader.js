@@ -66,7 +66,7 @@ const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } 
         ['models', 'admin-users.js'],
         ['models', 'admin-activity-logs.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubCommon();
@@ -83,7 +83,7 @@ const loadUsersRoute = (AdminUsers) => {
         ['routes', 'admin', 'common.js'],
         ['models', 'admin-users.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubCommon();

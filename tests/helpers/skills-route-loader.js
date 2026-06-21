@@ -24,7 +24,7 @@ const loadSkillsRoute = (Skills) => {
         ['utils', 'filter-values.js'],
         ['utils', 'request-body.js'],
         ['middleware', 'auth.ts'],
-        ['log.js']
+        ['log.ts']
     ]);
 
     stubRootModule(['routes', 'admin', 'common.js'], {

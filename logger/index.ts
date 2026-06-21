@@ -24,3 +24,5 @@ attachLoggerExtensions(logger, {
 });
 
 module.exports = logger;
+
+export {};
