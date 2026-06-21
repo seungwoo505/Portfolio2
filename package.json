@@ -2,10 +2,10 @@
   "name": "portfolio-blog-server",
   "version": "1.0.0",
   "description": "Portfolio blog server with REST API",
-  "main": "server.js",
+  "main": "server.ts",
   "scripts": {
-    "start": "node --import tsx server.js",
-    "dev": "nodemon --exec \"node --import tsx\" server.js",
+    "start": "node --import tsx server.ts",
+    "dev": "nodemon --exec \"node --import tsx\" server.ts",
     "setup:db": "node --import tsx scripts/setup-database.js",
     "migrate": "node --import tsx scripts/setup-database.js",
     "migrate:content": "node --import tsx migrations/content-migration.js",

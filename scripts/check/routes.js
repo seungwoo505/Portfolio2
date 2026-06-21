@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { collectJsFiles, rootDir } = require('./context');
+const { collectSourceFiles, rootDir } = require('./context');
 
 const checkAdminRouteExport = () => {
     const adminRoutes = require(path.join(rootDir, 'routes', 'admin'));
@@ -11,7 +11,7 @@ const checkAdminRouteExport = () => {
 };
 
 const checkRouteModelMethods = () => {
-    const routeFiles = collectJsFiles('routes');
+    const routeFiles = collectSourceFiles('routes');
     const requirePattern = /const\s+([A-Z][A-Za-z0-9_]*)\s*=\s*require\(['"]\.\.\/\.\.\/models\/([^'"]+)['"]\)/g;
     const methodCallPattern = /\b([A-Z][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
     const failures = [];
@@ -33,7 +33,7 @@ const checkRouteModelMethods = () => {
             const modelPath = path.join(rootDir, 'models', modelAliases.get(alias));
             const model = require(modelPath);
             if (typeof model[methodName] !== 'function') {
-                failures.push(`${routeFile}: ${alias}.${methodName}() is not exported by models/${modelAliases.get(alias)}.js`);
+                failures.push(`${routeFile}: ${alias}.${methodName}() is not exported by models/${modelAliases.get(alias)}`);
             }
         }
     }

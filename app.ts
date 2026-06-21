@@ -1,3 +1,5 @@
+import type { Request, Response } from "express";
+
 const express = require("express");
 const publicRoutes = require("./routes/public");
 const adminRoutes = require("./routes/admin");
@@ -39,7 +41,7 @@ mountSwaggerDocs(app, { port });
 app.use(requestLoggingMiddleware);
 app.use(apiResponseNormalizer);
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
     res.json(buildHealthResponse());
 });
 

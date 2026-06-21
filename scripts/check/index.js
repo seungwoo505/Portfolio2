@@ -1,5 +1,5 @@
 const { checkServerBoots } = require('./boot');
-const { syntaxCheckFiles } = require('./context');
+const { sourceCheckFiles } = require('./context');
 const { checkRoutePermissionsSeeded } = require('./permissions');
 const { checkAdminRouteExport, checkRouteModelMethods } = require('./routes');
 const { checkSwaggerServerConfig } = require('./swagger');
@@ -13,7 +13,7 @@ const runChecks = () => {
     checkSwaggerServerConfig();
     checkServerBoots();
 
-    console.log(`server check passed (${syntaxCheckFiles.length} files)`);
+    console.log(`server check passed (${sourceCheckFiles.length} files)`);
 };
 
 module.exports = {

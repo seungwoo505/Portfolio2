@@ -124,7 +124,7 @@ module.exports = {
   apps: [
     {
       name: "portfolio-server",
-      script: "server.js",
+      script: "server.ts",
       instances: "max",
       exec_mode: "cluster",
       env: {
@@ -139,7 +139,7 @@ module.exports = {
       log_file: "./logs/combined.log",
       time: true,
       max_memory_restart: "1G",
-      node_args: "--max-old-space-size=1024",
+      node_args: "--import tsx --max-old-space-size=1024",
     },
   ],
 };
@@ -167,7 +167,7 @@ RUN mkdir -p uploads
 EXPOSE 3333
 
 # 애플리케이션 시작
-CMD ["node", "server.js"]
+CMD ["node", "--import", "tsx", "server.ts"]
 ```
 
 ### **portfolio-server.service (systemd)**
@@ -181,7 +181,7 @@ After=network.target
 Type=simple
 User=www-data
 WorkingDirectory=/var/www/portfolio-server
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node --import tsx server.ts
 Restart=on-failure
 RestartSec=10
 Environment=NODE_ENV=production
@@ -357,7 +357,7 @@ SET GLOBAL long_query_time = 2;
 ### **3. 압축 설정**
 
 ```javascript
-// server.js에 추가
+// app.ts 또는 미들웨어 설정에 추가
 const compression = require("compression");
 app.use(compression());
 ```
@@ -394,7 +394,7 @@ sudo chmod 644 /path/to/ssl/certificate.crt
 
 ```bash
 # Node.js 메모리 제한 늘리기
-node --max-old-space-size=2048 server.js
+node --import tsx --max-old-space-size=2048 server.ts
 ```
 
 ##  **배포 후 확인사항**

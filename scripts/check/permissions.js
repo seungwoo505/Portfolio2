@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { collectJsFiles, rootDir } = require('./context');
+const { collectSourceFiles, rootDir } = require('./context');
 
 const extractSqlStringLiterals = (content) => (
     [...content.matchAll(/'([^']+)'/g)].map((match) => match[1])
@@ -52,7 +52,7 @@ const addSetDifferenceFailures = ({ failures, label, expectedPermissions, actual
 };
 
 const collectRoutePermissions = () => {
-    const routeFiles = collectJsFiles('routes');
+    const routeFiles = collectSourceFiles('routes');
     const routePermissionPattern = /requirePermission\(['"]([^'"]+)['"]\)/g;
     const routePermissions = new Set();
 

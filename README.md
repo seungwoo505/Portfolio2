@@ -107,7 +107,8 @@
 
 ```
 portfolio-server/
-├──  server.js                    # 메인 서버 파일
+├──  server.ts                    # 메인 서버 파일
+├──  app.ts                       # Express 앱 조립
 ├──  package.json                 # 프로젝트 설정 및 의존성
 ├──  .env.example                 # 환경 변수 예시 파일
 ├──  db.js                        # 데이터베이스 연결 설정

@@ -97,7 +97,7 @@ Portfolio2/
 │   ├── models/         # 데이터베이스 모델
 │   ├── routes/         # API 라우트
 │   ├── utils/          # 유틸리티
-│   └── server.js       # 메인 서버
+│   └── server.ts       # 메인 서버
 │
 └── README.md          # 이 파일
 ```
@@ -149,7 +149,7 @@ npm run build
 ```bash
 cd portfolio-server
 npm install -g pm2
-pm2 start server.js
+pm2 start server.ts --interpreter node --node-args="--import tsx"
 ```
 
 ## 📚 문서

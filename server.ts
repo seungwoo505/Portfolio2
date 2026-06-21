@@ -1,3 +1,5 @@
+import type { Server } from "http";
+
 require("dotenv").config({ quiet: true });
 
 const http = require("http");
@@ -14,7 +16,7 @@ if (!productionEnvValidation.ok) {
     process.exit(1);
 }
 
-const server = http.createServer(app);
+const server: Server = http.createServer(app);
 
 logger.info("포트폴리오 서버 시작 중...");
 logger.info("환경 설정", {
