@@ -1,6 +1,10 @@
 const RETRY_AFTER_MIN_SECONDS = 1;
 
-const normalizeResetTimeMs = (resetTime) => {
+type RateLimitInfo = {
+    resetTime?: Date | number;
+};
+
+const normalizeResetTimeMs = (resetTime: unknown): number | null => {
     if (resetTime instanceof Date) {
         return resetTime.getTime();
     }
@@ -12,8 +16,15 @@ const normalizeResetTimeMs = (resetTime) => {
     return null;
 };
 
-const getRetryAfterSeconds = (rateLimitInfo, fallbackSeconds, now = Date.now()) => {
-    const fallback = Math.max(RETRY_AFTER_MIN_SECONDS, Number.parseInt(fallbackSeconds, 10) || RETRY_AFTER_MIN_SECONDS);
+const getRetryAfterSeconds = (
+    rateLimitInfo: RateLimitInfo | null | undefined,
+    fallbackSeconds: unknown,
+    now = Date.now()
+): number => {
+    const fallback = Math.max(
+        RETRY_AFTER_MIN_SECONDS,
+        Number.parseInt(String(fallbackSeconds), 10) || RETRY_AFTER_MIN_SECONDS
+    );
     const resetTimeMs = normalizeResetTimeMs(rateLimitInfo?.resetTime);
 
     if (!resetTimeMs) {
@@ -27,3 +38,5 @@ const getRetryAfterSeconds = (rateLimitInfo, fallbackSeconds, now = Date.now()) 
 module.exports = {
     getRetryAfterSeconds
 };
+
+export {};

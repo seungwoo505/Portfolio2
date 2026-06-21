@@ -1,4 +1,16 @@
-const generateSlug = (value, fallback = 'item') => {
+type SlugValidationOptions = {
+    maxLength?: number;
+};
+
+type UniqueSlugOptions = {
+    value: unknown;
+    providedSlug?: unknown;
+    fallback?: string;
+    maxLength?: number;
+    exists: (candidate: string) => boolean | Promise<boolean>;
+};
+
+const generateSlug = (value: unknown, fallback = 'item'): string => {
     const slug = String(value || '')
         .toLowerCase()
         .replace(/[^a-z0-9가-힣\s-]/g, '')
@@ -9,7 +21,7 @@ const generateSlug = (value, fallback = 'item') => {
     return slug || fallback;
 };
 
-const isValidSlug = (value, { maxLength = 255 } = {}) => {
+const isValidSlug = (value: unknown, { maxLength = 255 }: SlugValidationOptions = {}): boolean => {
     if (typeof value !== 'string') {
         return false;
     }
@@ -22,13 +34,13 @@ const isValidSlug = (value, { maxLength = 255 } = {}) => {
     );
 };
 
-const truncateSlug = (slug, maxLength) => (
+const truncateSlug = (slug: string, maxLength: number): string => (
     slug.length > maxLength
         ? slug.slice(0, maxLength).replace(/-+$/g, '')
         : slug
 );
 
-const buildCandidate = (baseSlug, suffix, maxLength) => {
+const buildCandidate = (baseSlug: string, suffix: number, maxLength: number): string => {
     if (!suffix) {
         return truncateSlug(baseSlug, maxLength);
     }
@@ -44,7 +56,7 @@ const createUniqueSlug = async ({
     fallback = 'item',
     maxLength = 120,
     exists
-}) => {
+}: UniqueSlugOptions): Promise<string> => {
     const baseSlug = truncateSlug(generateSlug(providedSlug || value, fallback), maxLength);
     let suffix = 0;
 
@@ -64,3 +76,5 @@ module.exports = {
     isValidSlug,
     createUniqueSlug
 };
+
+export {};

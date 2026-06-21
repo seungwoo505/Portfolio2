@@ -1,15 +1,15 @@
 const allowedAdminRoles = new Set(['super_admin', 'admin', 'editor']);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const isValidEmail = (value) => (
+const isValidEmail = (value: unknown): boolean => (
     typeof value === 'string' && emailPattern.test(value.trim())
 );
 
-const isValidAdminRole = (value) => (
+const isValidAdminRole = (value: unknown): boolean => (
     typeof value === 'string' && allowedAdminRoles.has(value)
 );
 
-const getPasswordPolicyError = (password) => {
+const getPasswordPolicyError = (password: unknown): string | null => {
     if (typeof password !== 'string' || password.length === 0) {
         return '비밀번호를 입력해주세요.';
     }
@@ -31,3 +31,5 @@ module.exports = {
     isValidAdminRole,
     isValidEmail
 };
+
+export {};

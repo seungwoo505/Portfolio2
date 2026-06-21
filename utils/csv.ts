@@ -1,6 +1,6 @@
 const formulaInjectionPattern = /^[\s]*[=+\-@]|\t|\r/;
 
-const escapeCsvField = (value) => {
+const escapeCsvField = (value: unknown): string => {
     const stringValue = value === null || value === undefined ? '' : String(value);
     const safeValue = formulaInjectionPattern.test(stringValue)
         ? `'${stringValue}`
@@ -12,3 +12,5 @@ const escapeCsvField = (value) => {
 module.exports = {
     escapeCsvField
 };
+
+export {};

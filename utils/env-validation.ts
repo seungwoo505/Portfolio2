@@ -1,5 +1,7 @@
 const { parseIntegerEnv } = require('./env-number');
 
+type EnvMap = NodeJS.ProcessEnv | Record<string, unknown>;
+
 const placeholderPatterns = [
     /change[_-]?me/i,
     /your[_-\s]/i,
@@ -25,20 +27,22 @@ const bootstrapRequiredVariables = [
     'ADMIN_BOOTSTRAP_PASSWORD'
 ];
 
-const valueOf = (env, name) => String(env[name] ?? '').trim();
+const valueOf = (env: EnvMap, name: string): string => String(env[name] ?? '').trim();
 
-const hasValue = (env, name) => valueOf(env, name).length > 0;
+const hasValue = (env: EnvMap, name: string): boolean => valueOf(env, name).length > 0;
 
-const isPlaceholderValue = (value) => placeholderPatterns.some((pattern) => pattern.test(String(value || '')));
+const isPlaceholderValue = (value: unknown): boolean => (
+    placeholderPatterns.some((pattern) => pattern.test(String(value || '')))
+);
 
-const addPlaceholderFailure = (failures, env, name) => {
+const addPlaceholderFailure = (failures: string[], env: EnvMap, name: string): void => {
     const value = valueOf(env, name);
     if (value && isPlaceholderValue(value)) {
         failures.push(`${name} 값은 예시/placeholder가 아닌 실제 운영 값을 사용해야 합니다.`);
     }
 };
 
-const validateRequiredValues = (failures, env, variableNames) => {
+const validateRequiredValues = (failures: string[], env: EnvMap, variableNames: string[]): void => {
     variableNames.forEach((name) => {
         if (!hasValue(env, name)) {
             failures.push(`${name} 환경 변수가 필요합니다.`);
@@ -49,7 +53,7 @@ const validateRequiredValues = (failures, env, variableNames) => {
     });
 };
 
-const validateUrl = (failures, env, name) => {
+const validateUrl = (failures: string[], env: EnvMap, name: string): void => {
     const value = valueOf(env, name);
     if (!value) {
         return;
@@ -68,7 +72,7 @@ const validateUrl = (failures, env, name) => {
     }
 };
 
-const validateSecret = (failures, env, name) => {
+const validateSecret = (failures: string[], env: EnvMap, name: string): void => {
     const value = valueOf(env, name);
     if (!value) {
         return;
@@ -79,7 +83,7 @@ const validateSecret = (failures, env, name) => {
     }
 };
 
-const validateBootstrapCredentials = (failures, env) => {
+const validateBootstrapCredentials = (failures: string[], env: EnvMap): void => {
     const hasBootstrapConfig = bootstrapRequiredVariables.some((name) => hasValue(env, name));
     if (!hasBootstrapConfig) {
         return;
@@ -98,7 +102,7 @@ const validateBootstrapCredentials = (failures, env) => {
     }
 };
 
-const validateProductionEnv = (env = process.env) => {
+const validateProductionEnv = (env: EnvMap = process.env) => {
     if (env.NODE_ENV !== 'production') {
         return {
             ok: true,
@@ -106,7 +110,7 @@ const validateProductionEnv = (env = process.env) => {
         };
     }
 
-    const errors = [];
+    const errors: string[] = [];
     validateRequiredValues(errors, env, productionRequiredVariables);
     validateSecret(errors, env, 'JWT_SECRET');
     validateSecret(errors, env, 'JWT_REFRESH_SECRET');
@@ -136,3 +140,5 @@ const validateProductionEnv = (env = process.env) => {
 module.exports = {
     validateProductionEnv
 };
+
+export {};
