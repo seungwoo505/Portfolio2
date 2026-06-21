@@ -3,23 +3,40 @@ const path = require('path');
 
 const { rootDir } = require('./context');
 
+const sourceExtensions = new Set(['.js', '.ts']);
+
+const resolveExistingSourcePath = (...candidates) => {
+    const match = candidates.find((candidate) => fs.existsSync(candidate));
+    if (!match) {
+        throw new Error(`missing expected Swagger source file. Checked: ${candidates.join(', ')}`);
+    }
+    return match;
+};
+
 const checkSwaggerServerConfig = () => {
     const swaggerDir = path.join(rootDir, 'config', 'swagger');
     const swaggerFiles = [
-        path.join(rootDir, 'config', 'swagger.js'),
+        resolveExistingSourcePath(
+            path.join(rootDir, 'config', 'swagger.js'),
+            path.join(rootDir, 'config', 'swagger.ts')
+        ),
         ...fs.readdirSync(swaggerDir)
-            .filter((file) => file.endsWith('.js'))
+            .filter((file) => sourceExtensions.has(path.extname(file)))
             .map((file) => path.join(swaggerDir, file))
     ];
     const swaggerContent = swaggerFiles.map((file) => fs.readFileSync(file, 'utf8')).join('\n');
     const failures = [];
 
     if (swaggerContent.includes('seungwoo.i234.me')) {
-        failures.push('config/swagger.js must not hard-code deployment domains in Swagger configuration');
+        failures.push('config/swagger source files must not hard-code deployment domains in Swagger configuration');
     }
 
-    const swaggerOptionsContent = fs.readFileSync(path.join(swaggerDir, 'options.js'), 'utf8');
-    const swaggerOptionsMatch = swaggerOptionsContent.match(/const\s+swaggerUiOptions\s*=\s*\{[\s\S]*?\n\};/);
+    const swaggerOptionsPath = resolveExistingSourcePath(
+        path.join(swaggerDir, 'options.js'),
+        path.join(swaggerDir, 'options.ts')
+    );
+    const swaggerOptionsContent = fs.readFileSync(swaggerOptionsPath, 'utf8');
+    const swaggerOptionsMatch = swaggerOptionsContent.match(/const\s+swaggerUiOptions(?:\s*:\s*[^=]+)?\s*=\s*\{[\s\S]*?\n\};/);
     if (swaggerOptionsMatch) {
         const optionKeys = ['defaultModelsExpandDepth', 'defaultModelExpandDepth'];
         optionKeys.forEach((key) => {

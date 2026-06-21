@@ -1,4 +1,6 @@
-const swaggerUiOptions = {
+import type { SwaggerUiOptions } from "swagger-ui-express";
+
+const swaggerUiOptions: SwaggerUiOptions = {
     swaggerOptions: {
         docExpansion: "none",
         filter: true,

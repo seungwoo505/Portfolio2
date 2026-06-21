@@ -5,6 +5,11 @@ const { swaggerUiOptions } = require("./options");
 const { createSwaggerDefinition } = require("./definition");
 const { normalizeServerUrl } = require("./servers");
 
+type SwaggerPort = string | number;
+type SwaggerPortOptions = {
+    port: SwaggerPort;
+};
+
 const swaggerApis = [
     "./routes/*.js",
     "./routes/monitoring/*.js",
@@ -13,7 +18,7 @@ const swaggerApis = [
     "./routes/admin/**/*.js"
 ];
 
-const createSwaggerSpec = ({ port }) => swaggerJsdoc({
+const createSwaggerSpec = ({ port }: SwaggerPortOptions): object => swaggerJsdoc({
     definition: createSwaggerDefinition({ port }),
     apis: swaggerApis
 });
