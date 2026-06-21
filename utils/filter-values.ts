@@ -1,11 +1,18 @@
-const firstQueryValue = (value) => {
+type FilterValue = string | number | boolean | null | undefined | FilterValue[];
+
+type OptionalBooleanResult = {
+    isValid: boolean;
+    value: boolean | null;
+};
+
+const firstQueryValue = (value: FilterValue): string | number | boolean | null | undefined => {
     if (Array.isArray(value)) {
         return firstQueryValue(value[0]);
     }
     return value;
 };
 
-const toStringValue = (value, fallback = '') => {
+const toStringValue = (value: FilterValue, fallback = ''): string => {
     const firstValue = firstQueryValue(value);
     if (firstValue === undefined || firstValue === null) {
         return fallback;
@@ -19,7 +26,7 @@ const toStringValue = (value, fallback = '') => {
     return fallback;
 };
 
-const toStringArray = (value) => {
+const toStringArray = (value: FilterValue): string[] => {
     if (Array.isArray(value)) {
         return value.flatMap(toStringArray);
     }
@@ -28,7 +35,7 @@ const toStringArray = (value) => {
     return stringValue ? [stringValue] : [];
 };
 
-const toCsvStringArray = (value) => {
+const toCsvStringArray = (value: FilterValue): string[] => {
     if (Array.isArray(value)) {
         return value.flatMap(toCsvStringArray);
     }
@@ -44,7 +51,7 @@ const toCsvStringArray = (value) => {
         .filter(Boolean);
 };
 
-const toBooleanOrNull = (value) => {
+const toBooleanOrNull = (value: FilterValue): boolean | null => {
     const firstValue = firstQueryValue(value);
     if (firstValue === true || firstValue === false) {
         return firstValue;
@@ -64,7 +71,7 @@ const toBooleanOrNull = (value) => {
     return null;
 };
 
-const toOptionalBoolean = (value) => {
+const toOptionalBoolean = (value: FilterValue): OptionalBooleanResult => {
     const firstValue = firstQueryValue(value);
     if (firstValue === undefined || firstValue === null || firstValue === '') {
         return {
@@ -80,7 +87,7 @@ const toOptionalBoolean = (value) => {
     };
 };
 
-const toChoice = (value, allowedValues, fallback) => {
+const toChoice = (value: FilterValue, allowedValues: string[], fallback: string): string => {
     const normalized = toStringValue(value, fallback).trim().toLowerCase();
     return allowedValues.includes(normalized) ? normalized : fallback;
 };
@@ -94,3 +101,5 @@ module.exports = {
     toStringArray,
     toStringValue
 };
+
+export {};

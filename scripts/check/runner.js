@@ -4,7 +4,7 @@ const { rootDir } = require('./context');
 
 const run = (args, label, options = {}) => {
     const stdio = options.stdio || 'inherit';
-    const result = spawnSync(process.execPath, args, {
+    const result = spawnSync(process.execPath, [...process.execArgv, ...args], {
         cwd: rootDir,
         stdio,
         encoding: stdio === 'pipe' ? 'utf8' : undefined,

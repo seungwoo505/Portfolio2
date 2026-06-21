@@ -1,8 +1,33 @@
-const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
+type QueryValue = string | number | null | undefined | QueryValue[];
 
-const clampInteger = (value, { min = 1, max = 100, fallback = 20 } = {}) => {
+type ClampIntegerOptions = {
+    min?: number;
+    max?: number;
+    fallback?: number;
+};
+
+type PaginationQuery = {
+    limit?: QueryValue;
+    page?: QueryValue;
+};
+
+type PaginationOptions = {
+    defaultLimit?: number;
+    maxLimit?: number;
+    maxPage?: number;
+};
+
+const firstQueryValue = (value: QueryValue): string | number | null | undefined => (
+    Array.isArray(value) ? firstQueryValue(value[0]) : value
+);
+
+const clampInteger = (value: QueryValue, {
+    min = 1,
+    max = 100,
+    fallback = 20
+}: ClampIntegerOptions = {}): number => {
     const firstValue = firstQueryValue(value);
-    let parsed;
+    let parsed: number;
 
     if (typeof firstValue === 'number') {
         parsed = firstValue;
@@ -23,7 +48,7 @@ const clampInteger = (value, { min = 1, max = 100, fallback = 20 } = {}) => {
     return Math.min(Math.max(parsed, min), max);
 };
 
-const parsePagination = (query = {}, options = {}) => {
+const parsePagination = (query: PaginationQuery = {}, options: PaginationOptions = {}) => {
     const {
         defaultLimit = 20,
         maxLimit = 100,
@@ -43,3 +68,5 @@ module.exports = {
     clampInteger,
     parsePagination
 };
+
+export {};

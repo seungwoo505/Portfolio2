@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node", "express", "multer"]
+  },
+  "include": [
+    "*.js",
+    "config/**/*.js",
+    "logger/**/*.js",
+    "middleware/**/*.js",
+    "migrations/**/*.js",
+    "models/**/*.js",
+    "routes/**/*.js",
+    "scripts/**/*.js",
+    "tests/**/*.js",
+    "types/**/*.d.ts",
+    "types/**/*.ts",
+    "utils/**/*.js",
+    "utils/**/*.ts"
+  ],
+  "exclude": [
+    "coverage",
+    "docs",
+    "logs",
+    "mcp",
+    "node_modules",
+    "uploads"
+  ]
+}

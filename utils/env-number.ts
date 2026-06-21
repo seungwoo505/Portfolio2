@@ -1,6 +1,15 @@
-const firstValue = (value) => (Array.isArray(value) ? value[0] : value);
+type IntegerInput = unknown;
 
-const parseStrictInteger = (value) => {
+type ParseIntegerEnvOptions = {
+    fallback?: number;
+    min?: number;
+    max?: number;
+    clamp?: boolean;
+};
+
+const firstValue = (value: IntegerInput): unknown => (Array.isArray(value) ? value[0] : value);
+
+const parseStrictInteger = (value: IntegerInput): number | null => {
     const rawValue = firstValue(value);
 
     if (typeof rawValue === 'number') {
@@ -20,12 +29,12 @@ const parseStrictInteger = (value) => {
     return Number.isSafeInteger(parsed) ? parsed : null;
 };
 
-const parseIntegerEnv = (value, {
+const parseIntegerEnv = (value: IntegerInput, {
     fallback,
     min = 1,
     max = Number.MAX_SAFE_INTEGER,
     clamp = true
-} = {}) => {
+}: ParseIntegerEnvOptions = {}): number | undefined => {
     const parsed = parseStrictInteger(value);
 
     if (parsed === null) {
@@ -43,3 +52,5 @@ module.exports = {
     parseIntegerEnv,
     parseStrictInteger
 };
+
+export {};
