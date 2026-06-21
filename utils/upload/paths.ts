@@ -4,13 +4,13 @@ const path = require('path');
 const uploadImageDir = path.join(__dirname, '..', '..', 'uploads', 'images');
 const uploadedImageFilenamePattern = /^\d+-[a-zA-Z0-9가-힣]+\.(jpe?g|png|gif|webp)$/i;
 
-const ensureUploadImageDir = () => {
+const ensureUploadImageDir = (): void => {
     if (!fs.existsSync(uploadImageDir)) {
         fs.mkdirSync(uploadImageDir, { recursive: true });
     }
 };
 
-const sanitizeBaseName = (filename) => {
+const sanitizeBaseName = (filename: string): string => {
     const ext = path.extname(filename).toLowerCase();
     const baseName = path
         .basename(filename, ext)
@@ -20,7 +20,7 @@ const sanitizeBaseName = (filename) => {
     return baseName || 'image';
 };
 
-const isSafeUploadedImageFilename = (filename) => {
+const isSafeUploadedImageFilename = (filename: unknown): boolean => {
     if (typeof filename !== 'string' || !filename.trim()) {
         return false;
     }
@@ -35,7 +35,7 @@ const isSafeUploadedImageFilename = (filename) => {
     return resolvedPath.startsWith(`${uploadRoot}${path.sep}`);
 };
 
-const getUploadedImagePath = (filename) => path.resolve(uploadImageDir, path.basename(filename));
+const getUploadedImagePath = (filename: string): string => path.resolve(uploadImageDir, path.basename(filename));
 
 module.exports = {
     ensureUploadImageDir,
@@ -45,3 +45,5 @@ module.exports = {
     uploadImageDir,
     uploadedImageFilenamePattern
 };
+
+export {};

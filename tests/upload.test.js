@@ -11,11 +11,11 @@ const {
 } = require('../utils/upload');
 
 const uploadModulePaths = [
-    ['utils', 'upload.js'],
-    ['utils', 'upload', 'index.js'],
-    ['utils', 'upload', 'paths.js'],
-    ['utils', 'upload', 'storage.js'],
-    ['utils', 'upload', 'validation.js']
+    ['utils', 'upload.ts'],
+    ['utils', 'upload', 'index.ts'],
+    ['utils', 'upload', 'paths.ts'],
+    ['utils', 'upload', 'storage.ts'],
+    ['utils', 'upload', 'validation.ts']
 ];
 
 test('validateImageFile accepts matching image MIME and extension', () => {
@@ -51,7 +51,7 @@ test('upload max file size falls back for invalid environment values', () => {
 
     try {
         clearRootModules(uploadModulePaths);
-        const { uploadMaxFileSize } = require(resolveFromRoot(['utils', 'upload.js']));
+        const { uploadMaxFileSize } = require(resolveFromRoot(['utils', 'upload.ts']));
 
         assert.equal(uploadMaxFileSize, 5 * 1024 * 1024);
     } finally {

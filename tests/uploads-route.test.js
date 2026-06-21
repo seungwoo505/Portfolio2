@@ -39,7 +39,7 @@ const loadUploadsRoute = (filePath, options = {}) => {
         ['routes', 'admin', 'uploads.js'],
         ['routes', 'admin', 'uploads', 'images.js'],
         ['routes', 'admin', 'common.js'],
-        ['utils', 'upload.js'],
+        ['utils', 'upload.ts'],
         ['middleware', 'auth.js'],
         ['log.js']
     ]);
@@ -49,7 +49,7 @@ const loadUploadsRoute = (filePath, options = {}) => {
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })
     });
-    stubRootModule(['utils', 'upload.js'], {
+    stubRootModule(['utils', 'upload.ts'], {
         uploadImage: options.uploadImage || ((_req, _res, next) => next()),
         getUploadedImagePath: () => filePath,
         isSafeUploadedImageFilename: () => true

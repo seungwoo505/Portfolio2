@@ -1,3 +1,5 @@
+import type { NextFunction, Request, Response } from 'express';
+
 const multer = require('multer');
 const { parseIntegerEnv } = require('../env-number');
 const {
@@ -8,6 +10,13 @@ const {
 const { validateImageFile } = require('./validation');
 const { sendError } = require('../api-response');
 
+type UploadError = Error & {
+    code?: string;
+    statusCode?: number;
+};
+
+type MulterCallback = (error: UploadError | null, value?: string | boolean) => void;
+
 const defaultUploadMaxFileSize = 5 * 1024 * 1024;
 const uploadMaxFileSize = parseIntegerEnv(process.env.UPLOAD_MAX_FILE_SIZE, {
     fallback: defaultUploadMaxFileSize,
@@ -16,27 +25,27 @@ const uploadMaxFileSize = parseIntegerEnv(process.env.UPLOAD_MAX_FILE_SIZE, {
 });
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req: Request, _file: Express.Multer.File, cb: MulterCallback) => {
         ensureUploadImageDir();
         cb(null, uploadImageDir);
     },
-    filename: (req, file, cb) => {
+    filename: (_req: Request, file: Express.Multer.File, cb: MulterCallback) => {
         try {
             const imageType = validateImageFile(file);
             const baseName = sanitizeBaseName(file.originalname);
             cb(null, `${Date.now()}-${baseName}${imageType.extension}`);
         } catch (error) {
-            cb(error);
+            cb(error as UploadError);
         }
     }
 });
 
-const fileFilter = (req, file, cb) => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: MulterCallback) => {
     try {
         validateImageFile(file);
         cb(null, true);
     } catch (error) {
-        cb(error, false);
+        cb(error as UploadError, false);
     }
 };
 
@@ -48,7 +57,7 @@ const upload = multer({
     }
 });
 
-const sendUploadError = (res, error) => {
+const sendUploadError = (res: Response, error: UploadError) => {
     const statusCode = error.code === 'LIMIT_FILE_SIZE'
         ? 413
         : error.statusCode || 400;
@@ -59,8 +68,8 @@ const sendUploadError = (res, error) => {
     return sendError(res, statusCode, message);
 };
 
-const uploadImage = (req, res, next) => {
-    upload.single('image')(req, res, (error) => {
+const uploadImage = (req: Request, res: Response, next: NextFunction) => {
+    upload.single('image')(req, res, (error: UploadError | undefined) => {
         if (!error) {
             return next();
         }
