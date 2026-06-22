@@ -49,10 +49,10 @@ router.post('/ai/keywords',
             const normalizedTechTags = normalizeTechTags(techTags);
             const preprocessedContent = preprocessContent(validatedContent, '키워드 추출 전처리');
 
-            const keywords = await withTimeout<string[]>(
+            const keywords = await withTimeout(
                 geminiService.extractKeywords(preprocessedContent, normalizedMaxKeywords, normalizedTechTags),
                 'AI 키워드 추출'
-            );
+            ) as string[];
 
             res.json({
                 success: true,

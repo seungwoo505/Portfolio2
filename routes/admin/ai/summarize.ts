@@ -55,10 +55,10 @@ router.post('/ai/summarize',
             verboseDebug('전처리된 콘텐츠:', preprocessedContent);
 
             if (includeKeywords) {
-                const result = await withTimeout<SummaryKeywordsResult>(
+                const result = await withTimeout(
                     geminiService.generateSummaryAndKeywords(preprocessedContent, normalizedTechTags),
                     'AI 요약/키워드 생성'
-                );
+                ) as SummaryKeywordsResult;
 
                 return res.json({
                     success: true,
@@ -79,10 +79,10 @@ router.post('/ai/summarize',
             verboseDebug('generateSummary 메서드 타입:', typeof geminiService.generateSummary);
             verboseDebug('generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
 
-            const summary = await withTimeout<string>(
+            const summary = await withTimeout(
                 geminiService.generateSummary(preprocessedContent, 160, normalizedTechTags),
                 'AI 요약 생성'
-            );
+            ) as string;
             verboseDebug('generateSummary 호출 성공');
 
             verboseDebug('AI 요약 생성 완료 - summary 길이:', summary.length);
