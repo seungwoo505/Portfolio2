@@ -10,3 +10,4 @@ const checkSyntax = () => {
 module.exports = {
     checkSyntax
 };
+export {};

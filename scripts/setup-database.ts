@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('../log');
 
-const migrationEntry = path.join(__dirname, '..', 'migrations', 'init.js');
+const migrationEntry = path.join(__dirname, '..', 'migrations', 'init.ts');
 
 logger.info('포트폴리오 데이터베이스 설정을 시작합니다...');
 logger.info(` 데이터베이스: ${process.env.DB_SCHEMA}`);
@@ -32,3 +32,4 @@ runMigration().catch((error) => {
     logger.error('마이그레이션 실행 실패', { error: error.message, stack: error.stack });
     process.exit(1);
 });
+export {};

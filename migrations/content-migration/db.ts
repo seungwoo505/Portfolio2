@@ -15,3 +15,4 @@ const createPool = (database) => mysql.createPool({
 module.exports = {
     createPool
 };
+export {};

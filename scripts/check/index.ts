@@ -19,3 +19,4 @@ const runChecks = () => {
 module.exports = {
     runChecks
 };
+export {};

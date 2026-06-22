@@ -53,3 +53,4 @@ module.exports = {
     sourceCheckFiles,
     syntaxCheckFiles
 };
+export {};

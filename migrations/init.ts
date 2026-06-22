@@ -104,3 +104,4 @@ async function runMigration() {
 module.exports = {
     runMigration
 };
+export {};

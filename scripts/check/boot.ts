@@ -20,3 +20,4 @@ const checkServerBoots = () => {
 module.exports = {
     checkServerBoots
 };
+export {};

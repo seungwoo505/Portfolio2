@@ -68,7 +68,7 @@ const collectRoutePermissions = () => {
 
 const checkRoutePermissionsSeeded = () => {
     const routePermissions = collectRoutePermissions();
-    const seedMigration = require(path.join(rootDir, 'migrations', '002_seed_admin.js'));
+    const seedMigration = require(path.join(rootDir, 'migrations', '002_seed_admin.ts'));
     const seedPermissions = new Set(seedMigration.permissions.map(([name]) => name));
 
     const manualSyncPath = path.join(rootDir, 'migrations', 'manual', 'sync-admin-permissions.sql');
@@ -85,7 +85,7 @@ const checkRoutePermissionsSeeded = () => {
     const failures = [];
 
     if (missingFromSeed.length > 0) {
-        failures.push(`missing from migrations/002_seed_admin.js: ${missingFromSeed.join(', ')}`);
+        failures.push(`missing from migrations/002_seed_admin.ts: ${missingFromSeed.join(', ')}`);
     }
 
     if (missingFromManualSync.length > 0) {
@@ -133,3 +133,4 @@ const checkRoutePermissionsSeeded = () => {
 module.exports = {
     checkRoutePermissionsSeeded
 };
+export {};

@@ -97,3 +97,4 @@ const tablePlans = [
 module.exports = {
     tablePlans
 };
+export {};

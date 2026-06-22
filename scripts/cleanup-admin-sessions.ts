@@ -26,3 +26,4 @@ AdminUsers.cleanupExpiredSessions(retentionDays)
         });
         process.exit(1);
     });
+export {};

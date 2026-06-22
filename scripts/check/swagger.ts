@@ -55,3 +55,4 @@ const checkSwaggerServerConfig = () => {
 module.exports = {
     checkSwaggerServerConfig
 };
+export {};

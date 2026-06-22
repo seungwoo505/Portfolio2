@@ -2,7 +2,7 @@ const { spawnSync } = require('child_process');
 
 const { rootDir } = require('./context');
 
-const run = (args, label, options = {}) => {
+const run = (args, label, options: Record<string, any> = {}) => {
     const stdio = options.stdio || 'inherit';
     const result = spawnSync(process.execPath, [...process.execArgv, ...args], {
         cwd: rootDir,
@@ -34,3 +34,4 @@ const run = (args, label, options = {}) => {
 module.exports = {
     run
 };
+export {};

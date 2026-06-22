@@ -47,3 +47,4 @@ module.exports = {
     checkAdminRouteExport,
     checkRouteModelMethods
 };
+export {};
