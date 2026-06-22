@@ -43,12 +43,12 @@ const stubAdminMiddleware = () => {
 };
 
 const adminBlogRouteModules = [
-    ['routes', 'admin', 'blog.js'],
-    ['routes', 'admin', 'blog', 'index.js'],
-    ['routes', 'admin', 'blog', 'common.js'],
-    ['routes', 'admin', 'blog', 'collection.js'],
-    ['routes', 'admin', 'blog', 'detail.js'],
-    ['routes', 'admin', 'blog', 'status.js']
+    ['routes', 'admin', 'blog.ts'],
+    ['routes', 'admin', 'blog', 'index.ts'],
+    ['routes', 'admin', 'blog', 'common.ts'],
+    ['routes', 'admin', 'blog', 'collection.ts'],
+    ['routes', 'admin', 'blog', 'detail.ts'],
+    ['routes', 'admin', 'blog', 'status.ts']
 ];
 
 const adminProjectRouteModules = [
@@ -85,7 +85,7 @@ test('admin blog list returns count-based pagination total', async () => {
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubAdminMiddleware();
 
-    const router = require(resolveFromRoot(['routes', 'admin', 'blog.js']));
+    const router = require(resolveFromRoot(['routes', 'admin', 'blog.ts']));
     const { status, body } = await requestJson(router, '/blog/posts?limit=2&page=3');
 
     assert.equal(status, 200);

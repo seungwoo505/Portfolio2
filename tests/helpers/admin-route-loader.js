@@ -34,15 +34,15 @@ const requestJson = async (router, path, { method = 'GET', body = null } = {}) =
 };
 
 const adminBlogRouteModules = [
-    ['routes', 'admin', 'blog.js'],
-    ['routes', 'admin', 'blog', 'index.js'],
-    ['routes', 'admin', 'blog', 'common.js'],
-    ['routes', 'admin', 'blog', 'collection.js'],
-    ['routes', 'admin', 'blog', 'detail.js'],
-    ['routes', 'admin', 'blog', 'lookup.js'],
-    ['routes', 'admin', 'blog', 'payload.js'],
-    ['routes', 'admin', 'blog', 'status-update.js'],
-    ['routes', 'admin', 'blog', 'status.js']
+    ['routes', 'admin', 'blog.ts'],
+    ['routes', 'admin', 'blog', 'index.ts'],
+    ['routes', 'admin', 'blog', 'common.ts'],
+    ['routes', 'admin', 'blog', 'collection.ts'],
+    ['routes', 'admin', 'blog', 'detail.ts'],
+    ['routes', 'admin', 'blog', 'lookup.ts'],
+    ['routes', 'admin', 'blog', 'payload.ts'],
+    ['routes', 'admin', 'blog', 'status-update.ts'],
+    ['routes', 'admin', 'blog', 'status.ts']
 ];
 
 const adminProjectRouteModules = [
@@ -115,7 +115,7 @@ const adminExperiencesRouteModules = [
 
 const getRouteModules = (routeSegments) => {
     const routePath = routeSegments.join('/');
-    if (routePath === 'routes/admin/blog.js') {
+    if (routePath === 'routes/admin/blog.ts') {
         return adminBlogRouteModules;
     }
 

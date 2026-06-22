@@ -1,3 +1,21 @@
+type BlogRouteError = {
+    statusCode: number;
+    message: string;
+};
+
+type BlogRouteErrorResult = {
+    error: BlogRouteError;
+};
+
+type BlogStatusUpdateOptions = {
+    body?: Record<string, unknown> | null;
+    field: string;
+    falseMessage: string;
+    invalidMessage: string;
+    slug: unknown;
+    trueMessage: string;
+};
+
 const {
     BlogPosts,
     toBooleanOrNull
@@ -7,7 +25,7 @@ const {
     parseBlogPostSlugParam
 } = require('./lookup');
 
-const buildStatusError = (statusCode, message) => ({
+const buildStatusError = (statusCode: number, message: string): BlogRouteErrorResult => ({
     error: {
         statusCode,
         message
@@ -21,7 +39,7 @@ const updateBlogPostStatusBySlug = async ({
     invalidMessage,
     slug,
     trueMessage
-}) => {
+}: BlogStatusUpdateOptions) => {
     const value = toBooleanOrNull(body?.[field]);
     if (value === null) {
         return buildStatusError(400, invalidMessage);
@@ -50,3 +68,5 @@ const updateBlogPostStatusBySlug = async ({
 module.exports = {
     updateBlogPostStatusBySlug
 };
+
+export {};

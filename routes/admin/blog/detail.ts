@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     BlogPosts,
@@ -13,9 +15,14 @@ const {
 } = require('./lookup');
 const { normalizeBlogUpdatePayload } = require('./payload');
 
-const router = express.Router();
+const router: Router = express.Router();
 
-const sendRouteError = (res, error) => (
+type BlogRouteError = {
+    statusCode: number;
+    message: string;
+};
+
+const sendRouteError = (res: Response, error: BlogRouteError) => (
     res.status(error.statusCode).json({
         success: false,
         message: error.message
@@ -91,7 +98,7 @@ const sendRouteError = (res, error) => (
  *       404:
  *         description: 포스트 없음
  */
-router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.read'), async (req, res) => {
+router.get('/blog/posts/slug/:slug', authenticateToken, requirePermission('blog.read'), async (req: Request, res: Response) => {
     try {
         const parsed = parseBlogPostSlugParam(req.params.slug);
         if (parsed.error) {
@@ -120,7 +127,7 @@ router.put('/blog/posts/slug/:slug',
     authenticateToken,
     requirePermission('blog.update'),
     logActivity('update_blog_post'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const parsed = parseBlogPostSlugParam(req.params.slug);
             if (parsed.error) {
@@ -161,7 +168,7 @@ router.delete('/blog/posts/slug/:slug',
     authenticateToken,
     requirePermission('blog.delete'),
     logActivity('delete_blog_post'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const parsed = parseBlogPostSlugParam(req.params.slug);
             if (parsed.error) {

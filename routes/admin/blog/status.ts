@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     authenticateToken,
@@ -8,9 +10,14 @@ const {
 } = require('./common');
 const { updateBlogPostStatusBySlug } = require('./status-update');
 
-const router = express.Router();
+const router: Router = express.Router();
 
-const sendRouteError = (res, error) => (
+type BlogRouteError = {
+    statusCode: number;
+    message: string;
+};
+
+const sendRouteError = (res: Response, error: BlogRouteError) => (
     res.status(error.statusCode).json({
         success: false,
         message: error.message
@@ -53,7 +60,7 @@ router.put('/blog/posts/slug/:slug/publish',
     authenticateToken,
     requirePermission('blog.publish'),
     logActivity('publish_blog_post'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const result = await updateBlogPostStatusBySlug({
                 body: req.body,
@@ -117,7 +124,7 @@ router.put('/blog/posts/slug/:slug/featured',
     authenticateToken,
     requirePermission('blog.edit'),
     logActivity('feature_blog_post'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const result = await updateBlogPostStatusBySlug({
                 body: req.body,

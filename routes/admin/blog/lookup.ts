@@ -1,9 +1,31 @@
+type BlogRouteError = {
+    statusCode: number;
+    message: string;
+};
+
+type BlogRouteErrorResult = {
+    error: BlogRouteError;
+};
+
+type BlogSlugResult = BlogRouteErrorResult | {
+    postSlug: string;
+};
+
+type BlogPostRecord = {
+    id: number | string;
+    [key: string]: unknown;
+};
+
+type BlogPostLookupResult = BlogRouteErrorResult | {
+    post: BlogPostRecord;
+};
+
 const {
     BlogPosts,
     parseSlugParam
 } = require('./common');
 
-const parseBlogPostSlugParam = (slug) => {
+const parseBlogPostSlugParam = (slug: unknown): BlogSlugResult => {
     const postSlug = parseSlugParam(slug);
     if (!postSlug) {
         return {
@@ -17,7 +39,7 @@ const parseBlogPostSlugParam = (slug) => {
     return { postSlug };
 };
 
-const findBlogPostBySlug = async (postSlug) => {
+const findBlogPostBySlug = async (postSlug: string): Promise<BlogPostLookupResult> => {
     const post = await BlogPosts.getBySlugAdmin(postSlug);
     if (!post) {
         return {
@@ -35,3 +57,5 @@ module.exports = {
     findBlogPostBySlug,
     parseBlogPostSlugParam
 };
+
+export {};

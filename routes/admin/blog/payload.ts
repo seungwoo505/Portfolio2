@@ -1,15 +1,25 @@
+import type { Request } from 'express';
+
 const {
     getPlainBody,
     hasInvalidProvidedStringFields,
     trimStringFields
 } = require('./common');
 
-const hasUsableContent = (body) => (
+type BlogPayload = Record<string, unknown>;
+
+type BlogUpdatePayloadResult = {
+    error: string;
+} | {
+    body: BlogPayload;
+};
+
+const hasUsableContent = (body: BlogPayload): boolean => (
     (typeof body.content === 'string' && body.content.trim().length > 0)
     || (typeof body.content_text === 'string' && body.content_text.trim().length > 0)
 );
 
-const normalizeBlogContentFields = (body) => {
+const normalizeBlogContentFields = (body: BlogPayload): BlogPayload => {
     const normalizedBody = trimStringFields(body, ['title', 'content', 'content_text']);
 
     if (
@@ -23,7 +33,7 @@ const normalizeBlogContentFields = (body) => {
     return normalizedBody;
 };
 
-const normalizeBlogUpdatePayload = (req) => {
+const normalizeBlogUpdatePayload = (req: Request): BlogUpdatePayloadResult => {
     const body = normalizeBlogContentFields(getPlainBody(req));
 
     if (Object.keys(body).length === 0) {

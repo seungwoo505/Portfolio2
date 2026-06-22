@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     BlogPosts,
@@ -16,7 +18,7 @@ const {
     normalizeBlogContentFields
 } = require('./payload');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -55,7 +57,7 @@ const router = express.Router();
  *       500:
  *         description: 서버 오류
  */
-router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req, res) => {
+router.get('/blog/posts', authenticateToken, requirePermission('blog.read'), async (req: Request, res: Response) => {
     try {
         const { limit, page, offset } = parsePagination(req.query, {
             defaultLimit: 20,
@@ -92,7 +94,7 @@ router.post('/blog/posts',
     authenticateToken,
     requirePermission('blog.create'),
     logActivity('create_blog_post'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const body = normalizeBlogContentFields(getPlainBody(req));
 

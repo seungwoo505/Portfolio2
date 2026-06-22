@@ -38,15 +38,15 @@ const requestJson = async (router, path, body) => {
 
 const loadBlogRoute = (BlogPosts) => {
     const adminBlogRouteModules = [
-        ['routes', 'admin', 'blog.js'],
-        ['routes', 'admin', 'blog', 'index.js'],
-        ['routes', 'admin', 'blog', 'common.js'],
-        ['routes', 'admin', 'blog', 'collection.js'],
-        ['routes', 'admin', 'blog', 'detail.js'],
-        ['routes', 'admin', 'blog', 'lookup.js'],
-        ['routes', 'admin', 'blog', 'payload.js'],
-        ['routes', 'admin', 'blog', 'status-update.js'],
-        ['routes', 'admin', 'blog', 'status.js']
+        ['routes', 'admin', 'blog.ts'],
+        ['routes', 'admin', 'blog', 'index.ts'],
+        ['routes', 'admin', 'blog', 'common.ts'],
+        ['routes', 'admin', 'blog', 'collection.ts'],
+        ['routes', 'admin', 'blog', 'detail.ts'],
+        ['routes', 'admin', 'blog', 'lookup.ts'],
+        ['routes', 'admin', 'blog', 'payload.ts'],
+        ['routes', 'admin', 'blog', 'status-update.ts'],
+        ['routes', 'admin', 'blog', 'status.ts']
     ];
 
     clearRootModules([
@@ -75,7 +75,7 @@ const loadBlogRoute = (BlogPosts) => {
         logActivity: () => (_req, _res, next) => next()
     });
 
-    return require(resolveFromRoot(['routes', 'admin', 'blog.js']));
+    return require(resolveFromRoot(['routes', 'admin', 'blog.ts']));
 };
 
 test('admin blog publish status normalizes boolean-like strings', async () => {
