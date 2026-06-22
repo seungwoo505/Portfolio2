@@ -1,3 +1,5 @@
+import type { Request } from 'express';
+
 const { logger, buildErrorLog } = require('../common');
 const AdminUsers = require('../../../models/admin-users');
 const AdminActivityLogs = require('../../../models/admin-activity-logs');
@@ -12,11 +14,17 @@ const passwordChangeClientErrors = new Set([
     '기존 비밀번호가 올바르지 않습니다.'
 ]);
 
-const logAuthActivitySafe = async (req, {
+type AuthActivityOptions = {
+    adminId?: number | null;
+    action: string;
+    details: string;
+};
+
+const logAuthActivitySafe = async (req: Request, {
     adminId = null,
     action,
     details
-}) => {
+}: AuthActivityOptions): Promise<void> => {
     try {
         await AdminActivityLogs.log(
             adminId,

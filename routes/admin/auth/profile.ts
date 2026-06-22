@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     AdminUsers,
@@ -11,7 +13,11 @@ const {
     passwordChangeClientErrors
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
+
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
 
 /**
  * @swagger
@@ -54,7 +60,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/me', authenticateToken, async (req, res) => {
+router.get('/me', authenticateToken, async (req: Request, res: Response) => {
     try {
         const user = await AdminUsers.getById(req.admin.id);
         const permissions = await AdminUsers.getUserPermissions(req.admin.id);
@@ -125,7 +131,7 @@ router.get('/me', authenticateToken, async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/password', authenticateToken, logActivity('change_password'), async (req, res) => {
+router.put('/password', authenticateToken, logActivity('change_password'), async (req: Request, res: Response) => {
     try {
         const { oldPassword, newPassword } = getPlainBody(req);
 
@@ -151,10 +157,11 @@ router.put('/password', authenticateToken, logActivity('change_password'), async
             message: '비밀번호가 변경되었습니다.'
         });
     } catch (error) {
-        if (passwordChangeClientErrors.has(error.message)) {
+        const errorMessage = getErrorMessage(error);
+        if (passwordChangeClientErrors.has(errorMessage)) {
             return res.status(400).json({
                 success: false,
-                message: error.message
+                message: errorMessage
             });
         }
 

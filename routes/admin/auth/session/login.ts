@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     AdminUsers,
@@ -10,7 +12,11 @@ const {
     trimStringFields
 } = require('../common');
 
-const router = express.Router();
+const router: Router = express.Router();
+
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
 
 /**
  * @swagger
@@ -45,7 +51,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
     const body = trimStringFields(getPlainBody(req), ['username']);
     const username = body.username;
     const password = body.password;
@@ -99,7 +105,7 @@ router.post('/login', async (req, res) => {
             username,
             ip: req.ip,
             userAgent: req.headers['user-agent'],
-            error: error.message,
+            error: getErrorMessage(error),
             attemptTime: new Date().toISOString()
         });
 

@@ -39,14 +39,14 @@ const stubAuthMiddleware = () => {
 };
 
 const adminAuthRouteModules = [
-    ['routes', 'admin', 'auth.js'],
-    ['routes', 'admin', 'auth', 'index.js'],
-    ['routes', 'admin', 'auth', 'common.js'],
-    ['routes', 'admin', 'auth', 'session.js'],
-    ['routes', 'admin', 'auth', 'session', 'login.js'],
-    ['routes', 'admin', 'auth', 'session', 'logout.js'],
-    ['routes', 'admin', 'auth', 'session', 'refresh.js'],
-    ['routes', 'admin', 'auth', 'profile.js']
+    ['routes', 'admin', 'auth.ts'],
+    ['routes', 'admin', 'auth', 'index.ts'],
+    ['routes', 'admin', 'auth', 'common.ts'],
+    ['routes', 'admin', 'auth', 'session.ts'],
+    ['routes', 'admin', 'auth', 'session', 'login.ts'],
+    ['routes', 'admin', 'auth', 'session', 'logout.ts'],
+    ['routes', 'admin', 'auth', 'session', 'refresh.ts'],
+    ['routes', 'admin', 'auth', 'profile.ts']
 ];
 
 const adminUsersRouteModules = [
@@ -74,7 +74,7 @@ const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } 
     stubRootModule(['models', 'admin-users.js'], AdminUsers);
     stubRootModule(['models', 'admin-activity-logs.js'], AdminActivityLogs);
 
-    return require(resolveFromRoot(['routes', 'admin', 'auth.js']));
+    return require(resolveFromRoot(['routes', 'admin', 'auth.ts']));
 };
 
 const loadUsersRoute = (AdminUsers) => {

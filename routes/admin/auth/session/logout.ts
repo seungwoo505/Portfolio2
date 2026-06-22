@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     AdminActivityLogs,
@@ -6,7 +8,7 @@ const {
     logger
 } = require('../common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -43,9 +45,9 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/logout', authenticateToken, async (req, res) => {
+router.post('/logout', authenticateToken, async (req: Request, res: Response) => {
     try {
-        const token = req.headers['authorization'].split(' ')[1];
+        const token = (req.headers['authorization'] as string).split(' ')[1];
         await AdminUsers.logout(token);
 
         await AdminActivityLogs.log(
