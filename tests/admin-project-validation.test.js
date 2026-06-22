@@ -4,7 +4,7 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
 test('admin project create trims required strings before model call', async () => {
     const createdPayloads = [];
-    const router = loadAdminRoute(['routes', 'admin', 'projects.js'], [{
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
         segments: ['models', 'projects.js'],
         moduleExports: {
             create: async (payload) => {
@@ -32,7 +32,7 @@ test('admin project create trims required strings before model call', async () =
 
 test('admin project create accepts block content text without explicit description', async () => {
     const createdPayloads = [];
-    const router = loadAdminRoute(['routes', 'admin', 'projects.js'], [{
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
         segments: ['models', 'projects.js'],
         moduleExports: {
             create: async (payload) => {
@@ -59,7 +59,7 @@ test('admin project create accepts block content text without explicit descripti
 
 test('admin project detail rejects malformed slug before model calls', async () => {
     let getBySlugCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'projects.js'], [{
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
         segments: ['models', 'projects.js'],
         moduleExports: {
             getBySlug: async () => {

@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     CacheUtils,
@@ -11,7 +13,7 @@ const {
 } = require('./common');
 const { parseProjectUpdateRequest, updateProjectBySlug } = require('./update');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -59,7 +61,7 @@ const router = express.Router();
  *       404:
  *         description: 프로젝트 없음
  */
-router.get('/projects/slug/:slug', authenticateToken, requirePermission('projects.read'), async (req, res) => {
+router.get('/projects/slug/:slug', authenticateToken, requirePermission('projects.read'), async (req: Request, res: Response) => {
     try {
         const projectSlug = parseSlugParam(req.params.slug);
         if (!projectSlug) {
@@ -95,7 +97,7 @@ router.put('/projects/slug/:slug',
     authenticateToken,
     requirePermission('projects.update'),
     logActivity('update_project'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const parsed = parseProjectUpdateRequest(req);
             if (parsed.error) {
@@ -132,7 +134,7 @@ router.delete('/projects/slug/:slug',
     authenticateToken,
     requirePermission('projects.delete'),
     logActivity('delete_project'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const projectSlug = parseSlugParam(req.params.slug);
             if (!projectSlug) {

@@ -1,3 +1,25 @@
+import type { Request } from 'express';
+
+type ProjectPayload = Record<string, unknown>;
+
+type ProjectRouteError = {
+    statusCode: number;
+    message: string;
+};
+
+type ProjectUpdateParseResult = {
+    error: ProjectRouteError;
+} | {
+    projectSlug: string;
+    sanitizedData: ProjectPayload;
+};
+
+type ProjectUpdateResult = {
+    notFound: true;
+} | {
+    project: unknown;
+};
+
 const {
     CacheUtils,
     Projects,
@@ -11,7 +33,7 @@ const {
     verboseDebug
 } = require('./common');
 
-const parseProjectUpdateRequest = (req) => {
+const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
     const projectSlug = parseSlugParam(req.params.slug);
     if (!projectSlug) {
         return {
@@ -64,7 +86,11 @@ const parseProjectUpdateRequest = (req) => {
     };
 };
 
-const updateProjectBySlug = async (projectSlug, sanitizedData, req) => {
+const updateProjectBySlug = async (
+    projectSlug: string,
+    sanitizedData: ProjectPayload,
+    req: Request
+): Promise<ProjectUpdateResult> => {
     verboseDebug('Projects.getBySlug 호출 시작');
     const existingProject = await Projects.getBySlug(projectSlug);
     verboseDebug('Projects.getById 결과:', existingProject);
@@ -99,3 +125,5 @@ module.exports = {
     parseProjectUpdateRequest,
     updateProjectBySlug
 };
+
+export {};

@@ -46,13 +46,13 @@ const adminBlogRouteModules = [
 ];
 
 const adminProjectRouteModules = [
-    ['routes', 'admin', 'projects.js'],
-    ['routes', 'admin', 'projects', 'index.js'],
-    ['routes', 'admin', 'projects', 'common.js'],
-    ['routes', 'admin', 'projects', 'collection.js'],
-    ['routes', 'admin', 'projects', 'detail.js'],
-    ['routes', 'admin', 'projects', 'payload.js'],
-    ['routes', 'admin', 'projects', 'update.js']
+    ['routes', 'admin', 'projects.ts'],
+    ['routes', 'admin', 'projects', 'index.ts'],
+    ['routes', 'admin', 'projects', 'common.ts'],
+    ['routes', 'admin', 'projects', 'collection.ts'],
+    ['routes', 'admin', 'projects', 'detail.ts'],
+    ['routes', 'admin', 'projects', 'payload.ts'],
+    ['routes', 'admin', 'projects', 'update.ts']
 ];
 
 const adminProfileRouteModules = [
@@ -131,7 +131,7 @@ const getRouteModules = (routeSegments) => {
         ];
     }
 
-    if (routePath === 'routes/admin/projects.js') {
+    if (routePath === 'routes/admin/projects.ts') {
         return adminProjectRouteModules;
     }
 

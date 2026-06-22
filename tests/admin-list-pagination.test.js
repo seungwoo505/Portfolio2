@@ -52,11 +52,11 @@ const adminBlogRouteModules = [
 ];
 
 const adminProjectRouteModules = [
-    ['routes', 'admin', 'projects.js'],
-    ['routes', 'admin', 'projects', 'index.js'],
-    ['routes', 'admin', 'projects', 'common.js'],
-    ['routes', 'admin', 'projects', 'collection.js'],
-    ['routes', 'admin', 'projects', 'detail.js']
+    ['routes', 'admin', 'projects.ts'],
+    ['routes', 'admin', 'projects', 'index.ts'],
+    ['routes', 'admin', 'projects', 'common.ts'],
+    ['routes', 'admin', 'projects', 'collection.ts'],
+    ['routes', 'admin', 'projects', 'detail.ts']
 ];
 
 test('admin blog list returns count-based pagination total', async () => {
@@ -131,7 +131,7 @@ test('admin featured project list returns count-based pagination total', async (
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubAdminMiddleware();
 
-    const router = require(resolveFromRoot(['routes', 'admin', 'projects.js']));
+    const router = require(resolveFromRoot(['routes', 'admin', 'projects.ts']));
     const { status, body } = await requestJson(router, '/projects?featured=true&limit=2&page=2');
 
     assert.equal(status, 200);
@@ -182,7 +182,7 @@ test('admin project list rejects invalid featured filters before model calls', a
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubAdminMiddleware();
 
-    const router = require(resolveFromRoot(['routes', 'admin', 'projects.js']));
+    const router = require(resolveFromRoot(['routes', 'admin', 'projects.ts']));
     const { status, body } = await requestJson(router, '/projects?featured=maybe');
 
     assert.equal(status, 400);

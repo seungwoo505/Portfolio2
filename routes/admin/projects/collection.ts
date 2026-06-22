@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     CacheUtils,
@@ -16,7 +18,7 @@ const {
     verboseDebug
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -60,7 +62,7 @@ const router = express.Router();
  *       400:
  *         description: 잘못된 요청
  */
-router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req, res) => {
+router.get('/projects', authenticateToken, requirePermission('projects.read'), async (req: Request, res: Response) => {
     try {
         const pagination = parsePagination(req.query, {
             defaultLimit: 20,
@@ -117,7 +119,7 @@ router.post('/projects',
     authenticateToken,
     requirePermission('projects.create'),
     logActivity('create_project'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const body = trimStringFields(getPlainBody(req), ['title', 'description']);
 
