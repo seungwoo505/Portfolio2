@@ -51,8 +51,8 @@ const loadBlogRoute = (BlogPosts) => {
 
     clearRootModules([
         ...adminBlogRouteModules,
-        ['routes', 'admin', 'common.js'],
-        ['models', 'blog-posts.js'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'blog-posts.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
@@ -60,11 +60,11 @@ const loadBlogRoute = (BlogPosts) => {
         ['log.ts']
     ]);
 
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         buildErrorLog: (error) => ({ error: error.message })
     });
-    stubRootModule(['models', 'blog-posts.js'], BlogPosts);
+    stubRootModule(['models', 'blog-posts.ts'], BlogPosts);
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {

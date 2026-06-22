@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { createModelFixture } = require('./helpers/content-model-fixture');
 
 test('Experiences.update can explicitly clear nullable fields', async () => {
-    const fixture = createModelFixture(['models', 'experiences.js']);
+    const fixture = createModelFixture(['models', 'experiences.ts']);
 
     await fixture.model.update(7, {
         location: null,

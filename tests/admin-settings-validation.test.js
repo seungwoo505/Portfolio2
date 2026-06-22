@@ -4,8 +4,8 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
 test('admin settings update normalizes setting configs before model calls', async () => {
     const savedPayloads = [];
-    const router = loadAdminRoute(['routes', 'admin', 'settings.js'], [{
-        segments: ['models', 'site-settings.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'settings.ts'], [{
+        segments: ['models', 'site-settings.ts'],
         moduleExports: {
             setMany: async (settings) => {
                 savedPayloads.push(settings);
@@ -61,8 +61,8 @@ test('admin settings update normalizes setting configs before model calls', asyn
 
 test('admin settings update rejects oversized keys before model calls', async () => {
     let setManyCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'settings.js'], [{
-        segments: ['models', 'site-settings.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'settings.ts'], [{
+        segments: ['models', 'site-settings.ts'],
         moduleExports: {
             setMany: async () => {
                 setManyCalled = true;
@@ -88,8 +88,8 @@ test('admin settings update rejects oversized keys before model calls', async ()
 
 test('admin settings update rejects blank numeric values before model calls', async () => {
     let setManyCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'settings.js'], [{
-        segments: ['models', 'site-settings.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'settings.ts'], [{
+        segments: ['models', 'site-settings.ts'],
         moduleExports: {
             setMany: async () => {
                 setManyCalled = true;

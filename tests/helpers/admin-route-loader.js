@@ -56,61 +56,61 @@ const adminProjectRouteModules = [
 ];
 
 const adminProfileRouteModules = [
-    ['routes', 'admin', 'profile.js'],
-    ['routes', 'admin', 'profile', 'index.js'],
-    ['routes', 'admin', 'profile', 'personal-info.js'],
-    ['routes', 'admin', 'profile', 'social-links.js'],
-    ['routes', 'admin', 'profile', 'social-links', 'index.js'],
-    ['routes', 'admin', 'profile', 'social-links', 'collection.js'],
-    ['routes', 'admin', 'profile', 'social-links', 'detail.js'],
-    ['routes', 'admin', 'profile', 'social-links', 'payload.js']
+    ['routes', 'admin', 'profile.ts'],
+    ['routes', 'admin', 'profile', 'index.ts'],
+    ['routes', 'admin', 'profile', 'personal-info.ts'],
+    ['routes', 'admin', 'profile', 'social-links.ts'],
+    ['routes', 'admin', 'profile', 'social-links', 'index.ts'],
+    ['routes', 'admin', 'profile', 'social-links', 'collection.ts'],
+    ['routes', 'admin', 'profile', 'social-links', 'detail.ts'],
+    ['routes', 'admin', 'profile', 'social-links', 'payload.ts']
 ];
 
 const adminSettingsRouteModules = [
-    ['routes', 'admin', 'settings.js'],
-    ['routes', 'admin', 'settings', 'validation.js']
+    ['routes', 'admin', 'settings.ts'],
+    ['routes', 'admin', 'settings', 'validation.ts']
 ];
 
 const adminInterestsRouteModules = [
-    ['routes', 'admin', 'interests.js'],
-    ['routes', 'admin', 'interests', 'index.js'],
-    ['routes', 'admin', 'interests', 'collection.js'],
-    ['routes', 'admin', 'interests', 'detail.js'],
-    ['routes', 'admin', 'interests', 'payload.js']
+    ['routes', 'admin', 'interests.ts'],
+    ['routes', 'admin', 'interests', 'index.ts'],
+    ['routes', 'admin', 'interests', 'collection.ts'],
+    ['routes', 'admin', 'interests', 'detail.ts'],
+    ['routes', 'admin', 'interests', 'payload.ts']
 ];
 
 const adminTagsRouteModules = [
-    ['routes', 'admin', 'tags.js'],
-    ['routes', 'admin', 'tags', 'index.js'],
-    ['routes', 'admin', 'tags', 'collection.js'],
-    ['routes', 'admin', 'tags', 'detail.js'],
-    ['routes', 'admin', 'tags', 'payload.js']
+    ['routes', 'admin', 'tags.ts'],
+    ['routes', 'admin', 'tags', 'index.ts'],
+    ['routes', 'admin', 'tags', 'collection.ts'],
+    ['routes', 'admin', 'tags', 'detail.ts'],
+    ['routes', 'admin', 'tags', 'payload.ts']
 ];
 
 const adminContactsRouteModules = [
-    ['routes', 'admin', 'contacts.js'],
-    ['routes', 'admin', 'contacts', 'index.js'],
-    ['routes', 'admin', 'contacts', 'collection.js'],
-    ['routes', 'admin', 'contacts', 'actions.js']
+    ['routes', 'admin', 'contacts.ts'],
+    ['routes', 'admin', 'contacts', 'index.ts'],
+    ['routes', 'admin', 'contacts', 'collection.ts'],
+    ['routes', 'admin', 'contacts', 'actions.ts']
 ];
 
 const adminLogsRouteModules = [
-    ['routes', 'admin', 'logs.js'],
-    ['routes', 'admin', 'logs', 'index.js'],
-    ['routes', 'admin', 'logs', 'collection.js'],
-    ['routes', 'admin', 'logs', 'export-route.js'],
-    ['routes', 'admin', 'logs', 'export.js'],
-    ['routes', 'admin', 'logs', 'filters.js'],
-    ['routes', 'admin', 'logs', 'stats.js']
+    ['routes', 'admin', 'logs.ts'],
+    ['routes', 'admin', 'logs', 'index.ts'],
+    ['routes', 'admin', 'logs', 'collection.ts'],
+    ['routes', 'admin', 'logs', 'export-route.ts'],
+    ['routes', 'admin', 'logs', 'export.ts'],
+    ['routes', 'admin', 'logs', 'filters.ts'],
+    ['routes', 'admin', 'logs', 'stats.ts']
 ];
 
 const adminExperiencesRouteModules = [
-    ['routes', 'admin', 'experiences.js'],
-    ['routes', 'admin', 'experiences', 'index.js'],
-    ['routes', 'admin', 'experiences', 'collection.js'],
-    ['routes', 'admin', 'experiences', 'detail.js'],
-    ['routes', 'admin', 'experiences', 'timeline.js'],
-    ['routes', 'admin', 'experiences', 'payload.js']
+    ['routes', 'admin', 'experiences.ts'],
+    ['routes', 'admin', 'experiences', 'index.ts'],
+    ['routes', 'admin', 'experiences', 'collection.ts'],
+    ['routes', 'admin', 'experiences', 'detail.ts'],
+    ['routes', 'admin', 'experiences', 'timeline.ts'],
+    ['routes', 'admin', 'experiences', 'payload.ts']
 ];
 
 const getRouteModules = (routeSegments) => {
@@ -135,31 +135,31 @@ const getRouteModules = (routeSegments) => {
         return adminProjectRouteModules;
     }
 
-    if (routePath === 'routes/admin/profile.js') {
+    if (routePath === 'routes/admin/profile.ts') {
         return adminProfileRouteModules;
     }
 
-    if (routePath === 'routes/admin/settings.js') {
+    if (routePath === 'routes/admin/settings.ts') {
         return adminSettingsRouteModules;
     }
 
-    if (routePath === 'routes/admin/interests.js') {
+    if (routePath === 'routes/admin/interests.ts') {
         return adminInterestsRouteModules;
     }
 
-    if (routePath === 'routes/admin/tags.js') {
+    if (routePath === 'routes/admin/tags.ts') {
         return adminTagsRouteModules;
     }
 
-    if (routePath === 'routes/admin/contacts.js') {
+    if (routePath === 'routes/admin/contacts.ts') {
         return adminContactsRouteModules;
     }
 
-    if (routePath === 'routes/admin/logs.js') {
+    if (routePath === 'routes/admin/logs.ts') {
         return adminLogsRouteModules;
     }
 
-    if (routePath === 'routes/admin/experiences.js') {
+    if (routePath === 'routes/admin/experiences.ts') {
         return adminExperiencesRouteModules;
     }
 
@@ -169,7 +169,7 @@ const getRouteModules = (routeSegments) => {
 const loadAdminRoute = (routeSegments, moduleStubs) => {
     clearRootModules([
         ...getRouteModules(routeSegments),
-        ['routes', 'admin', 'common.js'],
+        ['routes', 'admin', 'common.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'request-body.js'],
@@ -180,7 +180,7 @@ const loadAdminRoute = (routeSegments, moduleStubs) => {
         ...moduleStubs.map(({ segments }) => segments)
     ]);
 
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })

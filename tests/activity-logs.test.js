@@ -11,24 +11,24 @@ const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
 const loadActivityLogsFixture = () => {
     const activityLogModelModules = [
-        ['models', 'activity-logs.js'],
-        ['models', 'activity-logs', 'index.js'],
-        ['models', 'activity-logs', 'common.js'],
-        ['models', 'activity-logs', 'writes.js'],
-        ['models', 'activity-logs', 'queries.js'],
-        ['models', 'activity-logs', 'stats.js'],
-        ['models', 'activity-logs', 'maintenance.js']
+        ['models', 'activity-logs.ts'],
+        ['models', 'activity-logs', 'index.ts'],
+        ['models', 'activity-logs', 'common.ts'],
+        ['models', 'activity-logs', 'writes.ts'],
+        ['models', 'activity-logs', 'queries.ts'],
+        ['models', 'activity-logs', 'stats.ts'],
+        ['models', 'activity-logs', 'maintenance.ts']
     ];
 
     clearRootModules([
         ...activityLogModelModules,
-        ['models', 'admin-activity-logs.js'],
-        ['models', 'db-utils.js']
+        ['models', 'admin-activity-logs.ts'],
+        ['models', 'db-utils.ts']
     ]);
 
     const queries = [];
 
-    stubRootModule(['models', 'db-utils.js'], {
+    stubRootModule(['models', 'db-utils.ts'], {
         executeQuery: async (query, params = []) => {
             queries.push({ sql: normalizeSql(query), params });
             return { insertId: 11, affectedRows: 3 };
@@ -43,8 +43,8 @@ const loadActivityLogsFixture = () => {
     });
 
     return {
-        ActivityLogs: require(resolveFromRoot(['models', 'activity-logs.js'])),
-        AdminActivityLogs: require(resolveFromRoot(['models', 'admin-activity-logs.js'])),
+        ActivityLogs: require(resolveFromRoot(['models', 'activity-logs.ts'])),
+        AdminActivityLogs: require(resolveFromRoot(['models', 'admin-activity-logs.ts'])),
         queries
     };
 };

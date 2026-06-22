@@ -12,14 +12,14 @@ process.env.JWT_REFRESH_SECRET = 'unit-test-refresh-secret';
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
 const adminUsersModules = [
-    ['models', 'admin-users.js'],
-    ['models', 'admin-users', 'index.js'],
-    ['models', 'admin-users', 'common.js'],
-    ['models', 'admin-users', 'auth.js'],
-    ['models', 'admin-users', 'tokens.js'],
-    ['models', 'admin-users', 'sessions.js'],
-    ['models', 'admin-users', 'users.js'],
-    ['models', 'admin-users', 'permissions.js']
+    ['models', 'admin-users.ts'],
+    ['models', 'admin-users', 'index.ts'],
+    ['models', 'admin-users', 'common.ts'],
+    ['models', 'admin-users', 'auth.ts'],
+    ['models', 'admin-users', 'tokens.ts'],
+    ['models', 'admin-users', 'sessions.ts'],
+    ['models', 'admin-users', 'users.ts'],
+    ['models', 'admin-users', 'permissions.ts']
 ];
 
 const authMiddlewareModules = [
@@ -40,7 +40,7 @@ const authMiddlewareModules = [
 const createAdminUsersFixture = async () => {
     clearRootModules([
         ...adminUsersModules,
-        ['models', 'db-utils.js'],
+        ['models', 'db-utils.ts'],
         ['log.ts']
     ]);
 
@@ -167,10 +167,10 @@ const createAdminUsersFixture = async () => {
         }
     };
 
-    stubRootModule(['models', 'db-utils.js'], dbUtils);
+    stubRootModule(['models', 'db-utils.ts'], dbUtils);
     stubRootModule(['log.ts'], createNoopLogger());
 
-    const AdminUsers = require(resolveFromRoot(['models', 'admin-users.js']));
+    const AdminUsers = require(resolveFromRoot(['models', 'admin-users.ts']));
     return { AdminUsers, sessions, queryCalls };
 };
 
@@ -178,12 +178,12 @@ const loadAuthMiddleware = (AdminUsers, logger = createNoopLogger()) => {
     clearRootModules([
         ...authMiddlewareModules,
         ...adminUsersModules,
-        ['models', 'admin-activity-logs.js'],
+        ['models', 'admin-activity-logs.ts'],
         ['log.ts']
     ]);
 
-    stubRootModule(['models', 'admin-users.js'], AdminUsers);
-    stubRootModule(['models', 'admin-activity-logs.js'], {});
+    stubRootModule(['models', 'admin-users.ts'], AdminUsers);
+    stubRootModule(['models', 'admin-activity-logs.ts'], {});
     stubRootModule(['log.ts'], logger);
 
     return require(resolveFromRoot(['middleware', 'auth.ts']));

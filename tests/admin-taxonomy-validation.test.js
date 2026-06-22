@@ -4,8 +4,8 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
 test('admin interest list normalizes array category filters before model calls', async () => {
     const requestedCategories = [];
-    const router = loadAdminRoute(['routes', 'admin', 'interests.js'], [{
-        segments: ['models', 'interests.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'interests.ts'], [{
+        segments: ['models', 'interests.ts'],
         moduleExports: {
             getByCategory: async (category) => {
                 requestedCategories.push(category);
@@ -23,8 +23,8 @@ test('admin interest list normalizes array category filters before model calls',
 
 test('admin interest create requires category', async () => {
     let createCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'interests.js'], [{
-        segments: ['models', 'interests.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'interests.ts'], [{
+        segments: ['models', 'interests.ts'],
         moduleExports: {
             create: async () => {
                 createCalled = true;
@@ -47,8 +47,8 @@ test('admin interest create requires category', async () => {
 
 test('admin tag update rejects blank provided name', async () => {
     let updateCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'tags.js'], [{
-        segments: ['models', 'tags.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'tags.ts'], [{
+        segments: ['models', 'tags.ts'],
         moduleExports: {
             update: async () => {
                 updateCalled = true;
@@ -72,8 +72,8 @@ test('admin tag update rejects blank provided name', async () => {
 test('admin tag list rejects invalid popular filters before model calls', async () => {
     let getAllCalled = false;
     let getPopularCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'tags.js'], [{
-        segments: ['models', 'tags.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'tags.ts'], [{
+        segments: ['models', 'tags.ts'],
         moduleExports: {
             getAll: async () => {
                 getAllCalled = true;
@@ -97,8 +97,8 @@ test('admin tag list rejects invalid popular filters before model calls', async 
 test('admin tag delete rejects invalid ids before model calls', async () => {
     let getByIdCalled = false;
     let deleteCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'tags.js'], [{
-        segments: ['models', 'tags.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'tags.ts'], [{
+        segments: ['models', 'tags.ts'],
         moduleExports: {
             getById: async () => {
                 getByIdCalled = true;

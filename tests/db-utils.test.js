@@ -9,12 +9,12 @@ const {
 } = require('./helpers/module-loader');
 
 const dbUtilsModulePaths = [
-    ['models', 'db-utils.js'],
-    ['models', 'db-utils', 'index.js'],
-    ['models', 'db-utils', 'batch.js'],
-    ['models', 'db-utils', 'execution.js'],
-    ['models', 'db-utils', 'logging.js'],
-    ['models', 'db-utils', 'transaction.js']
+    ['models', 'db-utils.ts'],
+    ['models', 'db-utils', 'index.ts'],
+    ['models', 'db-utils', 'batch.ts'],
+    ['models', 'db-utils', 'execution.ts'],
+    ['models', 'db-utils', 'logging.ts'],
+    ['models', 'db-utils', 'transaction.ts']
 ];
 
 const loadDbUtilsWithConnection = (connection, {
@@ -38,7 +38,7 @@ const loadDbUtilsWithConnection = (connection, {
         set: () => true
     });
 
-    return require(resolveFromRoot(['models', 'db-utils.js']));
+    return require(resolveFromRoot(['models', 'db-utils.ts']));
 };
 
 test('executeTransaction commits and releases the connection on success', async () => {

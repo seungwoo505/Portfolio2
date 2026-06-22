@@ -49,13 +49,13 @@ const loadAiRoute = (geminiService, logger = createNoopLogger()) => {
 
     clearRootModules([
         ...adminAiRouteModules,
-        ['routes', 'admin', 'common.js'],
+        ['routes', 'admin', 'common.ts'],
         ['services', 'gemini-ai.ts'],
         ['middleware', 'auth.ts'],
         ['log.ts']
     ]);
 
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger,
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })

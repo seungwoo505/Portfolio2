@@ -9,15 +9,15 @@ const {
 } = require('./helpers/module-loader');
 
 const blogPostModelModules = [
-    ['models', 'blog-posts.js'],
-    ['models', 'blog-posts', 'index.js'],
-    ['models', 'blog-posts', 'common.js'],
-    ['models', 'blog-posts', 'detail.js'],
-    ['models', 'blog-posts', 'filters.js'],
-    ['models', 'blog-posts', 'list.js'],
-    ['models', 'blog-posts', 'mutations.js'],
-    ['models', 'blog-posts', 'search.js'],
-    ['models', 'blog-posts', 'tags.js']
+    ['models', 'blog-posts.ts'],
+    ['models', 'blog-posts', 'index.ts'],
+    ['models', 'blog-posts', 'common.ts'],
+    ['models', 'blog-posts', 'detail.ts'],
+    ['models', 'blog-posts', 'filters.ts'],
+    ['models', 'blog-posts', 'list.ts'],
+    ['models', 'blog-posts', 'mutations.ts'],
+    ['models', 'blog-posts', 'search.ts'],
+    ['models', 'blog-posts', 'tags.ts']
 ];
 
 const cacheModules = [
@@ -62,12 +62,12 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
 
     clearRootModules([
         ...blogPostModelModules,
-        ['models', 'db-utils.js'],
+        ['models', 'db-utils.ts'],
         ...cacheModules,
         ['utils', 'slug.js']
     ]);
 
-    stubRootModule(['models', 'db-utils.js'], {
+    stubRootModule(['models', 'db-utils.ts'], {
         executeQuery: async () => [],
         executeQuerySingle: async () => null,
         executeConnectionQuery: async () => [],
@@ -86,7 +86,7 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
         createUniqueSlug: async () => 'post-a'
     });
 
-    const BlogPosts = require(resolveFromRoot(['models', 'blog-posts.js']));
+    const BlogPosts = require(resolveFromRoot(['models', 'blog-posts.ts']));
     BlogPosts.invalidateCache();
 
     assert.deepEqual(invalidations, [['blog', 'tags']]);

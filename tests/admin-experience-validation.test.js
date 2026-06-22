@@ -4,8 +4,8 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
 test('admin experience list normalizes array type filters before model calls', async () => {
     const requestedTypes = [];
-    const router = loadAdminRoute(['routes', 'admin', 'experiences.js'], [{
-        segments: ['models', 'experiences.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'experiences.ts'], [{
+        segments: ['models', 'experiences.ts'],
         moduleExports: {
             getByType: async (type) => {
                 requestedTypes.push(type);
@@ -23,8 +23,8 @@ test('admin experience list normalizes array type filters before model calls', a
 
 test('admin experience delete maps missing experiences to 404 before delete', async () => {
     let deleteCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'experiences.js'], [{
-        segments: ['models', 'experiences.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'experiences.ts'], [{
+        segments: ['models', 'experiences.ts'],
         moduleExports: {
             getById: async () => null,
             delete: async () => {

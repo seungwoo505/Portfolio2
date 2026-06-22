@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { createModelFixture, hasOperation } = require('./helpers/content-model-fixture');
 
 test('Projects.create writes the project and tags inside one transaction connection', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     const projectId = await fixture.model.create({
         title: 'Portfolio API',
@@ -22,7 +22,7 @@ test('Projects.create writes the project and tags inside one transaction connect
 });
 
 test('Projects.create stores block content fields', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.create({
         title: 'Block Project',
@@ -44,7 +44,7 @@ test('Projects.create stores block content fields', async () => {
 });
 
 test('Projects.getAll binds pagination values instead of interpolating them', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.getAll(25, 50);
 
@@ -55,7 +55,7 @@ test('Projects.getAll binds pagination values instead of interpolating them', as
 });
 
 test('Projects.getFeatured binds pagination values', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.getFeatured(12, 24);
 
@@ -67,7 +67,7 @@ test('Projects.getFeatured binds pagination values', async () => {
 });
 
 test('Projects.getWithFilters normalizes array query values', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.getWithFilters({
         order: ['desc', 'asc'],
@@ -85,7 +85,7 @@ test('Projects.getWithFilters normalizes array query values', async () => {
 });
 
 test('Projects.update can explicitly clear demo_url through project_url', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.update(20, { project_url: '' });
 
@@ -96,7 +96,7 @@ test('Projects.update can explicitly clear demo_url through project_url', async 
 });
 
 test('Projects.update can store block content fields', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.update(20, {
         content_json: [{ type: 'paragraph', content: '수정 내용' }],
@@ -118,7 +118,7 @@ test('Projects.update can store block content fields', async () => {
 });
 
 test('Projects.update normalizes string tags and can clear all tags', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.update(20, { tags: 'backend, node' });
 
@@ -134,7 +134,7 @@ test('Projects.update normalizes string tags and can clear all tags', async () =
 });
 
 test('Projects.delete removes child rows and recalculates tag counts in one transaction', async () => {
-    const fixture = createModelFixture(['models', 'projects.js']);
+    const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.delete(20);
 

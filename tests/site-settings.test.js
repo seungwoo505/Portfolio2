@@ -10,18 +10,18 @@ const {
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
 const siteSettingsModules = [
-    ['models', 'site-settings.js'],
-    ['models', 'site-settings', 'index.js'],
-    ['models', 'site-settings', 'common.js'],
-    ['models', 'site-settings', 'reads.js'],
-    ['models', 'site-settings', 'values.js'],
-    ['models', 'site-settings', 'writes.js']
+    ['models', 'site-settings.ts'],
+    ['models', 'site-settings', 'index.ts'],
+    ['models', 'site-settings', 'common.ts'],
+    ['models', 'site-settings', 'reads.ts'],
+    ['models', 'site-settings', 'values.ts'],
+    ['models', 'site-settings', 'writes.ts']
 ];
 
 const loadSiteSettingsFixture = () => {
     clearRootModules([
         ...siteSettingsModules,
-        ['models', 'db-utils.js']
+        ['models', 'db-utils.ts']
     ]);
 
     const operations = [];
@@ -47,7 +47,7 @@ const loadSiteSettingsFixture = () => {
         }
     };
 
-    stubRootModule(['models', 'db-utils.js'], {
+    stubRootModule(['models', 'db-utils.ts'], {
         executeQuery: async (query, params = []) => {
             recordOperation(query, params);
             return [];
@@ -78,7 +78,7 @@ const loadSiteSettingsFixture = () => {
     });
 
     return {
-        SiteSettings: require(resolveFromRoot(['models', 'site-settings.js'])),
+        SiteSettings: require(resolveFromRoot(['models', 'site-settings.ts'])),
         operations,
         get transactionCount() {
             return transactionCount;
@@ -130,7 +130,7 @@ test('SiteSettings.setMany stores null setting values as database null', async (
 test('SiteSettings getters preserve null setting values', async () => {
     clearRootModules([
         ...siteSettingsModules,
-        ['models', 'db-utils.js']
+        ['models', 'db-utils.ts']
     ]);
 
     const nullableSetting = {
@@ -142,7 +142,7 @@ test('SiteSettings getters preserve null setting values', async () => {
         updated_at: '2026-05-25'
     };
 
-    stubRootModule(['models', 'db-utils.js'], {
+    stubRootModule(['models', 'db-utils.ts'], {
         executeQuery: async () => [nullableSetting],
         executeQuerySingle: async () => nullableSetting,
         executeConnectionQuery: async () => [],
@@ -152,7 +152,7 @@ test('SiteSettings getters preserve null setting values', async () => {
         })
     });
 
-    const SiteSettings = require(resolveFromRoot(['models', 'site-settings.js']));
+    const SiteSettings = require(resolveFromRoot(['models', 'site-settings.ts']));
 
     assert.equal(await SiteSettings.getValue('optional_banner'), null);
     assert.deepEqual(await SiteSettings.getPublicSettings(), {

@@ -29,16 +29,16 @@ const publicRouteModules = [
 ];
 
 const modelModules = [
-    ['models', 'personal-info.js'],
-    ['models', 'social-links.js'],
-    ['models', 'skills.js'],
-    ['models', 'projects.js'],
-    ['models', 'blog-posts.js'],
-    ['models', 'tags.js'],
-    ['models', 'contact-messages.js'],
-    ['models', 'experiences.js'],
-    ['models', 'interests.js'],
-    ['models', 'site-settings.js']
+    ['models', 'personal-info.ts'],
+    ['models', 'social-links.ts'],
+    ['models', 'skills.ts'],
+    ['models', 'projects.ts'],
+    ['models', 'blog-posts.ts'],
+    ['models', 'tags.ts'],
+    ['models', 'contact-messages.ts'],
+    ['models', 'experiences.ts'],
+    ['models', 'interests.ts'],
+    ['models', 'site-settings.ts']
 ];
 
 const loadPublicRoute = ({
@@ -63,16 +63,16 @@ const loadPublicRoute = ({
     ]);
 
     stubRootModule(['log.ts'], createNoopLogger());
-    stubRootModule(['models', 'personal-info.js'], PersonalInfo);
-    stubRootModule(['models', 'social-links.js'], SocialLinks);
-    stubRootModule(['models', 'skills.js'], Skills);
-    stubRootModule(['models', 'projects.js'], Projects);
-    stubRootModule(['models', 'blog-posts.js'], BlogPosts);
-    stubRootModule(['models', 'tags.js'], Tags);
-    stubRootModule(['models', 'contact-messages.js'], ContactMessages);
-    stubRootModule(['models', 'experiences.js'], Experiences);
-    stubRootModule(['models', 'interests.js'], Interests);
-    stubRootModule(['models', 'site-settings.js'], SiteSettings);
+    stubRootModule(['models', 'personal-info.ts'], PersonalInfo);
+    stubRootModule(['models', 'social-links.ts'], SocialLinks);
+    stubRootModule(['models', 'skills.ts'], Skills);
+    stubRootModule(['models', 'projects.ts'], Projects);
+    stubRootModule(['models', 'blog-posts.ts'], BlogPosts);
+    stubRootModule(['models', 'tags.ts'], Tags);
+    stubRootModule(['models', 'contact-messages.ts'], ContactMessages);
+    stubRootModule(['models', 'experiences.ts'], Experiences);
+    stubRootModule(['models', 'interests.ts'], Interests);
+    stubRootModule(['models', 'site-settings.ts'], SiteSettings);
     stubRootModule(['utils', 'cache.ts'], CacheUtils);
 
     return require(resolveFromRoot(['routes', 'public.ts']));

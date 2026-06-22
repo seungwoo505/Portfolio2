@@ -34,23 +34,23 @@ const loadDashboardRoute = ({ executeQuery, contactStats, activityStats, activit
     const requiredPermissions = [];
 
     clearRootModules([
-        ['routes', 'admin', 'dashboard.js'],
-        ['models', 'admin-activity-logs.js'],
-        ['models', 'contact-messages.js'],
-        ['models', 'db-utils.js'],
+        ['routes', 'admin', 'dashboard.ts'],
+        ['models', 'admin-activity-logs.ts'],
+        ['models', 'contact-messages.ts'],
+        ['models', 'db-utils.ts'],
         ['middleware', 'auth.ts']
     ]);
 
-    stubRootModule(['models', 'admin-activity-logs.js'], {
+    stubRootModule(['models', 'admin-activity-logs.ts'], {
         getStats: async (days) => {
             activityDays.push(days);
             return activityStats;
         }
     });
-    stubRootModule(['models', 'contact-messages.js'], {
+    stubRootModule(['models', 'contact-messages.ts'], {
         getStats: async () => contactStats
     });
-    stubRootModule(['models', 'db-utils.js'], { executeQuery });
+    stubRootModule(['models', 'db-utils.ts'], { executeQuery });
     stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };
@@ -63,7 +63,7 @@ const loadDashboardRoute = ({ executeQuery, contactStats, activityStats, activit
     });
 
     return {
-        router: require(resolveFromRoot(['routes', 'admin', 'dashboard.js'])),
+        router: require(resolveFromRoot(['routes', 'admin', 'dashboard.ts'])),
         requiredPermissions
     };
 };

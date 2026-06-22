@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { createModelFixture, hasOperation } = require('./helpers/content-model-fixture');
 
 test('BlogPosts._create writes the post and tags inside one transaction connection', async () => {
-    const fixture = createModelFixture(['models', 'blog-posts.js']);
+    const fixture = createModelFixture(['models', 'blog-posts.ts']);
 
     const postId = await fixture.model._create({
         title: '테스트 글',
@@ -22,7 +22,7 @@ test('BlogPosts._create writes the post and tags inside one transaction connecti
 });
 
 test('BlogPosts._delete removes post tag usage and recalculates tag counts in one transaction', async () => {
-    const fixture = createModelFixture(['models', 'blog-posts.js']);
+    const fixture = createModelFixture(['models', 'blog-posts.ts']);
 
     await fixture.model._delete(10);
 
@@ -33,7 +33,7 @@ test('BlogPosts._delete removes post tag usage and recalculates tag counts in on
 });
 
 test('BlogPosts._update can explicitly clear nullable fields and tags', async () => {
-    const fixture = createModelFixture(['models', 'blog-posts.js']);
+    const fixture = createModelFixture(['models', 'blog-posts.ts']);
 
     await fixture.model._update(10, {
         featured_image: null,
@@ -50,7 +50,7 @@ test('BlogPosts._update can explicitly clear nullable fields and tags', async ()
 });
 
 test('BlogPosts.getWithFilters normalizes array query values', async () => {
-    const fixture = createModelFixture(['models', 'blog-posts.js']);
+    const fixture = createModelFixture(['models', 'blog-posts.ts']);
 
     await fixture.model.getWithFilters({
         order: ['asc', 'desc'],

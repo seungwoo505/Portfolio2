@@ -8,18 +8,18 @@ const { requestJson } = require('./admin-route-loader');
 
 const loadSkillsRoute = (Skills) => {
     clearRootModules([
-        ['routes', 'admin', 'skills.js'],
-        ['routes', 'admin', 'skills', 'index.js'],
-        ['routes', 'admin', 'skills', 'common.js'],
-        ['routes', 'admin', 'skills', 'payload.js'],
-        ['routes', 'admin', 'skills', 'display-order.js'],
-        ['routes', 'admin', 'skills', 'categories.js'],
-        ['routes', 'admin', 'skills', 'crud.js'],
-        ['routes', 'admin', 'skills', 'collection.js'],
-        ['routes', 'admin', 'skills', 'detail.js'],
-        ['routes', 'admin', 'skills', 'actions.js'],
-        ['routes', 'admin', 'common.js'],
-        ['models', 'skills.js'],
+        ['routes', 'admin', 'skills.ts'],
+        ['routes', 'admin', 'skills', 'index.ts'],
+        ['routes', 'admin', 'skills', 'common.ts'],
+        ['routes', 'admin', 'skills', 'payload.ts'],
+        ['routes', 'admin', 'skills', 'display-order.ts'],
+        ['routes', 'admin', 'skills', 'categories.ts'],
+        ['routes', 'admin', 'skills', 'crud.ts'],
+        ['routes', 'admin', 'skills', 'collection.ts'],
+        ['routes', 'admin', 'skills', 'detail.ts'],
+        ['routes', 'admin', 'skills', 'actions.ts'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'skills.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'request-body.js'],
@@ -27,11 +27,11 @@ const loadSkillsRoute = (Skills) => {
         ['log.ts']
     ]);
 
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         buildErrorLog: (error) => ({ error: error.message })
     });
-    stubRootModule(['models', 'skills.js'], Skills);
+    stubRootModule(['models', 'skills.ts'], Skills);
     stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
     stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
@@ -42,7 +42,7 @@ const loadSkillsRoute = (Skills) => {
         logActivity: () => (_req, _res, next) => next()
     });
 
-    return require(resolveFromRoot(['routes', 'admin', 'skills.js']));
+    return require(resolveFromRoot(['routes', 'admin', 'skills.ts']));
 };
 
 module.exports = {

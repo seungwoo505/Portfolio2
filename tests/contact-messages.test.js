@@ -11,17 +11,17 @@ const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
 const createContactMessagesFixture = () => {
     clearRootModules([
-        ['models', 'contact-messages.js'],
-        ['models', 'contact-messages', 'index.js'],
-        ['models', 'contact-messages', 'queries.js'],
-        ['models', 'contact-messages', 'mutations.js'],
-        ['models', 'contact-messages', 'stats.js'],
-        ['models', 'contact-messages', 'rate-limit.js'],
-        ['models', 'db-utils.js']
+        ['models', 'contact-messages.ts'],
+        ['models', 'contact-messages', 'index.ts'],
+        ['models', 'contact-messages', 'queries.ts'],
+        ['models', 'contact-messages', 'mutations.ts'],
+        ['models', 'contact-messages', 'stats.ts'],
+        ['models', 'contact-messages', 'rate-limit.ts'],
+        ['models', 'db-utils.ts']
     ]);
 
     const operations = [];
-    stubRootModule(['models', 'db-utils.js'], {
+    stubRootModule(['models', 'db-utils.ts'], {
         executeQuery: async (query, params = []) => {
             operations.push({ sql: normalizeSql(query), params });
             return [];
@@ -33,7 +33,7 @@ const createContactMessagesFixture = () => {
     });
 
     return {
-        model: require(resolveFromRoot(['models', 'contact-messages.js'])),
+        model: require(resolveFromRoot(['models', 'contact-messages.ts'])),
         operations
     };
 };

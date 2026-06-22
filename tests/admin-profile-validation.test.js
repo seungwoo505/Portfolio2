@@ -4,13 +4,13 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
 test('admin social link create trims required strings before model call', async () => {
     const createdPayloads = [];
-    const router = loadAdminRoute(['routes', 'admin', 'profile.js'], [
+    const router = loadAdminRoute(['routes', 'admin', 'profile.ts'], [
         {
-            segments: ['models', 'personal-info.js'],
+            segments: ['models', 'personal-info.ts'],
             moduleExports: {}
         },
         {
-            segments: ['models', 'social-links.js'],
+            segments: ['models', 'social-links.ts'],
             moduleExports: {
                 create: async (payload) => {
                     createdPayloads.push(payload);
@@ -38,13 +38,13 @@ test('admin social link create trims required strings before model call', async 
 
 test('admin social link update maps missing links to 404 before update', async () => {
     let updateCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'profile.js'], [
+    const router = loadAdminRoute(['routes', 'admin', 'profile.ts'], [
         {
-            segments: ['models', 'personal-info.js'],
+            segments: ['models', 'personal-info.ts'],
             moduleExports: {}
         },
         {
-            segments: ['models', 'social-links.js'],
+            segments: ['models', 'social-links.ts'],
             moduleExports: {
                 getById: async () => null,
                 update: async () => {

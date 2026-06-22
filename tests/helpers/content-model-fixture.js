@@ -8,35 +8,35 @@ const {
 const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 
 const projectModelModules = [
-    ['models', 'projects.js'],
-    ['models', 'projects', 'index.js'],
-    ['models', 'projects', 'common.js'],
-    ['models', 'projects', 'detail.js'],
-    ['models', 'projects', 'filters.js'],
-    ['models', 'projects', 'list.js'],
-    ['models', 'projects', 'mutations.js'],
-    ['models', 'projects', 'relations.js'],
-    ['models', 'projects', 'slugs.js']
+    ['models', 'projects.ts'],
+    ['models', 'projects', 'index.ts'],
+    ['models', 'projects', 'common.ts'],
+    ['models', 'projects', 'detail.ts'],
+    ['models', 'projects', 'filters.ts'],
+    ['models', 'projects', 'list.ts'],
+    ['models', 'projects', 'mutations.ts'],
+    ['models', 'projects', 'relations.ts'],
+    ['models', 'projects', 'slugs.ts']
 ];
 
 const blogPostModelModules = [
-    ['models', 'blog-posts.js'],
-    ['models', 'blog-posts', 'index.js'],
-    ['models', 'blog-posts', 'common.js'],
-    ['models', 'blog-posts', 'detail.js'],
-    ['models', 'blog-posts', 'filters.js'],
-    ['models', 'blog-posts', 'list.js'],
-    ['models', 'blog-posts', 'mutations.js'],
-    ['models', 'blog-posts', 'search.js'],
-    ['models', 'blog-posts', 'tags.js']
+    ['models', 'blog-posts.ts'],
+    ['models', 'blog-posts', 'index.ts'],
+    ['models', 'blog-posts', 'common.ts'],
+    ['models', 'blog-posts', 'detail.ts'],
+    ['models', 'blog-posts', 'filters.ts'],
+    ['models', 'blog-posts', 'list.ts'],
+    ['models', 'blog-posts', 'mutations.ts'],
+    ['models', 'blog-posts', 'search.ts'],
+    ['models', 'blog-posts', 'tags.ts']
 ];
 
 const getModelModules = (modelPath) => {
-    if (modelPath.join('/') === 'models/blog-posts.js') {
+    if (modelPath.join('/') === 'models/blog-posts.ts') {
         return blogPostModelModules;
     }
 
-    if (modelPath.join('/') === 'models/projects.js') {
+    if (modelPath.join('/') === 'models/projects.ts') {
         return projectModelModules;
     }
 
@@ -46,7 +46,7 @@ const getModelModules = (modelPath) => {
 const createModelFixture = (modelPath) => {
     clearRootModules([
         ...getModelModules(modelPath),
-        ['models', 'db-utils.js'],
+        ['models', 'db-utils.ts'],
         ['utils', 'slug.js'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
@@ -106,7 +106,7 @@ const createModelFixture = (modelPath) => {
         }
     };
 
-    stubRootModule(['models', 'db-utils.js'], dbUtils);
+    stubRootModule(['models', 'db-utils.ts'], dbUtils);
     stubRootModule(['utils', 'slug.js'], {
         generateSlug: (value, fallback = 'item') => (
             String(value || fallback).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || fallback

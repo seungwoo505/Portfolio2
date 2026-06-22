@@ -7,7 +7,7 @@ const {
 const { requestJson } = require('./admin-route-loader');
 
 const stubCommon = () => {
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         buildErrorLog: (error) => ({ error: error.message })
     });
@@ -62,17 +62,17 @@ const adminUsersRouteModules = [
 const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } }) => {
     clearRootModules([
         ...adminAuthRouteModules,
-        ['routes', 'admin', 'common.js'],
-        ['models', 'admin-users.js'],
-        ['models', 'admin-activity-logs.js'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'admin-users.ts'],
+        ['models', 'admin-activity-logs.ts'],
         ['middleware', 'auth.ts'],
         ['log.ts']
     ]);
 
     stubCommon();
     stubAuthMiddleware();
-    stubRootModule(['models', 'admin-users.js'], AdminUsers);
-    stubRootModule(['models', 'admin-activity-logs.js'], AdminActivityLogs);
+    stubRootModule(['models', 'admin-users.ts'], AdminUsers);
+    stubRootModule(['models', 'admin-activity-logs.ts'], AdminActivityLogs);
 
     return require(resolveFromRoot(['routes', 'admin', 'auth.ts']));
 };
@@ -80,15 +80,15 @@ const loadAuthRoute = ({ AdminUsers, AdminActivityLogs = { log: async () => 0 } 
 const loadUsersRoute = (AdminUsers) => {
     clearRootModules([
         ...adminUsersRouteModules,
-        ['routes', 'admin', 'common.js'],
-        ['models', 'admin-users.js'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'admin-users.ts'],
         ['middleware', 'auth.ts'],
         ['log.ts']
     ]);
 
     stubCommon();
     stubAuthMiddleware();
-    stubRootModule(['models', 'admin-users.js'], AdminUsers);
+    stubRootModule(['models', 'admin-users.ts'], AdminUsers);
 
     return require(resolveFromRoot(['routes', 'admin', 'users.ts']));
 };

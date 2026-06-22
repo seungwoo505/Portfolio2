@@ -36,15 +36,15 @@ const requestJson = async (router, pathName, { method = 'GET' } = {}) => {
 
 const loadUploadsRoute = (filePath, options = {}) => {
     clearRootModules([
-        ['routes', 'admin', 'uploads.js'],
-        ['routes', 'admin', 'uploads', 'images.js'],
-        ['routes', 'admin', 'common.js'],
+        ['routes', 'admin', 'uploads.ts'],
+        ['routes', 'admin', 'uploads', 'images.ts'],
+        ['routes', 'admin', 'common.ts'],
         ['utils', 'upload.ts'],
         ['middleware', 'auth.ts'],
         ['log.ts']
     ]);
 
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })
@@ -63,7 +63,7 @@ const loadUploadsRoute = (filePath, options = {}) => {
         logActivity: () => (_req, _res, next) => next()
     });
 
-    return require(resolveFromRoot(['routes', 'admin', 'uploads.js']));
+    return require(resolveFromRoot(['routes', 'admin', 'uploads.ts']));
 };
 
 test('admin upload create hides unexpected internal errors', async () => {

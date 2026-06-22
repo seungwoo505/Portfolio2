@@ -5,7 +5,7 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 test('admin blog create rejects blank required strings', async () => {
     let createCalled = false;
     const router = loadAdminRoute(['routes', 'admin', 'blog.ts'], [{
-        segments: ['models', 'blog-posts.js'],
+        segments: ['models', 'blog-posts.ts'],
         moduleExports: {
             create: async () => {
                 createCalled = true;
@@ -30,7 +30,7 @@ test('admin blog create rejects blank required strings', async () => {
 test('admin blog create accepts block content text without legacy markdown', async () => {
     let createPayload = null;
     const router = loadAdminRoute(['routes', 'admin', 'blog.ts'], [{
-        segments: ['models', 'blog-posts.js'],
+        segments: ['models', 'blog-posts.ts'],
         moduleExports: {
             create: async (payload) => {
                 createPayload = payload;
@@ -58,7 +58,7 @@ test('admin blog create accepts block content text without legacy markdown', asy
 test('admin blog delete rejects malformed slug before model calls', async () => {
     let getBySlugAdminCalled = false;
     const router = loadAdminRoute(['routes', 'admin', 'blog.ts'], [{
-        segments: ['models', 'blog-posts.js'],
+        segments: ['models', 'blog-posts.ts'],
         moduleExports: {
             getBySlugAdmin: async () => {
                 getBySlugAdminCalled = true;

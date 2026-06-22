@@ -62,8 +62,8 @@ const adminProjectRouteModules = [
 test('admin blog list returns count-based pagination total', async () => {
     clearRootModules([
         ...adminBlogRouteModules,
-        ['routes', 'admin', 'common.js'],
-        ['models', 'blog-posts.js'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'blog-posts.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'pagination.js'],
         ['middleware', 'auth.ts'],
@@ -71,11 +71,11 @@ test('admin blog list returns count-based pagination total', async () => {
     ]);
 
     const countFilters = [];
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         buildErrorLog: (error) => ({ error: error.message })
     });
-    stubRootModule(['models', 'blog-posts.js'], {
+    stubRootModule(['models', 'blog-posts.ts'], {
         getAll: async () => [{ id: 1 }],
         getCountWithFilters: async (filters) => {
             countFilters.push(filters);
@@ -101,8 +101,8 @@ test('admin blog list returns count-based pagination total', async () => {
 test('admin featured project list returns count-based pagination total', async () => {
     clearRootModules([
         ...adminProjectRouteModules,
-        ['routes', 'admin', 'common.js'],
-        ['models', 'projects.js'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'projects.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
@@ -112,12 +112,12 @@ test('admin featured project list returns count-based pagination total', async (
 
     const featuredCalls = [];
     const countFilters = [];
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })
     });
-    stubRootModule(['models', 'projects.js'], {
+    stubRootModule(['models', 'projects.ts'], {
         getFeatured: async (limit, offset) => {
             featuredCalls.push({ limit, offset });
             return [{ id: 1 }];
@@ -152,8 +152,8 @@ test('admin featured project list returns count-based pagination total', async (
 test('admin project list rejects invalid featured filters before model calls', async () => {
     clearRootModules([
         ...adminProjectRouteModules,
-        ['routes', 'admin', 'common.js'],
-        ['models', 'projects.js'],
+        ['routes', 'admin', 'common.ts'],
+        ['models', 'projects.ts'],
         ['utils', 'cache.ts'],
         ['utils', 'filter-values.js'],
         ['utils', 'pagination.js'],
@@ -163,12 +163,12 @@ test('admin project list rejects invalid featured filters before model calls', a
 
     let getAllCalled = false;
     let getFeaturedCalled = false;
-    stubRootModule(['routes', 'admin', 'common.js'], {
+    stubRootModule(['routes', 'admin', 'common.ts'], {
         logger: createNoopLogger(),
         verboseDebug: () => {},
         buildErrorLog: (error) => ({ error: error.message })
     });
-    stubRootModule(['models', 'projects.js'], {
+    stubRootModule(['models', 'projects.ts'], {
         getFeatured: async () => {
             getFeaturedCalled = true;
             return [];

@@ -4,8 +4,8 @@ const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
 test('admin contact read maps missing messages to 404 before update', async () => {
     let markAsReadCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'contacts.js'], [{
-        segments: ['models', 'contact-messages.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'contacts.ts'], [{
+        segments: ['models', 'contact-messages.ts'],
         moduleExports: {
             getById: async () => null,
             markAsRead: async () => {
@@ -27,8 +27,8 @@ test('admin contact read maps missing messages to 404 before update', async () =
 test('admin contact list rejects invalid unread filters before model calls', async () => {
     let getAllCalled = false;
     let getUnreadCalled = false;
-    const router = loadAdminRoute(['routes', 'admin', 'contacts.js'], [{
-        segments: ['models', 'contact-messages.js'],
+    const router = loadAdminRoute(['routes', 'admin', 'contacts.ts'], [{
+        segments: ['models', 'contact-messages.ts'],
         moduleExports: {
             getAll: async () => {
                 getAllCalled = true;
