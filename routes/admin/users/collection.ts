@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     AdminUsers,
@@ -12,7 +14,11 @@ const {
     validateCreateUserPayload
 } = require('./payload');
 
-const router = express.Router();
+const router: Router = express.Router();
+
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
 
 /**
  * @swagger
@@ -36,7 +42,7 @@ const router = express.Router();
  *       400:
  *         description: 잘못된 요청
  */
-router.get('/users', ...superAdminOnly, async (req, res) => {
+router.get('/users', ...superAdminOnly, async (req: Request, res: Response) => {
     try {
         const users = await AdminUsers.getAll();
         res.json({
@@ -51,7 +57,7 @@ router.get('/users', ...superAdminOnly, async (req, res) => {
     }
 });
 
-router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req, res) => {
+router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req: Request, res: Response) => {
     try {
         const payload = getCreateUserPayload(req);
         const validationError = validateCreateUserPayload(payload);
@@ -72,10 +78,11 @@ router.post('/users', ...superAdminOnly, logActivity('create_admin'), async (req
             data: newUser
         });
     } catch (error) {
-        if (userCreateClientErrors.has(error.message)) {
+        const errorMessage = getErrorMessage(error);
+        if (userCreateClientErrors.has(errorMessage)) {
             return res.status(400).json({
                 success: false,
-                message: error.message
+                message: errorMessage
             });
         }
 

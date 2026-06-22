@@ -1,3 +1,5 @@
+import type { Request } from 'express';
+
 const {
     getPasswordPolicyError,
     isValidAdminRole,
@@ -14,7 +16,17 @@ const {
 const userStringFields = ['username', 'email', 'full_name', 'role'];
 const userUpdateRequiredStringFields = ['username', 'email', 'role'];
 
-const getCreateUserPayload = (req) => {
+type UserPayload = Record<string, unknown>;
+
+type CreateUserPayload = {
+    username: unknown;
+    email: unknown;
+    password: unknown;
+    full_name: unknown;
+    role: unknown;
+};
+
+const getCreateUserPayload = (req: Request): CreateUserPayload => {
     const body = trimStringFields(getPlainBody(req), userStringFields);
     return {
         username: body.username,
@@ -25,7 +37,7 @@ const getCreateUserPayload = (req) => {
     };
 };
 
-const validateCreateUserPayload = ({ username, email, password, role }) => {
+const validateCreateUserPayload = ({ username, email, password, role }: CreateUserPayload): string | null => {
     if (!hasRequiredStringFields({ username, email, password }, ['username', 'email', 'password'])) {
         return '사용자명, 이메일, 비밀번호는 필수입니다.';
     }
@@ -41,7 +53,7 @@ const validateCreateUserPayload = ({ username, email, password, role }) => {
     return getPasswordPolicyError(password);
 };
 
-const getUpdateUserPayload = (req) => {
+const getUpdateUserPayload = (req: Request): UserPayload => {
     const body = trimStringFields(getPlainBody(req), userStringFields);
 
     if (Object.prototype.hasOwnProperty.call(body, 'is_active')) {
@@ -51,7 +63,7 @@ const getUpdateUserPayload = (req) => {
     return body;
 };
 
-const validateUpdateUserPayload = (body) => {
+const validateUpdateUserPayload = (body: UserPayload): string | null => {
     if (Object.keys(body).length === 0) {
         return '수정할 관리자 정보가 필요합니다.';
     }

@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     AdminUsers,
@@ -16,16 +18,21 @@ const {
     parseUserIdParam
 } = require('./lookup');
 
-const router = express.Router();
+const router: Router = express.Router();
 
-const sendRouteError = (res, error) => (
+type UserRouteError = {
+    statusCode: number;
+    message: string;
+};
+
+const sendRouteError = (res: Response, error: UserRouteError) => (
     res.status(error.statusCode).json({
         success: false,
         message: error.message
     })
 );
 
-router.get('/users/:id', ...superAdminOnly, async (req, res) => {
+router.get('/users/:id', ...superAdminOnly, async (req: Request, res: Response) => {
     try {
         const parsed = parseUserIdParam(req.params.id);
         if (parsed.error) {
@@ -81,7 +88,7 @@ router.get('/users/:id', ...superAdminOnly, async (req, res) => {
  *       404:
  *         description: 관리자 없음
  */
-router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req, res) => {
+router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req: Request, res: Response) => {
     try {
         const parsed = parseUserIdParam(req.params.id);
         if (parsed.error) {
@@ -122,7 +129,7 @@ router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (
     }
 });
 
-router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), async (req, res) => {
+router.delete('/users/:id', ...superAdminOnly, logActivity('delete_admin'), async (req: Request, res: Response) => {
     try {
         const parsed = parseUserIdParam(req.params.id);
         if (parsed.error) {
