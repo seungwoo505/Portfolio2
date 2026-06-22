@@ -1,3 +1,5 @@
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
 const {
     authenticateToken,
@@ -13,7 +15,7 @@ const {
     withTimeout
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -38,7 +40,7 @@ const router = express.Router();
 router.post('/ai/keywords',
     authenticateToken,
     requirePermission('blog.create'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const body = getPlainBody(req);
             const { content, maxKeywords = 10, techTags = [] } = body;
@@ -47,7 +49,7 @@ router.post('/ai/keywords',
             const normalizedTechTags = normalizeTechTags(techTags);
             const preprocessedContent = preprocessContent(validatedContent, '키워드 추출 전처리');
 
-            const keywords = await withTimeout(
+            const keywords = await withTimeout<string[]>(
                 geminiService.extractKeywords(preprocessedContent, normalizedMaxKeywords, normalizedTechTags),
                 'AI 키워드 추출'
             );

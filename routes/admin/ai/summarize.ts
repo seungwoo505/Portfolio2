@@ -1,3 +1,6 @@
+import type { Request, Response, Router } from 'express';
+import type { SummaryKeywordsResult } from '../../../services/gemini-ai/types';
+
 const express = require('express');
 const {
     authenticateToken,
@@ -14,7 +17,7 @@ const {
     withTimeout
 } = require('./common');
 
-const router = express.Router();
+const router: Router = express.Router();
 
 /**
  * @swagger
@@ -39,7 +42,7 @@ const router = express.Router();
 router.post('/ai/summarize',
     authenticateToken,
     requirePermission('blog.create'),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         try {
             const body = getPlainBody(req);
             const { content, techTags = [] } = body;
@@ -52,7 +55,7 @@ router.post('/ai/summarize',
             verboseDebug('전처리된 콘텐츠:', preprocessedContent);
 
             if (includeKeywords) {
-                const result = await withTimeout(
+                const result = await withTimeout<SummaryKeywordsResult>(
                     geminiService.generateSummaryAndKeywords(preprocessedContent, normalizedTechTags),
                     'AI 요약/키워드 생성'
                 );
@@ -76,7 +79,7 @@ router.post('/ai/summarize',
             verboseDebug('generateSummary 메서드 타입:', typeof geminiService.generateSummary);
             verboseDebug('generateSummary 메서드 내용:', geminiService.generateSummary.toString().substring(0, 100) + '...');
 
-            const summary = await withTimeout(
+            const summary = await withTimeout<string>(
                 geminiService.generateSummary(preprocessedContent, 160, normalizedTechTags),
                 'AI 요약 생성'
             );

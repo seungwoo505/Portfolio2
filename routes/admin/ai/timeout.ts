@@ -1,11 +1,15 @@
 const { AI_ROUTE_TIMEOUT } = require('./config');
 
-const withTimeout = async (promise, label) => {
-    let timeoutId;
+type AiRouteTimeoutError = Error & {
+    code?: string;
+};
 
-    const timeout = new Promise((_, reject) => {
+const withTimeout = async <T>(promise: Promise<T>, label: string): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const timeout = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => {
-            const error = new Error(`${label} 요청 시간이 초과되었습니다.`);
+            const error = new Error(`${label} 요청 시간이 초과되었습니다.`) as AiRouteTimeoutError;
             error.code = 'AI_ROUTE_TIMEOUT';
             reject(error);
         }, AI_ROUTE_TIMEOUT);

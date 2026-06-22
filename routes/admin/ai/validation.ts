@@ -7,7 +7,11 @@ const {
 } = require('./config');
 const { AiValidationError } = require('./errors');
 
-const parseStrictInteger = (value) => {
+type TechTagInput = string | {
+    name?: unknown;
+};
+
+const parseStrictInteger = (value: unknown): number | null => {
     if (typeof value === 'number') {
         return Number.isSafeInteger(value) ? value : null;
     }
@@ -25,7 +29,7 @@ const parseStrictInteger = (value) => {
     return Number.isSafeInteger(parsed) ? parsed : null;
 };
 
-const validateContent = (content, emptyMessage) => {
+const validateContent = (content: unknown, emptyMessage: string): string => {
     if (typeof content !== 'string') {
         throw new AiValidationError('content는 문자열이어야 합니다.');
     }
@@ -41,7 +45,7 @@ const validateContent = (content, emptyMessage) => {
     return content;
 };
 
-const normalizeTechTags = (techTags = []) => {
+const normalizeTechTags = (techTags: unknown = []): string[] => {
     if (!Array.isArray(techTags)) {
         throw new AiValidationError('techTags는 배열이어야 합니다.');
     }
@@ -51,7 +55,7 @@ const normalizeTechTags = (techTags = []) => {
     }
 
     return techTags
-        .map((tag) => {
+        .map((tag: TechTagInput) => {
             if (typeof tag === 'string') {
                 return tag.trim();
             }
@@ -72,7 +76,7 @@ const normalizeTechTags = (techTags = []) => {
         });
 };
 
-const normalizeMaxKeywords = (value = 10) => {
+const normalizeMaxKeywords = (value: unknown = 10): number => {
     const parsed = parseStrictInteger(value);
 
     if (parsed === null || parsed < 1 || parsed > AI_MAX_KEYWORDS) {
@@ -82,7 +86,7 @@ const normalizeMaxKeywords = (value = 10) => {
     return parsed;
 };
 
-const normalizeIncludeKeywords = (value = false) => {
+const normalizeIncludeKeywords = (value: unknown = false): boolean => {
     const normalizedValue = toBooleanOrNull(value);
     if (normalizedValue !== null) {
         return normalizedValue;
