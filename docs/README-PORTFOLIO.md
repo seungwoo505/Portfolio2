@@ -149,7 +149,7 @@ npm run build
 ```bash
 cd portfolio-server
 npm install -g pm2
-pm2 start server.ts --interpreter node --node-args="--import tsx"
+pm2 start ecosystem.config.cjs --env production
 ```
 
 ## 📚 문서

@@ -495,19 +495,26 @@ erDiagram
 
 ### **PM2를 사용한 배포 (권장)**
 
-`ecosystem.config.js`는 저장소에 기본 포함되어 있지 않습니다. [배포 가이드](./docs/DEPLOYMENT_GUIDE.md)의 예시를 운영 환경에 맞게 저장한 뒤 실행하세요.
+저장소에 포함된 `ecosystem.config.cjs`는 PM2 cluster 모드로 서버를 실행합니다. 기본 워커 수는 `2`이며, 운영 서버 자원에 맞춰 `PM2_INSTANCES=max` 또는 숫자로 조정할 수 있습니다.
 
 ```bash
 # PM2 전역 설치
 npm install -g pm2
 
-# ecosystem.config.js 생성 후 시작
-pm2 start ecosystem.config.js
+# cluster 모드로 시작
+pm2 start ecosystem.config.cjs --env production
 
 # 프로세스 저장 (재부팅 시 자동 시작)
 pm2 save
 pm2 startup
 ```
+
+```bash
+# 모든 CPU 코어를 사용하고 싶을 때
+PM2_INSTANCES=max pm2 start ecosystem.config.cjs --env production
+```
+
+PM2 cluster 모드에서는 `express-rate-limit`와 `node-cache`의 메모리 상태가 워커별로 분리됩니다. 현재 기본값은 안정성을 위해 `2`개 워커로 시작하며, 전체 워커가 공유하는 rate limit이나 캐시가 필요해지면 Redis 기반 store로 확장하는 것이 좋습니다.
 
 ### **Docker를 사용한 배포**
 

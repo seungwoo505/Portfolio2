@@ -75,10 +75,10 @@ FLUSH PRIVILEGES;
 # 1. PM2 전역 설치
 npm install -g pm2
 
-# 2. 아래 예시를 ecosystem.config.js로 저장
+# 2. 저장소에 포함된 ecosystem.config.cjs 확인
 
 # 3. 애플리케이션 시작
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs --env production
 
 # 4. PM2 프로세스 저장 (재부팅 시 자동 시작)
 pm2 save
@@ -115,35 +115,22 @@ sudo systemctl status portfolio-server
 
 ##  **설정 파일 예시**
 
-아래 파일들은 저장소에 기본 포함된 파일이 아니라 배포 환경에 맞게 생성해서 사용하는 예시입니다.
+`ecosystem.config.cjs`는 저장소에 포함되어 있으며 PM2 cluster 모드로 서버를 실행합니다. Dockerfile과 systemd 서비스 파일은 배포 환경에 맞게 생성해서 사용하는 예시입니다.
 
-### **ecosystem.config.js (PM2)**
+### **ecosystem.config.cjs (PM2)**
 
-```javascript
-module.exports = {
-  apps: [
-    {
-      name: "portfolio-server",
-      script: "server.ts",
-      instances: "max",
-      exec_mode: "cluster",
-      env: {
-        NODE_ENV: "development",
-      },
-      env_production: {
-        NODE_ENV: "production",
-        PORT: 3333,
-      },
-      error_file: "./logs/err.log",
-      out_file: "./logs/out.log",
-      log_file: "./logs/combined.log",
-      time: true,
-      max_memory_restart: "1G",
-      node_args: "--import tsx --max-old-space-size=1024",
-    },
-  ],
-};
+```bash
+# 기본 2개 워커
+pm2 start ecosystem.config.cjs --env production
+
+# 모든 CPU 코어 사용
+PM2_INSTANCES=max pm2 start ecosystem.config.cjs --env production
+
+# 특정 워커 수 지정
+PM2_INSTANCES=4 pm2 start ecosystem.config.cjs --env production
 ```
+
+PM2 cluster 모드에서는 같은 `PORT`를 여러 워커가 공유합니다. 다만 `express-rate-limit`와 `node-cache`는 현재 프로세스 메모리 기반이므로 rate limit 카운터와 캐시는 워커별로 분리됩니다. 강한 전역 제한이나 공유 캐시가 필요하면 Redis store를 붙이는 방식으로 확장하세요.
 
 ### **Dockerfile**
 
