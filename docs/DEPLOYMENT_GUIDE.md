@@ -72,18 +72,31 @@ FLUSH PRIVILEGES;
 ### **방법 1: PM2를 사용한 배포 (권장)**
 
 ```bash
-# 1. PM2 전역 설치
+# 1. npm 캐시나 PM2 홈 디렉토리 권한 문제가 있을 때
+sudo mkdir -p ~/.npm ~/.pm2
+sudo chown -R "$(id -u):$(id -g)" ~/.npm ~/.pm2
+
+# 2. PM2 전역 설치
 npm install -g pm2
 
-# 2. 저장소에 포함된 ecosystem.config.cjs 확인
+# 3. 의존성 설치
+npm ci
 
-# 3. 애플리케이션 시작
-pm2 start ecosystem.config.cjs --env production
+# 4. 저장소에 포함된 ecosystem.config.cjs 확인
 
-# 4. PM2 프로세스 저장 (재부팅 시 자동 시작)
-pm2 save
-pm2 startup
+# 5. 운영 환경 변수 검증 전 로컬 PM2 기동 확인 (선택)
+npm run pm2:start
+npm run pm2:stop
+
+# 6. 운영 환경 변수를 실제 값으로 채운 뒤 애플리케이션 시작
+npm run pm2:start:prod
+
+# 7. PM2 프로세스 저장 (재부팅 시 자동 시작)
+npm run pm2:save
+npm run pm2:startup
 ```
+
+`npm run pm2:start:prod`는 `NODE_ENV=production`으로 실행되므로 운영 환경 변수 검증을 통과해야 합니다. `JWT_SECRET`, `JWT_REFRESH_SECRET`은 32자 이상의 서로 다른 실제 값이어야 하며 `change_me`, `your-*`, `example.com` 같은 예시값은 차단됩니다. `MY_HOST`에는 실제 운영 도메인 URL을 넣어야 합니다.
 
 ### **방법 2: Docker를 사용한 배포**
 
@@ -116,18 +129,23 @@ sudo systemctl status portfolio-server
 ##  **설정 파일 예시**
 
 `ecosystem.config.cjs`는 저장소에 포함되어 있으며 PM2 cluster 모드로 서버를 실행합니다. Dockerfile과 systemd 서비스 파일은 배포 환경에 맞게 생성해서 사용하는 예시입니다.
+PM2 npm 스크립트는 운영 서버에 전역 설치된 `pm2`를 사용하며, PM2 상태 파일은 프로젝트 내부 `.pm2/`에 저장됩니다.
 
 ### **ecosystem.config.cjs (PM2)**
 
 ```bash
+# 로컬 검증 (선택)
+npm run pm2:start
+npm run pm2:stop
+
 # 기본 2개 워커
-pm2 start ecosystem.config.cjs --env production
+npm run pm2:start:prod
 
 # 모든 CPU 코어 사용
-PM2_INSTANCES=max pm2 start ecosystem.config.cjs --env production
+PM2_INSTANCES=max npm run pm2:start:prod
 
 # 특정 워커 수 지정
-PM2_INSTANCES=4 pm2 start ecosystem.config.cjs --env production
+PM2_INSTANCES=4 npm run pm2:start:prod
 ```
 
 PM2 cluster 모드에서는 같은 `PORT`를 여러 워커가 공유합니다. 다만 `express-rate-limit`와 `node-cache`는 현재 프로세스 메모리 기반이므로 rate limit 카운터와 캐시는 워커별로 분리됩니다. 강한 전역 제한이나 공유 캐시가 필요하면 Redis store를 붙이는 방식으로 확장하세요.

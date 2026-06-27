@@ -1,4 +1,7 @@
+const path = require("node:path");
+
 const DEFAULT_INSTANCES = 2;
+const ROOT_DIR = __dirname;
 
 const parseInstances = (value) => {
   const normalized = String(value || "").trim().toLowerCase();
@@ -19,9 +22,11 @@ module.exports = {
   apps: [
     {
       name: process.env.PM2_APP_NAME || "portfolio-server",
-      script: "server.ts",
+      cwd: ROOT_DIR,
+      script: path.join(ROOT_DIR, "node_modules", "tsx", "dist", "cli.mjs"),
+      args: "server.ts",
       interpreter: "node",
-      node_args: "--import tsx --max-old-space-size=1024",
+      node_args: "--max-old-space-size=1024",
       instances: parseInstances(process.env.PM2_INSTANCES),
       exec_mode: "cluster",
       watch: false,
