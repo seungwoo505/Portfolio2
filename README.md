@@ -495,7 +495,7 @@ erDiagram
 
 ### **PM2를 사용한 배포 (권장)**
 
-저장소에 포함된 `ecosystem.config.cjs`는 PM2 cluster 모드로 서버를 실행합니다. 기본 워커 수는 `2`이며, 운영 서버 자원에 맞춰 `PM2_INSTANCES=max` 또는 숫자로 조정할 수 있습니다.
+저장소에 포함된 `ecosystem.config.cjs`는 PM2 cluster 모드로 서버를 실행합니다. 저사양 서버의 메모리 사용량을 줄이기 위해 기본 워커 수는 `1`이며, 운영 서버 자원에 맞춰 `PM2_INSTANCES=max` 또는 숫자로 조정할 수 있습니다.
 PM2 npm 스크립트는 운영 서버에 전역 설치된 `pm2`를 사용합니다. 기본 PM2 홈을 공유하므로 `pm2 list`에서 프론트엔드와 백엔드 프로세스를 함께 확인할 수 있습니다.
 
 ```bash
@@ -526,7 +526,7 @@ npm run pm2:startup
 PM2_INSTANCES=max npm run pm2:start:prod
 ```
 
-PM2 cluster 모드에서는 `express-rate-limit`와 `node-cache`의 메모리 상태가 워커별로 분리됩니다. 현재 기본값은 안정성을 위해 `2`개 워커로 시작하며, 전체 워커가 공유하는 rate limit이나 캐시가 필요해지면 Redis 기반 store로 확장하는 것이 좋습니다.
+PM2 cluster 모드에서는 `express-rate-limit`와 `node-cache`의 메모리 상태가 워커별로 분리됩니다. 현재 기본값은 메모리 사용량을 낮추기 위해 `1`개 워커로 시작하며, 전체 워커가 공유하는 rate limit이나 캐시가 필요해지면 Redis 기반 store로 확장하는 것이 좋습니다.
 
 `npm run pm2:start:prod`는 `NODE_ENV=production`으로 실행되므로 운영 환경 변수 검증을 통과해야 합니다. 특히 `JWT_SECRET`, `JWT_REFRESH_SECRET`은 32자 이상의 서로 다른 실제 값이어야 하고, `MY_HOST`는 운영 도메인 URL이어야 합니다.
 

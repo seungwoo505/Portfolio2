@@ -1,6 +1,6 @@
 const path = require("node:path");
 
-const DEFAULT_INSTANCES = 2;
+const DEFAULT_INSTANCES = 1;
 const ROOT_DIR = __dirname;
 
 const parseInstances = (value) => {

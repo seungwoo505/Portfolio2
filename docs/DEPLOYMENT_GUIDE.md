@@ -138,7 +138,7 @@ PM2 npm 스크립트는 운영 서버에 전역 설치된 `pm2`를 사용합니�
 npm run pm2:start
 npm run pm2:stop
 
-# 기본 2개 워커
+# 기본 1개 워커
 npm run pm2:start:prod
 
 # 모든 CPU 코어 사용
@@ -148,7 +148,7 @@ PM2_INSTANCES=max npm run pm2:start:prod
 PM2_INSTANCES=4 npm run pm2:start:prod
 ```
 
-PM2 cluster 모드에서는 같은 `PORT`를 여러 워커가 공유합니다. 다만 `express-rate-limit`와 `node-cache`는 현재 프로세스 메모리 기반이므로 rate limit 카운터와 캐시는 워커별로 분리됩니다. 강한 전역 제한이나 공유 캐시가 필요하면 Redis store를 붙이는 방식으로 확장하세요.
+PM2 cluster 모드에서는 같은 `PORT`를 여러 워커가 공유합니다. 기본값은 저사양 서버의 메모리 사용량을 낮추기 위해 `1`개 워커입니다. 다만 `express-rate-limit`와 `node-cache`는 현재 프로세스 메모리 기반이므로 워커를 2개 이상으로 늘리면 rate limit 카운터와 캐시는 워커별로 분리됩니다. 강한 전역 제한이나 공유 캐시가 필요하면 Redis store를 붙이는 방식으로 확장하세요.
 
 ### **Dockerfile**
 
