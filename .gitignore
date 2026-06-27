@@ -7,6 +7,7 @@ logs/*.log
 logs/.*-audit.json
 
 # Runtime data
+.pm2/
 pids
 *.pid
 *.seed

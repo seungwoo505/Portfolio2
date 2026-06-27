@@ -149,7 +149,10 @@ npm run build
 ```bash
 cd portfolio-server
 npm install -g pm2
-pm2 start ecosystem.config.cjs --env production
+npm ci
+npm run pm2:start
+npm run pm2:stop
+npm run pm2:start:prod
 ```
 
 ## 📚 문서

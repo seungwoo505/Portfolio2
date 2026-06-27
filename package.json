@@ -16,7 +16,16 @@
     "check:mcp": "npm --prefix mcp run smoke",
     "typecheck": "npm run check:types",
     "test:unit": "node --import tsx --test tests/*.test.js",
-    "test": "npm run check && npm run check:types && npm run test:unit"
+    "test": "npm run check && npm run check:types && npm run test:unit",
+    "pm2:start": "PM2_HOME=$PWD/.pm2 pm2 start ecosystem.config.cjs",
+    "pm2:start:prod": "PM2_HOME=$PWD/.pm2 pm2 start ecosystem.config.cjs --env production",
+    "pm2:reload": "PM2_HOME=$PWD/.pm2 pm2 reload ecosystem.config.cjs --env production",
+    "pm2:restart": "PM2_HOME=$PWD/.pm2 pm2 restart portfolio-server",
+    "pm2:stop": "PM2_HOME=$PWD/.pm2 pm2 stop portfolio-server",
+    "pm2:logs": "PM2_HOME=$PWD/.pm2 pm2 logs portfolio-server --lines 80",
+    "pm2:status": "PM2_HOME=$PWD/.pm2 pm2 list",
+    "pm2:save": "PM2_HOME=$PWD/.pm2 pm2 save",
+    "pm2:startup": "PM2_HOME=$PWD/.pm2 pm2 startup"
   },
   "keywords": [
     "blog",
