@@ -129,7 +129,7 @@ sudo systemctl status portfolio-server
 ##  **설정 파일 예시**
 
 `ecosystem.config.cjs`는 저장소에 포함되어 있으며 PM2 cluster 모드로 서버를 실행합니다. Dockerfile과 systemd 서비스 파일은 배포 환경에 맞게 생성해서 사용하는 예시입니다.
-PM2 npm 스크립트는 운영 서버에 전역 설치된 `pm2`를 사용하며, PM2 상태 파일은 프로젝트 내부 `.pm2/`에 저장됩니다.
+PM2 npm 스크립트는 운영 서버에 전역 설치된 `pm2`를 사용합니다. 기본 PM2 홈을 공유하므로 `pm2 list`에서 프론트엔드와 백엔드 프로세스를 함께 확인할 수 있습니다.
 
 ### **ecosystem.config.cjs (PM2)**
 
