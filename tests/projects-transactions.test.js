@@ -1,6 +1,27 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createModelFixture, hasOperation } = require('./helpers/content-model-fixture');
+const {
+    clearRootModules,
+    resolveFromRoot,
+    stubRootModule
+} = require('./helpers/module-loader');
+
+const loadProjectCommon = () => {
+    clearRootModules([
+        ['models', 'projects', 'common.ts'],
+        ['models', 'db-utils.ts'],
+        ['utils', 'slug.ts']
+    ]);
+
+    stubRootModule(['models', 'db-utils.ts'], {});
+    stubRootModule(['utils', 'slug.ts'], {
+        generateSlug: (value, fallback = 'item') => String(value || fallback),
+        createUniqueSlug: async ({ value }) => String(value || 'project')
+    });
+
+    return require(resolveFromRoot(['models', 'projects', 'common.ts']));
+};
 
 test('Projects.create writes the project and tags inside one transaction connection', async () => {
     const fixture = createModelFixture(['models', 'projects.ts']);
@@ -81,7 +102,81 @@ test('Projects.getWithFilters normalizes array query values', async () => {
     const listQuery = fixture.operations.find((operation) => operation.sql.startsWith('pool:select p.*'));
     assert.ok(listQuery);
     assert.equal(listQuery.sql.includes('order by p.is_featured desc, p.title desc'), true);
-    assert.deepEqual(listQuery.params, [0, 'backend', 'Node.js', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', 10, 0]);
+    assert.deepEqual(listQuery.params, [
+        0,
+        'backend',
+        'Node.js',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        '%portfolio%',
+        10,
+        0
+    ]);
+});
+
+test('project list mapper exposes catalog-friendly aliases', () => {
+    const { mapProjectListItem } = loadProjectCommon();
+
+    const mapped = mapProjectListItem({
+        id: 10,
+        title: 'Shop Portfolio',
+        description: '프로젝트 카탈로그 설명',
+        slug: 'shop-portfolio',
+        demo_url: 'https://demo.example.com',
+        featured_image: '',
+        thumbnail_image: 'https://image.example.com/thumb.png',
+        is_featured: 1,
+        status: 'completed',
+        skills: 'Next.js, TypeScript',
+        tags: 'frontend, portfolio',
+        images: 'https://image.example.com/one.png,https://image.example.com/two.png'
+    });
+
+    assert.equal(mapped.project_url, 'https://demo.example.com');
+    assert.equal(mapped.demo_url, 'https://demo.example.com');
+    assert.equal(mapped.image_url, 'https://image.example.com/thumb.png');
+    assert.equal(mapped.catalog_summary, '프로젝트 카탈로그 설명');
+    assert.equal(mapped.catalog_label, '추천 프로젝트');
+    assert.equal(mapped.catalog_status, '출시 완료');
+    assert.deepEqual(mapped.skills, ['Next.js', 'TypeScript']);
+    assert.deepEqual(mapped.tags, ['frontend', 'portfolio']);
+    assert.deepEqual(mapped.images, [
+        'https://image.example.com/one.png',
+        'https://image.example.com/two.png'
+    ]);
+});
+
+test('project detail mapper keeps relation objects and adds URL aliases', () => {
+    const { mapProjectDetailItem } = loadProjectCommon();
+
+    const mapped = mapProjectDetailItem({
+        id: 11,
+        title: 'Admin Workflow',
+        excerpt: '관리자 경험 개선',
+        demo_url: null,
+        project_url: 'https://admin.example.com',
+        is_featured: 0,
+        status: 'in_progress'
+    }, {
+        skills: [{ id: 1, name: 'Node.js' }],
+        tags: [{ id: 2, name: 'backend' }],
+        images: [{ image_url: 'https://image.example.com/detail.png' }]
+    });
+
+    assert.equal(mapped.demo_url, 'https://admin.example.com');
+    assert.equal(mapped.project_url, 'https://admin.example.com');
+    assert.equal(mapped.image_url, 'https://image.example.com/detail.png');
+    assert.equal(mapped.catalog_summary, '관리자 경험 개선');
+    assert.equal(mapped.catalog_label, '프로젝트');
+    assert.equal(mapped.catalog_status, '제작 중');
+    assert.deepEqual(mapped.skills, [{ id: 1, name: 'Node.js' }]);
+    assert.deepEqual(mapped.tags, [{ id: 2, name: 'backend' }]);
 });
 
 test('Projects.update can explicitly clear demo_url through project_url', async () => {

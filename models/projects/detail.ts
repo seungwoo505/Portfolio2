@@ -1,6 +1,7 @@
 const {
     executeQuery,
-    executeQuerySingle
+    executeQuerySingle,
+    mapProjectDetailItem
 } = require('./common');
 
 const getProjectRelations = async (id) => {
@@ -40,13 +41,11 @@ module.exports = {
 
         const [skills, images, tags] = await getProjectRelations(id);
 
-        return {
-            ...project,
-            featured: Boolean(project.is_featured),
+        return mapProjectDetailItem(project, {
             skills,
             images,
             tags
-        };
+        });
     },
 
     /**
@@ -63,14 +62,11 @@ module.exports = {
 
         const [skills, images, tags] = await getProjectRelations(project.id);
 
-        return {
-            ...project,
-            featured: Boolean(project.is_featured),
-            long_description: project.content_text || project.content || project.detailed_description,
+        return mapProjectDetailItem(project, {
             skills,
             images,
             tags
-        };
+        });
     },
 
     /**
