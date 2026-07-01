@@ -44,7 +44,13 @@ const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
         };
     }
 
-    const body = trimStringFields(getPlainBody(req), ['title', 'description']);
+    const body = normalizeProjectContentFields(trimStringFields(getPlainBody(req), [
+        'title',
+        'description',
+        'catalog_title',
+        'catalog_summary',
+        'catalog_status'
+    ]));
     verboseDebug('projectSlug:', projectSlug);
 
     if (Object.keys(body).length === 0) {
@@ -75,7 +81,7 @@ const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
         };
     }
 
-    const sanitizedData = normalizeProjectContentFields(body);
+    const sanitizedData = body;
     verboseDebug('프로젝트 수정 - 원본 데이터:', body);
     verboseDebug('프로젝트 수정 - 정규화된 데이터:', sanitizedData);
     verboseDebug('프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));

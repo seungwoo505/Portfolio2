@@ -121,7 +121,13 @@ router.post('/projects',
     logActivity('create_project'),
     async (req: Request, res: Response) => {
         try {
-            const body = trimStringFields(getPlainBody(req), ['title', 'description']);
+            const body = normalizeProjectContentFields(trimStringFields(getPlainBody(req), [
+                'title',
+                'description',
+                'catalog_title',
+                'catalog_summary',
+                'catalog_status'
+            ]));
 
             const hasProjectDescription = [
                 body.description,
@@ -138,7 +144,7 @@ router.post('/projects',
                 });
             }
 
-            const sanitizedData = normalizeProjectContentFields(body);
+            const sanitizedData = body;
 
             verboseDebug('원본 데이터:', body);
             verboseDebug('정규화된 데이터:', sanitizedData);
