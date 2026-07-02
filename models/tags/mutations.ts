@@ -82,7 +82,7 @@ const update = async (id, data) => {
 };
 
 const deleteTag = async (id) => {
-    await executeQuery('DELETE FROM tag_usage WHERE tag_id = ?', [id]);
+    await executeQuery('DELETE FROM project_tags WHERE tag_id = ?', [id]);
     await executeQuery('DELETE FROM tags WHERE id = ?', [id]);
 };
 

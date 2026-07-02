@@ -34,6 +34,8 @@ router.post('/skills/categories',
         try {
             const body = getPlainBody(req);
             const name = toStringValue(body.name).trim();
+            const slug = toStringValue(body.slug).trim();
+            const description = toStringValue(body.description).trim();
 
             if (!name) {
                 return res.status(400).json({
@@ -50,13 +52,18 @@ router.post('/skills/categories',
                 });
             }
 
-            const categoryId = await Skills.createCategory(name);
+            const categoryId = await Skills.createCategory({
+                name,
+                slug: slug || undefined,
+                description: description || null,
+                display_order: body.display_order
+            });
             CacheUtils.invalidateResources('skills');
 
             res.status(201).json({
                 success: true,
                 message: '카테고리가 성공적으로 추가되었습니다.',
-                data: { id: categoryId, name }
+                data: { id: categoryId, name, slug: slug || undefined }
             });
         } catch (error) {
             logger.error('카테고리 추가 실패', buildErrorLog(error, req));

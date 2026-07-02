@@ -1,30 +1,32 @@
 const { executeQuery, executeQuerySingle } = require('./db-utils');
 
 const profileFields = [
-    'name',
+    'display_name',
     'full_name',
-    'title',
+    'headline',
     'bio',
     'about',
     'email',
     'phone',
     'location',
     'avatar_url',
-    'resume_url',
-    'github_url',
-    'linkedin_url',
-    'twitter_url',
-    'instagram_url'
+    'resume_url'
 ];
 
 const normalizeProfileInput = (data: Record<string, any> = {}) => {
     const normalized = { ...data };
 
-    if (normalized.full_name !== undefined && normalized.name === undefined) {
-        normalized.name = normalized.full_name;
+    if (normalized.name !== undefined && normalized.display_name === undefined) {
+        normalized.display_name = normalized.name;
     }
-    if (normalized.name !== undefined && normalized.full_name === undefined) {
-        normalized.full_name = normalized.name;
+    if (normalized.full_name !== undefined && normalized.display_name === undefined) {
+        normalized.display_name = normalized.full_name;
+    }
+    if (normalized.display_name !== undefined && normalized.full_name === undefined) {
+        normalized.full_name = normalized.display_name;
+    }
+    if (normalized.title !== undefined && normalized.headline === undefined) {
+        normalized.headline = normalized.title;
     }
     if (normalized.profile_image !== undefined && normalized.avatar_url === undefined) {
         normalized.avatar_url = normalized.profile_image;
@@ -38,13 +40,18 @@ const formatProfile = (profile: Record<string, any> | null) => {
         return null;
     }
 
-    const fullName = profile.full_name || profile.name || null;
+    const displayName = profile.display_name || profile.name || profile.full_name || null;
+    const fullName = profile.full_name || displayName;
+    const headline = profile.headline || profile.title || null;
     const avatarUrl = profile.avatar_url || null;
 
     return {
         ...profile,
-        name: profile.name || fullName,
+        display_name: displayName,
+        name: displayName,
         full_name: fullName,
+        headline,
+        title: headline,
         avatar_url: avatarUrl,
         profile_image: avatarUrl
     };

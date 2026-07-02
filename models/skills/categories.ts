@@ -1,4 +1,21 @@
 const { executeQuery, executeQuerySingle } = require('./common');
+const { createUniqueSlug } = require('../../utils/slug');
+
+const createCategorySlug = async ({ name, slug, id = null }) => (
+    await createUniqueSlug({
+        value: name,
+        providedSlug: slug,
+        fallback: 'category',
+        maxLength: 120,
+        exists: async candidate => {
+            const query = id
+                ? 'SELECT id FROM skill_categories WHERE slug = ? AND id != ? LIMIT 1'
+                : 'SELECT id FROM skill_categories WHERE slug = ? LIMIT 1';
+            const params = id ? [candidate, id] : [candidate];
+            return !!(await executeQuerySingle(query, params));
+        }
+    })
+);
 
 module.exports = {
     /**
@@ -22,22 +39,23 @@ module.exports = {
      */
     async createCategory(data) {
         const category = typeof data === 'string' ? { name: data } : data;
-        const { name, description = null, display_order } = category;
+        const { name, slug, description = null, display_order } = category;
+        const finalSlug = await createCategorySlug({ name, slug });
         const finalDisplayOrder = display_order ?? (
             await executeQuerySingle('SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM skill_categories')
         ).next_order;
         const query = `
-            INSERT INTO skill_categories (name, description, display_order)
-            VALUES (?, ?, ?)
+            INSERT INTO skill_categories (name, slug, description, display_order)
+            VALUES (?, ?, ?, ?)
         `;
-        const result = await executeQuery(query, [name, description, finalDisplayOrder]);
+        const result = await executeQuery(query, [name, finalSlug, description, finalDisplayOrder]);
         return result.insertId;
     },
 
     async getCategoryByName(name) {
         return await executeQuerySingle(`
-            SELECT * FROM skill_categories WHERE name = ?
-        `, [name]);
+            SELECT * FROM skill_categories WHERE name = ? OR slug = ?
+        `, [name, name]);
     },
 
     async getCategoryById(id) {

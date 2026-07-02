@@ -1,4 +1,21 @@
-const { executeQuery } = require('./common');
+const { executeQuery, executeQuerySingle } = require('./common');
+const { createUniqueSlug } = require('../../utils/slug');
+
+const createSkillSlug = async ({ name, slug, id = null }) => (
+    await createUniqueSlug({
+        value: name,
+        providedSlug: slug,
+        fallback: 'skill',
+        maxLength: 120,
+        exists: async candidate => {
+            const query = id
+                ? 'SELECT id FROM skills WHERE slug = ? AND id != ? LIMIT 1'
+                : 'SELECT id FROM skills WHERE slug = ? LIMIT 1';
+            const params = id ? [candidate, id] : [candidate];
+            return !!(await executeQuerySingle(query, params));
+        }
+    })
+);
 
 module.exports = {
     /**
@@ -10,6 +27,7 @@ module.exports = {
         const {
             category_id,
             name,
+            slug,
             proficiency_level,
             years_of_experience,
             icon,
@@ -17,13 +35,15 @@ module.exports = {
             display_order,
             is_featured
         } = data;
+        const finalSlug = await createSkillSlug({ name, slug });
         const query = `
-            INSERT INTO skills (category_id, name, proficiency_level, years_of_experience, icon, color, display_order, is_featured)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO skills (category_id, name, slug, proficiency_level, years_of_experience, icon, color, display_order, is_featured)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const result = await executeQuery(query, [
             category_id,
             name,
+            finalSlug,
             proficiency_level ?? 50,
             years_of_experience ?? null,
             icon ?? null,
@@ -43,9 +63,14 @@ module.exports = {
     async updateSkill(id, data) {
         const updateFields = [];
         const updateValues = [];
+        const shouldUpdateSlug = data.slug !== undefined || data.name !== undefined;
+        const finalSlug = shouldUpdateSlug
+            ? await createSkillSlug({ name: data.name, slug: data.slug, id })
+            : null;
         const allowedFields = {
             category_id: data.category_id,
             name: data.name,
+            slug: shouldUpdateSlug ? finalSlug : undefined,
             proficiency_level: data.proficiency_level,
             years_of_experience: data.years_of_experience,
             icon: data.icon,

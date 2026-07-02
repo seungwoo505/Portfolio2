@@ -100,12 +100,12 @@ const normalizeSkillPayload = (body: Record<string, any> = {}, { requireRequired
         payload.years_of_experience = null;
     }
 
-    for (const field of ['icon', 'color']) {
+    for (const field of ['slug', 'icon', 'color']) {
         const error = setStringField(payload, body, field);
         if (error) {
             return { error };
         }
-        if (requireRequired && !hasOwn(payload, field)) {
+        if (requireRequired && ['icon', 'color'].includes(field) && !hasOwn(payload, field)) {
             payload[field] = null;
         }
     }

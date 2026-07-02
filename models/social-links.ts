@@ -20,12 +20,12 @@ const SocialLinks = {
      * @returns {Promise<any>} 처리 결과
      */
     async create(data) {
-        const { platform, url, icon, display_order, is_active = true } = data;
+        const { platform, label, url, icon, display_order, is_active = true } = data;
         const query = `
-            INSERT INTO social_links (platform, url, icon, display_order, is_active) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO social_links (platform, label, url, icon, display_order, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
-        const result = await executeQuery(query, [platform, url, icon, display_order ?? 0, is_active]);
+        const result = await executeQuery(query, [platform, label ?? platform, url, icon, display_order ?? 0, is_active]);
         return result.insertId;
     },
 
@@ -40,6 +40,7 @@ const SocialLinks = {
         const updateValues = [];
         const allowedFields = {
             platform: data.platform,
+            label: data.label,
             url: data.url,
             icon: data.icon,
             display_order: data.display_order,

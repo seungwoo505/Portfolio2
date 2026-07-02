@@ -5,14 +5,15 @@ const {
     trimStringFields
 } = require('../../../../utils/request-body');
 
-const socialLinkStringFields = ['platform', 'url'];
+const socialLinkStringFields = ['platform', 'label', 'url'];
+const socialLinkRequiredStringFields = ['platform', 'url'];
 
 const getSocialLinkPayload = (req) => (
     trimStringFields(getPlainBody(req), socialLinkStringFields)
 );
 
 const validateCreateSocialLinkPayload = (body) => {
-    if (!hasRequiredStringFields(body, socialLinkStringFields)) {
+    if (!hasRequiredStringFields(body, socialLinkRequiredStringFields)) {
         return '플랫폼과 URL은 필수입니다.';
     }
 
@@ -24,7 +25,7 @@ const validateUpdateSocialLinkPayload = (body) => {
         return '수정할 소셜 링크 정보가 필요합니다.';
     }
 
-    if (hasInvalidProvidedStringFields(body, socialLinkStringFields)) {
+    if (hasInvalidProvidedStringFields(body, socialLinkRequiredStringFields)) {
         return '플랫폼과 URL은 비어 있을 수 없습니다.';
     }
 
