@@ -28,6 +28,18 @@ const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key
 
 const normalizeOptionalUrl = (value) => (value === '' ? null : value);
 
+const parseJsonField = (value) => {
+    if (!value || typeof value !== 'string') {
+        return value ?? null;
+    }
+
+    try {
+        return JSON.parse(value);
+    } catch (_error) {
+        return value;
+    }
+};
+
 const splitCsvField = (value) => {
     if (Array.isArray(value)) {
         return value;
@@ -61,52 +73,106 @@ const pickFirstImageUrl = (images) => {
     return null;
 };
 
-const pickProjectSummary = (project) => {
-    const summary = [
-        project.excerpt,
-        project.short_description,
-        project.description,
-        project.meta_description,
-        project.content_text,
-        project.detailed_description,
-        project.content
-    ].find(value => typeof value === 'string' && value.trim());
-
-    return summary ? summary.trim().slice(0, 220) : null;
+const pickFirstString = (...values) => {
+    const value = values.find(item => typeof item === 'string' && item.trim());
+    return value ? value.trim() : null;
 };
 
-const getCatalogStatus = (status) => {
+const getStatusLabel = (status) => {
     if (status === 'completed') return '출시 완료';
     if (status === 'in_progress') return '제작 중';
     if (status === 'planning') return '기획 중';
     if (status === 'on_hold') return '보류';
+    if (status === 'archived') return '보관됨';
     return '프로젝트';
 };
 
+const getPrimaryLinkUrl = (links, type) => {
+    if (!Array.isArray(links)) {
+        return null;
+    }
+
+    const link = links.find(item => item.link_type === type) ||
+        links.find(item => item.type === type);
+    return link?.url || null;
+};
+
 const mapProjectCatalogFields = (project) => {
-    const demoUrl = project.demo_url || project.project_url || null;
-    const imageUrl = project.image_url ||
-        project.featured_image ||
-        project.thumbnail_image ||
-        pickFirstImageUrl(project.images);
     const isFeatured = Boolean(project.is_featured ?? project.featured);
+    const catalogTitle = pickFirstString(
+        project.custom_label,
+        project.catalog_title,
+        project.title
+    );
+    const catalogSummary = pickFirstString(
+        project.custom_summary,
+        project.catalog_summary,
+        project.summary,
+        project.description,
+        project.meta_description,
+        project.content_text
+    );
+    const imageUrl = pickFirstString(
+        project.catalog_image_url,
+        project.primary_image_url,
+        project.image_url,
+        pickFirstImageUrl(project.images)
+    );
+    const demoUrl = project.demo_url || getPrimaryLinkUrl(project.links, 'demo');
+    const githubUrl = project.github_url || getPrimaryLinkUrl(project.links, 'github');
+    const primaryMetric = project.primary_metric_label || project.primary_metric_value
+        ? {
+            label: project.primary_metric_label || null,
+            value: project.primary_metric_value || null
+        }
+        : null;
+    const catalog = {
+        title: catalogTitle,
+        summary: catalogSummary,
+        label: pickFirstString(project.catalog_label) || (isFeatured ? '추천 프로젝트' : '프로젝트'),
+        status: pickFirstString(project.catalog_status) || getStatusLabel(project.status),
+        badge: project.catalog_badge || null,
+        image_url: imageUrl,
+        image_alt: project.primary_image_alt || null,
+        accent_color: project.catalog_accent_color || null,
+        cta_label: project.catalog_cta_label || '상세 보기',
+        priority: Number(project.catalog_priority || 0),
+        price_label: project.price_label || 'Portfolio',
+        difficulty_label: project.difficulty_label || null,
+        impact_summary: project.impact_summary || null,
+        primary_metric: primaryMetric
+    };
 
     return {
         ...project,
+        content_json: parseJsonField(project.content_json),
+        featured: isFeatured,
         demo_url: demoUrl,
         project_url: demoUrl,
+        github_url: githubUrl,
         image_url: imageUrl || null,
-        featured: isFeatured,
-        catalog_summary: pickProjectSummary(project),
-        catalog_label: isFeatured ? '추천 프로젝트' : '프로젝트',
-        catalog_status: getCatalogStatus(project.status)
+        catalog,
+        catalog_title: catalog.title,
+        catalog_summary: catalog.summary,
+        catalog_label: catalog.label,
+        catalog_status: catalog.status,
+        catalog_badge: catalog.badge,
+        catalog_image_url: catalog.image_url,
+        catalog_accent_color: catalog.accent_color,
+        catalog_cta_label: catalog.cta_label,
+        catalog_priority: catalog.priority,
+        price_label: catalog.price_label,
+        difficulty_label: catalog.difficulty_label,
+        impact_summary: catalog.impact_summary,
+        primary_metric_label: primaryMetric?.label || null,
+        primary_metric_value: primaryMetric?.value || null
     };
 };
 
 const mapProjectListItem = (project) => ({
     ...mapProjectCatalogFields({
         ...project,
-        long_description: project.content_text || project.content || project.detailed_description,
+        long_description: project.content_text || project.description,
         skills: splitCsvField(project.skills),
         tags: splitCsvField(project.tags),
         images: splitCsvField(project.images)
@@ -116,7 +182,10 @@ const mapProjectListItem = (project) => ({
 const mapProjectDetailItem = (project, relations: Record<string, any> = {}) => (
     mapProjectCatalogFields({
         ...project,
-        long_description: project.content_text || project.content || project.detailed_description,
+        long_description: project.content_text || project.description,
+        metrics: relations.metrics || project.metrics || [],
+        links: relations.links || project.links || [],
+        sections: relations.sections || project.sections || [],
         skills: relations.skills || project.skills || [],
         images: relations.images || project.images || [],
         tags: relations.tags || project.tags || []
@@ -136,6 +205,8 @@ module.exports = {
     mapProjectDetailItem,
     mapProjectListItem,
     normalizeOptionalUrl,
+    parseJsonField,
+    pickFirstString,
     splitCsvField,
     toBooleanOrNull,
     toChoice,
