@@ -123,6 +123,7 @@ router.post('/projects',
         try {
             const body = normalizeProjectContentFields(trimStringFields(getPlainBody(req), [
                 'title',
+                'summary',
                 'description',
                 'catalog_title',
                 'catalog_summary',
@@ -130,11 +131,12 @@ router.post('/projects',
             ]));
 
             const hasProjectDescription = [
+                body.summary,
                 body.description,
-                body.excerpt,
                 body.meta_description,
                 body.content_text,
-                body.content
+                body.catalog?.summary,
+                body.catalog?.catalog_summary
             ].some((value) => typeof value === 'string' && value.trim());
 
             if (!hasRequiredStringFields(body, ['title']) || !hasProjectDescription) {

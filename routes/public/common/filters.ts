@@ -23,6 +23,8 @@ const buildProjectFilters = (query: ParsedQs) => {
         search: toStringValue(query.search),
         tags: toCsvStringArray(query.tags),
         skills: toCsvStringArray(query.skills),
+        project_type: toCsvStringArray(query.project_type || query.types),
+        project_status: toStringValue(query.project_status),
         featured: featured.value,
         status: 'published',
         sort: toStringValue(query.sort, 'display_order'),

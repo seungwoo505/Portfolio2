@@ -46,6 +46,7 @@ const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
 
     const body = normalizeProjectContentFields(trimStringFields(getPlainBody(req), [
         'title',
+        'summary',
         'description',
         'catalog_title',
         'catalog_summary',
@@ -63,11 +64,12 @@ const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
     }
 
     const hasProjectDescription = [
+        body.summary,
         body.description,
-        body.excerpt,
         body.meta_description,
         body.content_text,
-        body.content
+        body.catalog?.summary,
+        body.catalog?.catalog_summary
     ].some((value) => typeof value === 'string' && value.trim());
     const hasInvalidTitle = hasInvalidProvidedStringFields(body, ['title']);
     const hasInvalidDescription = hasInvalidProvidedStringFields(body, ['description']);
