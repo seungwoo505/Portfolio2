@@ -36,9 +36,10 @@ test('Projects.create writes the project and tags inside one transaction connect
     assert.equal(projectId, 201);
     assert.equal(fixture.transactionCount, 1);
     assert.equal(hasOperation(fixture.operations, 'insert into projects'), true);
-    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'project'"), true);
+    assert.equal(hasOperation(fixture.operations, 'insert into project_catalog_profiles'), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_tags where project_id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'insert into tags'), true);
-    assert.equal(hasOperation(fixture.operations, "insert ignore into tag_usage"), true);
+    assert.equal(hasOperation(fixture.operations, 'insert ignore into project_tags'), true);
     assert.equal(fixture.operations.some((operation) => operation.sql.startsWith('pool:')), false);
 });
 
@@ -59,9 +60,9 @@ test('Projects.create stores block content fields', async () => {
     assert.equal(insertQuery.sql.includes('content_json'), true);
     assert.equal(insertQuery.sql.includes('content_html'), true);
     assert.equal(insertQuery.sql.includes('content_text'), true);
+    assert.equal(insertQuery.params[4], '<p>블록 내용</p>');
     assert.equal(insertQuery.params[5], JSON.stringify([{ type: 'paragraph', content: '블록 내용' }]));
-    assert.equal(insertQuery.params[6], '<p>블록 내용</p>');
-    assert.equal(insertQuery.params[7], '블록 내용');
+    assert.equal(insertQuery.params[6], '블록 내용');
 });
 
 test('Projects.getAll binds pagination values instead of interpolating them', async () => {
@@ -105,7 +106,10 @@ test('Projects.getWithFilters normalizes array query values', async () => {
     assert.deepEqual(listQuery.params, [
         0,
         'backend',
+        'backend',
         'Node.js',
+        'Node.js',
+        '%portfolio%',
         '%portfolio%',
         '%portfolio%',
         '%portfolio%',
@@ -126,11 +130,13 @@ test('project list mapper exposes catalog-friendly aliases', () => {
     const mapped = mapProjectListItem({
         id: 10,
         title: 'Shop Portfolio',
-        description: '프로젝트 카탈로그 설명',
+        summary: '프로젝트 기본 설명',
+        catalog_summary: '프로젝트 카탈로그 설명',
+        catalog_label: 'Best Item',
+        catalog_status: '출시 완료',
+        primary_image_url: 'https://image.example.com/catalog.png',
         slug: 'shop-portfolio',
         demo_url: 'https://demo.example.com',
-        featured_image: '',
-        thumbnail_image: 'https://image.example.com/thumb.png',
         is_featured: 1,
         status: 'completed',
         skills: 'Next.js, TypeScript',
@@ -140,10 +146,26 @@ test('project list mapper exposes catalog-friendly aliases', () => {
 
     assert.equal(mapped.project_url, 'https://demo.example.com');
     assert.equal(mapped.demo_url, 'https://demo.example.com');
-    assert.equal(mapped.image_url, 'https://image.example.com/thumb.png');
+    assert.equal(mapped.image_url, 'https://image.example.com/catalog.png');
     assert.equal(mapped.catalog_summary, '프로젝트 카탈로그 설명');
-    assert.equal(mapped.catalog_label, '추천 프로젝트');
+    assert.equal(mapped.catalog_label, 'Best Item');
     assert.equal(mapped.catalog_status, '출시 완료');
+    assert.deepEqual(mapped.catalog, {
+        title: 'Shop Portfolio',
+        summary: '프로젝트 카탈로그 설명',
+        label: 'Best Item',
+        status: '출시 완료',
+        badge: null,
+        image_url: 'https://image.example.com/catalog.png',
+        image_alt: null,
+        accent_color: null,
+        cta_label: '상세 보기',
+        priority: 0,
+        price_label: 'Portfolio',
+        difficulty_label: null,
+        impact_summary: null,
+        primary_metric: null
+    });
     assert.deepEqual(mapped.skills, ['Next.js', 'TypeScript']);
     assert.deepEqual(mapped.tags, ['frontend', 'portfolio']);
     assert.deepEqual(mapped.images, [
@@ -158,15 +180,15 @@ test('project detail mapper keeps relation objects and adds URL aliases', () => 
     const mapped = mapProjectDetailItem({
         id: 11,
         title: 'Admin Workflow',
-        excerpt: '관리자 경험 개선',
-        demo_url: null,
-        project_url: 'https://admin.example.com',
+        summary: '관리자 경험 개선',
         is_featured: 0,
         status: 'in_progress'
     }, {
         skills: [{ id: 1, name: 'Node.js' }],
         tags: [{ id: 2, name: 'backend' }],
-        images: [{ image_url: 'https://image.example.com/detail.png' }]
+        images: [{ image_url: 'https://image.example.com/detail.png' }],
+        links: [{ link_type: 'demo', url: 'https://admin.example.com' }],
+        metrics: [{ label: 'FCP', value: '1.0s' }]
     });
 
     assert.equal(mapped.demo_url, 'https://admin.example.com');
@@ -177,17 +199,16 @@ test('project detail mapper keeps relation objects and adds URL aliases', () => 
     assert.equal(mapped.catalog_status, '제작 중');
     assert.deepEqual(mapped.skills, [{ id: 1, name: 'Node.js' }]);
     assert.deepEqual(mapped.tags, [{ id: 2, name: 'backend' }]);
+    assert.deepEqual(mapped.metrics, [{ label: 'FCP', value: '1.0s' }]);
 });
 
-test('Projects.update can explicitly clear demo_url through project_url', async () => {
+test('Projects.update can explicitly clear project links through project_url', async () => {
     const fixture = createModelFixture(['models', 'projects.ts']);
 
     await fixture.model.update(20, { project_url: '' });
 
-    const updateQuery = fixture.operations.find((operation) => operation.sql.startsWith('update projects set'));
-    assert.ok(updateQuery);
-    assert.equal(updateQuery.sql.includes('demo_url = ?'), true);
-    assert.deepEqual(updateQuery.params, [null, 20]);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_links where project_id = ?'), true);
+    assert.equal(hasOperation(fixture.operations, 'insert into project_links'), false);
 });
 
 test('Projects.update can store block content fields', async () => {
@@ -205,8 +226,8 @@ test('Projects.update can store block content fields', async () => {
     assert.equal(updateQuery.sql.includes('content_html = ?'), true);
     assert.equal(updateQuery.sql.includes('content_text = ?'), true);
     assert.deepEqual(updateQuery.params, [
-        JSON.stringify([{ type: 'paragraph', content: '수정 내용' }]),
         '<p>수정 내용</p>',
+        JSON.stringify([{ type: 'paragraph', content: '수정 내용' }]),
         '수정 내용',
         20
     ]);
@@ -217,15 +238,15 @@ test('Projects.update normalizes string tags and can clear all tags', async () =
 
     await fixture.model.update(20, { tags: 'backend, node' });
 
-    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'project'"), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_tags where project_id = ?'), true);
     const tagSelects = fixture.operations.filter((operation) => operation.sql.includes('select id from tags where name = ?'));
     assert.deepEqual(tagSelects.map((operation) => operation.params), [['backend'], ['node']]);
 
     fixture.operations.length = 0;
     await fixture.model.update(20, { tags: null });
 
-    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'project'"), true);
-    assert.equal(hasOperation(fixture.operations, 'insert ignore into tag_usage'), false);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_tags where project_id = ?'), true);
+    assert.equal(hasOperation(fixture.operations, 'insert ignore into project_tags'), false);
 });
 
 test('Projects.delete removes child rows and recalculates tag counts in one transaction', async () => {
@@ -234,9 +255,13 @@ test('Projects.delete removes child rows and recalculates tag counts in one tran
     await fixture.model.delete(20);
 
     assert.equal(fixture.transactionCount, 1);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_catalog_section_items where project_id = ?'), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_metrics where project_id = ?'), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_links where project_id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'delete from project_skills where project_id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'delete from project_images where project_id = ?'), true);
-    assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'project'"), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_tags where project_id = ?'), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_catalog_profiles where project_id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'delete from projects where id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'update tags t left join'), true);
 });

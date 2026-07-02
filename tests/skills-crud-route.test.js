@@ -20,6 +20,7 @@ test('admin skills create normalizes numeric and boolean fields', async () => {
         method: 'POST',
         body: {
             name: ' Node.js ',
+            slug: ' node-js ',
             category_id: '3',
             proficiency_level: '80',
             years_of_experience: '2.5',
@@ -33,6 +34,7 @@ test('admin skills create normalizes numeric and boolean fields', async () => {
     assert.equal(status, 201);
     assert.deepEqual(createdPayloads, [{
         name: 'Node.js',
+        slug: 'node-js',
         category_id: 3,
         proficiency_level: 80,
         years_of_experience: 2.5,

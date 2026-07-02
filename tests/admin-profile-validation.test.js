@@ -25,6 +25,7 @@ test('admin social link create trims required strings before model call', async 
         method: 'POST',
         body: {
             platform: '  GitHub  ',
+            label: '  Code  ',
             url: '  https://github.com/example  '
         }
     });
@@ -32,6 +33,7 @@ test('admin social link create trims required strings before model call', async 
     assert.equal(status, 201);
     assert.deepEqual(createdPayloads, [{
         platform: 'GitHub',
+        label: 'Code',
         url: 'https://github.com/example'
     }]);
 });

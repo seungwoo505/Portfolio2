@@ -22,17 +22,20 @@ test('public project list rejects invalid featured filters before model calls', 
     assert.equal(getWithFiltersCalled, false);
 });
 
-test('public project catalog returns derived catalog sections', async () => {
-    const filterCalls = [];
+test('public project catalog returns database-backed catalog sections', async () => {
+    const sectionLimits = [];
     const router = loadPublicRoute({
         Projects: {
-            getWithFilters: async (filters) => {
-                filterCalls.push(['items', filters]);
-                return [{ id: filterCalls.length, title: '프로젝트' }];
-            },
-            getCountWithFilters: async (filters) => {
-                filterCalls.push(['count', filters]);
-                return 1;
+            getCatalogSections: async (limit) => {
+                sectionLimits.push(limit);
+                return [{
+                    id: 1,
+                    title: '추천 프로젝트',
+                    slug: 'featured-projects',
+                    type: 'featured',
+                    items: [{ id: 10, title: '프로젝트' }],
+                    total: 1
+                }];
             }
         }
     });
@@ -43,16 +46,30 @@ test('public project catalog returns derived catalog sections', async () => {
     assert.equal(body.success, true);
     assert.equal(body.data.sectionLimit, 12);
     assert.deepEqual(
-        body.data.sections.map(section => section.id),
-        ['featured', 'new_arrivals', 'popular', 'case_studies']
+        body.data.sections.map(section => section.slug),
+        ['featured-projects']
     );
     assert.equal(body.data.sections[0].items.length, 1);
-    assert.equal(filterCalls.length, 8);
-    assert.equal(filterCalls.every(([, filters]) => filters.limit === 12), true);
-    assert.equal(filterCalls.every(([, filters]) => filters.status === 'published'), true);
-    assert.equal(filterCalls.every(([, filters]) => filters.published_only === true), true);
-    assert.equal(filterCalls.some(([, filters]) => filters.featured === true), true);
-    assert.equal(filterCalls.some(([, filters]) => filters.sort === 'view_count'), true);
+    assert.deepEqual(sectionLimits, [12]);
+});
+
+test('public project catalog falls back for partially numeric limits', async () => {
+    const sectionLimits = [];
+    const router = loadPublicRoute({
+        Projects: {
+            getCatalogSections: async (limit) => {
+                sectionLimits.push(limit);
+                return [];
+            }
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/projects/catalog?limit=7abc');
+
+    assert.equal(status, 200);
+    assert.equal(body.success, true);
+    assert.equal(body.data.sectionLimit, 4);
+    assert.deepEqual(sectionLimits, [4]);
 });
 
 test('public post list rejects invalid featured filters before model calls', async () => {

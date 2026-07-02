@@ -57,7 +57,7 @@ test('admin project create accepts block content text without explicit descripti
     assert.equal(createdPayloads[0].content_html, '<p>블록 기반 프로젝트 설명입니다.</p>');
 });
 
-test('admin project create maps catalog fields onto existing project columns', async () => {
+test('admin project create preserves shop catalog payload fields', async () => {
     const createdPayloads = [];
     const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
         segments: ['models', 'projects.ts'],
@@ -81,13 +81,18 @@ test('admin project create maps catalog fields onto existing project columns', a
 
     assert.equal(status, 201);
     assert.equal(createdPayloads[0].title, '쇼핑몰형 포트폴리오');
-    assert.equal(createdPayloads[0].excerpt, '프로젝트를 상품처럼 탐색하는 화면입니다.');
+    assert.equal(createdPayloads[0].summary, '프로젝트를 상품처럼 탐색하는 화면입니다.');
     assert.equal(createdPayloads[0].description, '프로젝트를 상품처럼 탐색하는 화면입니다.');
     assert.equal(createdPayloads[0].meta_description, '프로젝트를 상품처럼 탐색하는 화면입니다.');
     assert.equal(createdPayloads[0].status, 'in_progress');
+    assert.deepEqual(createdPayloads[0].catalog, {
+        title: '쇼핑몰형 포트폴리오',
+        summary: '프로젝트를 상품처럼 탐색하는 화면입니다.',
+        status: '제작 중'
+    });
 });
 
-test('admin project update accepts catalog summary without legacy description', async () => {
+test('admin project update accepts catalog summary without base description', async () => {
     const updatedPayloads = [];
     const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
         segments: ['models', 'projects.ts'],
@@ -109,9 +114,13 @@ test('admin project update accepts catalog summary without legacy description', 
     });
 
     assert.equal(status, 200);
-    assert.equal(updatedPayloads[0].excerpt, '카탈로그 카드에 표시할 요약입니다.');
+    assert.equal(updatedPayloads[0].summary, '카탈로그 카드에 표시할 요약입니다.');
     assert.equal(updatedPayloads[0].description, '카탈로그 카드에 표시할 요약입니다.');
     assert.equal(updatedPayloads[0].status, 'completed');
+    assert.deepEqual(updatedPayloads[0].catalog, {
+        summary: '카탈로그 카드에 표시할 요약입니다.',
+        status: '출시 완료'
+    });
 });
 
 test('admin project detail rejects malformed slug before model calls', async () => {
