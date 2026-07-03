@@ -10,6 +10,7 @@ const normalizeSql = (query) => query.replace(/\s+/g, ' ').trim().toLowerCase();
 const projectModelModules = [
     ['models', 'projects.ts'],
     ['models', 'projects', 'index.ts'],
+    ['models', 'projects', 'catalog-sections.ts'],
     ['models', 'projects', 'common.ts'],
     ['models', 'projects', 'detail.ts'],
     ['models', 'projects', 'filters.ts'],

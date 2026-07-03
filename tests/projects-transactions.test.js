@@ -124,6 +124,16 @@ test('Projects.getWithFilters normalizes array query values', async () => {
     ]);
 });
 
+test('Projects.getFilterOptions loads public project skills and tags', async () => {
+    const fixture = createModelFixture(['models', 'projects.ts']);
+
+    await fixture.model.getFilterOptions();
+
+    assert.equal(hasOperation(fixture.operations, 'from skills s inner join project_skills'), true);
+    assert.equal(hasOperation(fixture.operations, 'from tags t inner join project_tags'), true);
+    assert.equal(hasOperation(fixture.operations, 'where p.is_published = 1'), true);
+});
+
 test('project list mapper exposes catalog-friendly aliases', () => {
     const { mapProjectListItem } = loadProjectCommon();
 
@@ -264,4 +274,30 @@ test('Projects.delete removes child rows and recalculates tag counts in one tran
     assert.equal(hasOperation(fixture.operations, 'delete from project_catalog_profiles where project_id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'delete from projects where id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'update tags t left join'), true);
+});
+
+test('Projects.replaceCatalogSectionItems replaces section items in one transaction', async () => {
+    const fixture = createModelFixture(['models', 'projects.ts']);
+
+    await fixture.model.replaceCatalogSectionItems(7, [
+        {
+            project_id: 10,
+            display_order: 0,
+            custom_label: '대표',
+            custom_summary: null
+        },
+        {
+            project_id: 11,
+            display_order: 2,
+            custom_label: null,
+            custom_summary: '케이스 스터디'
+        }
+    ]);
+
+    assert.equal(fixture.transactionCount, 1);
+    assert.equal(hasOperation(fixture.operations, 'delete from project_catalog_section_items where section_id = ?'), true);
+    const inserts = fixture.operations.filter((operation) => operation.sql.includes('insert into project_catalog_section_items'));
+    assert.equal(inserts.length, 2);
+    assert.deepEqual(inserts[0].params, [7, 10, 0, '대표', null]);
+    assert.deepEqual(inserts[1].params, [7, 11, 2, null, '케이스 스터디']);
 });
