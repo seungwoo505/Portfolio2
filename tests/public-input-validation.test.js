@@ -72,6 +72,86 @@ test('public project catalog falls back for partially numeric limits', async () 
     assert.deepEqual(sectionLimits, [4]);
 });
 
+test('public project filter options returns project filter metadata', async () => {
+    let getFilterOptionsCalled = false;
+    const router = loadPublicRoute({
+        Projects: {
+            getFilterOptions: async () => {
+                getFilterOptionsCalled = true;
+                return {
+                    projectTypes: [{ value: 'backend', label: 'Backend' }],
+                    skills: [{ id: 1, name: 'Express' }],
+                    tags: [{ id: 2, name: 'api' }]
+                };
+            }
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/projects/filter-options');
+
+    assert.equal(status, 200);
+    assert.equal(body.success, true);
+    assert.equal(getFilterOptionsCalled, true);
+    assert.deepEqual(body.data.projectTypes, [{ value: 'backend', label: 'Backend' }]);
+    assert.deepEqual(body.data.skills, [{ id: 1, name: 'Express' }]);
+});
+
+test('public related projects rejects malformed slugs before model calls', async () => {
+    let getRelatedProjectsCalled = false;
+    const router = loadPublicRoute({
+        Projects: {
+            getRelatedProjects: async () => {
+                getRelatedProjectsCalled = true;
+                return [];
+            }
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/projects/bad.slug/related');
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '유효한 slug가 필요합니다.');
+    assert.equal(getRelatedProjectsCalled, false);
+});
+
+test('public related projects clamps limit and maps missing source project to 404', async () => {
+    const relatedCalls = [];
+    const router = loadPublicRoute({
+        Projects: {
+            getRelatedProjects: async (slug, limit) => {
+                relatedCalls.push({ slug, limit });
+                return null;
+            }
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/projects/shop-portfolio/related?limit=30');
+
+    assert.equal(status, 404);
+    assert.equal(body.message, '프로젝트를 찾을 수 없습니다.');
+    assert.deepEqual(relatedCalls, [{ slug: 'shop-portfolio', limit: 12 }]);
+});
+
+test('public related projects returns item payloads with normalized fallback limit', async () => {
+    const relatedCalls = [];
+    const router = loadPublicRoute({
+        Projects: {
+            getRelatedProjects: async (slug, limit) => {
+                relatedCalls.push({ slug, limit });
+                return [{ id: 2, title: 'Related Project' }];
+            }
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/projects/shop-portfolio/related?limit=4abc');
+
+    assert.equal(status, 200);
+    assert.equal(body.success, true);
+    assert.deepEqual(relatedCalls, [{ slug: 'shop-portfolio', limit: 4 }]);
+    assert.deepEqual(body.data.items, [{ id: 2, title: 'Related Project' }]);
+    assert.equal(body.data.limit, 4);
+});
+
 test('public post list rejects invalid featured filters before model calls', async () => {
     let getWithFiltersCalled = false;
     const router = loadPublicRoute({

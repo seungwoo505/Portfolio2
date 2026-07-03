@@ -9,6 +9,40 @@ const {
     normalizeProjectFilters
 } = require('./filters');
 
+const PROJECT_TYPE_OPTIONS = [
+    { value: 'web_app', label: 'Web App' },
+    { value: 'admin_tool', label: 'Admin Tool' },
+    { value: 'backend', label: 'Backend' },
+    { value: 'fullstack', label: 'Full-stack' },
+    { value: 'performance', label: 'Performance' },
+    { value: 'case_study', label: 'Case Study' },
+    { value: 'experiment', label: 'Experiment' },
+    { value: 'other', label: 'Other' }
+];
+
+const PROJECT_STATUS_OPTIONS = [
+    { value: 'planning', label: '기획 중' },
+    { value: 'in_progress', label: '진행 중' },
+    { value: 'completed', label: '완료' },
+    { value: 'on_hold', label: '보류' },
+    { value: 'archived', label: '보관됨' }
+];
+
+const PUBLICATION_STATUS_OPTIONS = [
+    { value: 'published', label: '공개' },
+    { value: 'draft', label: '비공개' },
+    { value: 'all', label: '전체' }
+];
+
+const PROJECT_SORT_OPTIONS = [
+    { value: 'catalog_priority', label: '추천순' },
+    { value: 'created_at', label: '생성일순' },
+    { value: 'published_at', label: '공개일순' },
+    { value: 'title', label: '제목순' },
+    { value: 'view_count', label: '조회순' },
+    { value: 'display_order', label: '노출순' }
+];
+
 const PROJECT_CARD_SELECT = `
     SELECT p.*,
            cp.catalog_title,
@@ -325,6 +359,99 @@ module.exports = {
                 total
             };
         }));
+    },
+
+    async getFilterOptions() {
+        const [skills, tags] = await Promise.all([
+            executeQuery(`
+                SELECT DISTINCT s.id,
+                       s.name,
+                       s.slug,
+                       s.description,
+                       s.proficiency_level,
+                       s.icon,
+                       s.color,
+                       s.display_order,
+                       s.is_featured,
+                       sc.name AS category_name,
+                       sc.slug AS category_slug
+                FROM skills s
+                INNER JOIN project_skills ps ON ps.skill_id = s.id
+                INNER JOIN projects p ON p.id = ps.project_id
+                LEFT JOIN skill_categories sc ON sc.id = s.category_id
+                WHERE p.is_published = 1
+                ORDER BY s.is_featured DESC, s.display_order ASC, s.name ASC
+            `),
+            executeQuery(`
+                SELECT DISTINCT t.id,
+                       t.name,
+                       t.slug,
+                       t.description,
+                       t.color,
+                       t.type,
+                       t.usage_count
+                FROM tags t
+                INNER JOIN project_tags pt ON pt.tag_id = t.id
+                INNER JOIN projects p ON p.id = pt.project_id
+                WHERE p.is_published = 1
+                ORDER BY t.usage_count DESC, t.name ASC
+            `)
+        ]);
+
+        return {
+            projectTypes: PROJECT_TYPE_OPTIONS,
+            projectStatuses: PROJECT_STATUS_OPTIONS,
+            publicationStatuses: PUBLICATION_STATUS_OPTIONS,
+            sortOptions: PROJECT_SORT_OPTIONS,
+            skills,
+            tags
+        };
+    },
+
+    async getRelatedProjects(slug, limit = 4) {
+        const project = await executeQuerySingle(`
+            SELECT id, project_type
+            FROM projects
+            WHERE slug = ? AND is_published = 1
+            LIMIT 1
+        `, [slug]);
+
+        if (!project) {
+            return null;
+        }
+
+        const query = `${PROJECT_CARD_SELECT}
+            WHERE p.is_published = 1 AND p.id <> ?
+            ORDER BY
+                (p.project_type = ?) DESC,
+                (
+                    SELECT COUNT(*)
+                    FROM project_skills target_ps
+                    INNER JOIN project_skills candidate_ps ON candidate_ps.skill_id = target_ps.skill_id
+                    WHERE target_ps.project_id = ? AND candidate_ps.project_id = p.id
+                ) DESC,
+                (
+                    SELECT COUNT(*)
+                    FROM project_tags target_pt
+                    INNER JOIN project_tags candidate_pt ON candidate_pt.tag_id = target_pt.tag_id
+                    WHERE target_pt.project_id = ? AND candidate_pt.project_id = p.id
+                ) DESC,
+                cp.catalog_priority DESC,
+                p.view_count DESC,
+                p.display_order ASC,
+                COALESCE(p.published_at, p.created_at) DESC
+            LIMIT ?
+        `;
+
+        const projects = await executeQuery(query, [
+            project.id,
+            project.project_type,
+            project.id,
+            project.id,
+            limit
+        ]);
+
+        return projects.map(mapProjectListItem);
     }
 };
 export {};

@@ -23,12 +23,22 @@ const router: Router = express.Router();
 
 const DEFAULT_CATALOG_SECTION_LIMIT = 4;
 const MAX_CATALOG_SECTION_LIMIT = 12;
+const DEFAULT_RELATED_PROJECT_LIMIT = 4;
+const MAX_RELATED_PROJECT_LIMIT = 12;
 
 const normalizeCatalogLimit = (value: unknown) => {
     return clampInteger(value, {
         min: 1,
         max: MAX_CATALOG_SECTION_LIMIT,
         fallback: DEFAULT_CATALOG_SECTION_LIMIT
+    });
+};
+
+const normalizeRelatedProjectLimit = (value: unknown) => {
+    return clampInteger(value, {
+        min: 1,
+        max: MAX_RELATED_PROJECT_LIMIT,
+        fallback: DEFAULT_RELATED_PROJECT_LIMIT
     });
 };
 
@@ -49,6 +59,14 @@ const normalizeCatalogLimit = (value: unknown) => {
  * /public/projects/catalog:
  *   get:
  *     summary: 쇼핑몰형 프로젝트 카탈로그 섹션 조회
+ *     tags: ['Public']
+ * /public/projects/filter-options:
+ *   get:
+ *     summary: 프로젝트 필터 옵션 조회
+ *     tags: ['Public']
+ * /public/projects/{slug}/related:
+ *   get:
+ *     summary: 관련 프로젝트 조회
  *     tags: ['Public']
  */
 router.get('/projects', async (req: Request, res: Response) => {
@@ -72,6 +90,19 @@ router.get('/projects', async (req: Request, res: Response) => {
     }
 });
 
+router.get('/projects/filter-options', async (req: Request, res: Response) => {
+    try {
+        const options = await cached(
+            cacheKey('projects', 'filter-options'),
+            () => Projects.getFilterOptions()
+        );
+
+        return ok(res, options);
+    } catch (error) {
+        return fail(res, error, req, '프로젝트 필터 옵션을 가져오는데 실패했습니다.');
+    }
+});
+
 router.get('/projects/catalog', async (req: Request, res: Response) => {
     try {
         const sectionLimit = normalizeCatalogLimit(req.query.limit);
@@ -86,6 +117,32 @@ router.get('/projects/catalog', async (req: Request, res: Response) => {
         });
     } catch (error) {
         return fail(res, error, req, '프로젝트 카탈로그를 가져오는데 실패했습니다.');
+    }
+});
+
+router.get('/projects/:slug/related', async (req: Request, res: Response) => {
+    try {
+        const { slug } = req.params;
+        if (!isValidSlug(slug)) {
+            return badRequest(res, '유효한 slug가 필요합니다.');
+        }
+
+        const limit = normalizeRelatedProjectLimit(req.query.limit);
+        const items = await cached(
+            cacheKey('projects', 'related', slug, limit),
+            () => Projects.getRelatedProjects(slug, limit)
+        );
+
+        if (!items) {
+            return notFound(res, '프로젝트를 찾을 수 없습니다.');
+        }
+
+        return ok(res, {
+            items,
+            limit
+        });
+    } catch (error) {
+        return fail(res, error, req, '관련 프로젝트를 가져오는데 실패했습니다.');
     }
 });
 
