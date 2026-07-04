@@ -21,6 +21,26 @@ test('BlogPosts._create writes the post and tags inside one transaction connecti
     assert.equal(fixture.operations.some((operation) => operation.sql.startsWith('pool:')), false);
 });
 
+test('BlogPosts._create can attach related projects inside one transaction', async () => {
+    const fixture = createModelFixture(['models', 'blog-posts.ts']);
+
+    await fixture.model._create({
+        title: 'Related Post',
+        content: '프로젝트 회고',
+        projects: [
+            { project_id: 10, relation_label: '구현 사례' },
+            { slug: 'shop-portfolio', display_order: 3 }
+        ]
+    });
+
+    assert.equal(fixture.transactionCount, 1);
+    assert.equal(hasOperation(fixture.operations, 'delete from blog_project_links where blog_post_id = ?'), true);
+    const inserts = fixture.operations.filter((operation) => operation.sql.includes('insert into blog_project_links'));
+    assert.equal(inserts.length, 2);
+    assert.deepEqual(inserts[0].params, [101, 10, 0, '구현 사례']);
+    assert.deepEqual(inserts[1].params, [101, 301, 3, null]);
+});
+
 test('BlogPosts._delete removes post tag usage and recalculates tag counts in one transaction', async () => {
     const fixture = createModelFixture(['models', 'blog-posts.ts']);
 
@@ -28,6 +48,7 @@ test('BlogPosts._delete removes post tag usage and recalculates tag counts in on
 
     assert.equal(fixture.transactionCount, 1);
     assert.equal(hasOperation(fixture.operations, "delete from tag_usage where content_type = 'blog_post'"), true);
+    assert.equal(hasOperation(fixture.operations, 'delete from blog_project_links where blog_post_id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'delete from blog_posts where id = ?'), true);
     assert.equal(hasOperation(fixture.operations, 'update tags t left join'), true);
 });

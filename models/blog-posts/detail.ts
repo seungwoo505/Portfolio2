@@ -3,6 +3,9 @@ const {
     executeQuery,
     executeQuerySingle
 } = require('./common');
+const {
+    getRelatedProjects
+} = require('./projects');
 
 const getPostTags = async (postId) => {
     return await executeQuery(`
@@ -13,11 +16,16 @@ const getPostTags = async (postId) => {
 };
 
 const mapPostDetail = async (post) => {
-    const tags = await getPostTags(post.id);
+    const [tags, relatedProjects] = await Promise.all([
+        getPostTags(post.id),
+        getRelatedProjects(post.id)
+    ]);
     return {
         ...post,
         featured: Boolean(post.is_featured),
-        tags
+        tags,
+        related_projects: relatedProjects,
+        projects: relatedProjects
     };
 };
 

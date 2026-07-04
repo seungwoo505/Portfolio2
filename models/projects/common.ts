@@ -186,6 +186,7 @@ const mapProjectDetailItem = (project, relations: Record<string, any> = {}) => (
         metrics: relations.metrics || project.metrics || [],
         links: relations.links || project.links || [],
         sections: relations.sections || project.sections || [],
+        related_posts: relations.related_posts || project.related_posts || [],
         skills: relations.skills || project.skills || [],
         images: relations.images || project.images || [],
         tags: relations.tags || project.tags || []

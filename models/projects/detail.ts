@@ -3,6 +3,9 @@ const {
     executeQuerySingle,
     mapProjectDetailItem
 } = require('./common');
+const {
+    getRelatedPostsForProject
+} = require('../blog-posts/projects');
 
 const getProjectRelations = async (id) => {
     return await Promise.all([
@@ -50,7 +53,8 @@ const getProjectRelations = async (id) => {
             INNER JOIN project_catalog_section_items csi ON csi.section_id = pcs.id
             WHERE csi.project_id = ?
             ORDER BY pcs.display_order ASC, csi.display_order ASC
-        `, [id])
+        `, [id]),
+        getRelatedPostsForProject(id)
     ]);
 };
 
@@ -85,7 +89,7 @@ module.exports = {
 
         if (!project) return null;
 
-        const [skills, images, tags, metrics, links, sections] = await getProjectRelations(id);
+        const [skills, images, tags, metrics, links, sections, relatedPosts] = await getProjectRelations(id);
 
         return mapProjectDetailItem(project, {
             skills,
@@ -93,7 +97,8 @@ module.exports = {
             tags,
             metrics,
             links,
-            sections
+            sections,
+            related_posts: relatedPosts
         });
     },
 
@@ -107,7 +112,7 @@ module.exports = {
 
         if (!project) return null;
 
-        const [skills, images, tags, metrics, links, sections] = await getProjectRelations(project.id);
+        const [skills, images, tags, metrics, links, sections, relatedPosts] = await getProjectRelations(project.id);
 
         return mapProjectDetailItem(project, {
             skills,
@@ -115,7 +120,8 @@ module.exports = {
             tags,
             metrics,
             links,
-            sections
+            sections,
+            related_posts: relatedPosts
         });
     },
 

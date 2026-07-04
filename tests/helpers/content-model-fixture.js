@@ -28,6 +28,7 @@ const blogPostModelModules = [
     ['models', 'blog-posts', 'filters.ts'],
     ['models', 'blog-posts', 'list.ts'],
     ['models', 'blog-posts', 'mutations.ts'],
+    ['models', 'blog-posts', 'projects.ts'],
     ['models', 'blog-posts', 'search.ts'],
     ['models', 'blog-posts', 'tags.ts']
 ];
@@ -69,6 +70,14 @@ const createModelFixture = (modelPath) => {
 
             if (sql.includes('insert into projects')) {
                 return [{ insertId: 201 }];
+            }
+
+            if (sql.startsWith('select id from projects where id = ?')) {
+                return [[{ id: params[0] }]];
+            }
+
+            if (sql.startsWith('select id from projects where slug = ?')) {
+                return [[{ id: 301 }]];
             }
 
             if (sql.includes('insert into tags')) {

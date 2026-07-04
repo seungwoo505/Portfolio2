@@ -24,7 +24,7 @@ module.exports = {
      * @returns {Promise<number>} 생성된 글 ID
      */
     async _create(data) {
-        const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
+        const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags, projects, related_projects } = data;
         const uuid = crypto.randomUUID();
 
         return await executeTransaction(async (connection) => {
@@ -54,6 +54,11 @@ module.exports = {
                 await this.updateTags(result.insertId, tags, db);
             }
 
+            const linkedProjects = related_projects ?? projects;
+            if (linkedProjects !== undefined) {
+                await this.updateProjects(result.insertId, linkedProjects, db);
+            }
+
             return result.insertId;
         });
     },
@@ -65,7 +70,7 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async _update(id, data) {
-        const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
+        const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags, projects, related_projects } = data;
 
         await executeTransaction(async (connection) => {
             const db = createQueryContext(connection);
@@ -127,6 +132,10 @@ module.exports = {
             if (tags !== undefined) {
                 await this.updateTags(id, tags || [], db);
             }
+
+            if (related_projects !== undefined || projects !== undefined) {
+                await this.updateProjects(id, related_projects ?? projects ?? [], db);
+            }
         });
 
         return await this.getById(id);
@@ -142,6 +151,7 @@ module.exports = {
             const db = createQueryContext(connection);
 
             await db.query("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [id]);
+            await db.query('DELETE FROM blog_project_links WHERE blog_post_id = ?', [id]);
             await db.query('DELETE FROM blog_posts WHERE id = ?', [id]);
             await db.query('UPDATE tags t LEFT JOIN (SELECT tag_id, COUNT(*) cnt FROM tag_usage GROUP BY tag_id) u ON t.id = u.tag_id SET t.usage_count = COALESCE(u.cnt, 0)');
         });
