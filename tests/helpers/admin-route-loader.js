@@ -52,6 +52,7 @@ const adminProjectRouteModules = [
     ['routes', 'admin', 'projects', 'common.ts'],
     ['routes', 'admin', 'projects', 'collection.ts'],
     ['routes', 'admin', 'projects', 'detail.ts'],
+    ['routes', 'admin', 'projects', 'images.ts'],
     ['routes', 'admin', 'projects', 'payload.ts'],
     ['routes', 'admin', 'projects', 'update.ts']
 ];

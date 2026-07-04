@@ -264,6 +264,99 @@ test('admin project catalog section items replace validated project placement', 
     assert.equal(body.data.items.length, 2);
 });
 
+test('admin project images reject invalid image types before update', async () => {
+    let updateCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+        segments: ['models', 'projects.ts'],
+        moduleExports: {
+            getBySlug: async () => ({ id: 8, slug: 'shop-portfolio', images: [] }),
+            update: async () => {
+                updateCalled = true;
+                return {};
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/projects/slug/shop-portfolio/images', {
+        method: 'PUT',
+        body: {
+            images: [
+                { image_type: 'invalid', image_url: 'https://image.example.com/one.png' }
+            ]
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '유효한 image_type이 필요합니다.');
+    assert.equal(updateCalled, false);
+});
+
+test('admin project images replace validated image gallery', async () => {
+    const updatePayloads = [];
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+        segments: ['models', 'projects.ts'],
+        moduleExports: {
+            getBySlug: async () => ({ id: 8, slug: 'shop-portfolio', images: [] }),
+            update: async (_id, payload) => {
+                updatePayloads.push(payload);
+                return {
+                    id: 8,
+                    images: payload.images
+                };
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/projects/slug/shop-portfolio/images', {
+        method: 'PUT',
+        body: {
+            images: [
+                {
+                    image_type: 'catalog',
+                    image_url: '  https://image.example.com/catalog.png  ',
+                    alt_text: '  대표 이미지  ',
+                    width: '1200',
+                    height: '800',
+                    is_primary: 'true'
+                },
+                {
+                    image_type: 'gallery',
+                    image_url: 'https://image.example.com/detail.png',
+                    caption: '  상세 화면  '
+                }
+            ]
+        }
+    });
+
+    assert.equal(status, 200);
+    assert.equal(body.success, true);
+    assert.deepEqual(updatePayloads, [{
+        images: [
+            {
+                image_type: 'catalog',
+                image_url: 'https://image.example.com/catalog.png',
+                alt_text: '대표 이미지',
+                caption: null,
+                width: 1200,
+                height: 800,
+                display_order: 0,
+                is_primary: true
+            },
+            {
+                image_type: 'gallery',
+                image_url: 'https://image.example.com/detail.png',
+                alt_text: null,
+                caption: '상세 화면',
+                width: null,
+                height: null,
+                display_order: 1,
+                is_primary: false
+            }
+        ]
+    }]);
+    assert.equal(body.data.length, 2);
+});
+
 test('admin project detail rejects malformed slug before model calls', async () => {
     let getBySlugCalled = false;
     const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
