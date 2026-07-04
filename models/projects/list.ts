@@ -452,6 +452,23 @@ module.exports = {
         ]);
 
         return projects.map(mapProjectListItem);
+    },
+
+    async getRecommendations(limit = 8) {
+        const query = `${PROJECT_CARD_SELECT}
+            WHERE p.is_published = 1
+            ORDER BY
+                p.is_featured DESC,
+                (p.project_type = 'case_study') DESC,
+                cp.catalog_priority DESC,
+                p.view_count DESC,
+                COALESCE(p.published_at, p.created_at) DESC,
+                p.display_order ASC
+            LIMIT ?
+        `;
+
+        const projects = await executeQuery(query, [limit]);
+        return projects.map(mapProjectListItem);
     }
 };
 export {};

@@ -152,6 +152,26 @@ test('public related projects returns item payloads with normalized fallback lim
     assert.equal(body.data.limit, 4);
 });
 
+test('public project recommendations clamps limits and returns item payloads', async () => {
+    const recommendationCalls = [];
+    const router = loadPublicRoute({
+        Projects: {
+            getRecommendations: async (limit) => {
+                recommendationCalls.push(limit);
+                return [{ id: 3, title: 'Recommended Project' }];
+            }
+        }
+    });
+
+    const { status, body } = await requestJson(router, '/projects/recommendations?limit=30');
+
+    assert.equal(status, 200);
+    assert.equal(body.success, true);
+    assert.deepEqual(recommendationCalls, [16]);
+    assert.deepEqual(body.data.items, [{ id: 3, title: 'Recommended Project' }]);
+    assert.equal(body.data.limit, 16);
+});
+
 test('public post list rejects invalid featured filters before model calls', async () => {
     let getWithFiltersCalled = false;
     const router = loadPublicRoute({

@@ -25,6 +25,8 @@ const DEFAULT_CATALOG_SECTION_LIMIT = 4;
 const MAX_CATALOG_SECTION_LIMIT = 12;
 const DEFAULT_RELATED_PROJECT_LIMIT = 4;
 const MAX_RELATED_PROJECT_LIMIT = 12;
+const DEFAULT_RECOMMENDED_PROJECT_LIMIT = 8;
+const MAX_RECOMMENDED_PROJECT_LIMIT = 16;
 
 const normalizeCatalogLimit = (value: unknown) => {
     return clampInteger(value, {
@@ -39,6 +41,14 @@ const normalizeRelatedProjectLimit = (value: unknown) => {
         min: 1,
         max: MAX_RELATED_PROJECT_LIMIT,
         fallback: DEFAULT_RELATED_PROJECT_LIMIT
+    });
+};
+
+const normalizeRecommendedProjectLimit = (value: unknown) => {
+    return clampInteger(value, {
+        min: 1,
+        max: MAX_RECOMMENDED_PROJECT_LIMIT,
+        fallback: DEFAULT_RECOMMENDED_PROJECT_LIMIT
     });
 };
 
@@ -63,6 +73,10 @@ const normalizeRelatedProjectLimit = (value: unknown) => {
  * /public/projects/filter-options:
  *   get:
  *     summary: 프로젝트 필터 옵션 조회
+ *     tags: ['Public']
+ * /public/projects/recommendations:
+ *   get:
+ *     summary: 조회수와 카탈로그 우선순위 기반 추천 프로젝트 조회
  *     tags: ['Public']
  * /public/projects/{slug}/related:
  *   get:
@@ -117,6 +131,23 @@ router.get('/projects/catalog', async (req: Request, res: Response) => {
         });
     } catch (error) {
         return fail(res, error, req, '프로젝트 카탈로그를 가져오는데 실패했습니다.');
+    }
+});
+
+router.get('/projects/recommendations', async (req: Request, res: Response) => {
+    try {
+        const limit = normalizeRecommendedProjectLimit(req.query.limit);
+        const items = await cached(
+            cacheKey('projects', 'recommendations', limit),
+            () => Projects.getRecommendations(limit)
+        );
+
+        return ok(res, {
+            items,
+            limit
+        });
+    } catch (error) {
+        return fail(res, error, req, '추천 프로젝트를 가져오는데 실패했습니다.');
     }
 });
 

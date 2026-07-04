@@ -134,6 +134,20 @@ test('Projects.getFilterOptions loads public project skills and tags', async () 
     assert.equal(hasOperation(fixture.operations, 'where p.is_published = 1'), true);
 });
 
+test('Projects.getRecommendations orders by featured case study priority and views', async () => {
+    const fixture = createModelFixture(['models', 'projects.ts']);
+
+    await fixture.model.getRecommendations(8);
+
+    const query = fixture.operations.find((operation) => operation.sql.startsWith('pool:select p.*'));
+    assert.ok(query);
+    assert.equal(query.sql.includes('where p.is_published = 1'), true);
+    assert.equal(query.sql.includes("p.project_type = 'case_study'"), true);
+    assert.equal(query.sql.includes('cp.catalog_priority desc'), true);
+    assert.equal(query.sql.includes('p.view_count desc'), true);
+    assert.deepEqual(query.params, [8]);
+});
+
 test('project list mapper exposes catalog-friendly aliases', () => {
     const { mapProjectListItem } = loadProjectCommon();
 
