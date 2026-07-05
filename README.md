@@ -317,7 +317,11 @@ GET /public/social-links    # 소셜 링크
 GET /public/skills          # 기술 스택
 GET /public/skills/featured # 주요 기술 스택
 GET /public/projects        # 프로젝트 목록
+GET /public/projects/catalog # 쇼핑몰형 카탈로그 섹션
+GET /public/projects/filter-options # 프로젝트 필터 옵션
+GET /public/projects/recommendations # 추천 프로젝트
 GET /public/projects/:slug  # 특정 프로젝트
+GET /public/projects/:slug/related # 관련 프로젝트
 POST /public/projects/:slug/view # 프로젝트 조회수 증가
 GET /public/experiences     # 경력/경험
 GET /public/experiences/timeline # 타임라인
@@ -372,6 +376,13 @@ POST /admin/projects        # 새 프로젝트 생성
 GET /admin/projects/slug/:slug # 프로젝트 상세
 PUT /admin/projects/slug/:slug # 프로젝트 수정
 DELETE /admin/projects/slug/:slug # 프로젝트 삭제
+GET /admin/projects/catalog-sections # 카탈로그 섹션 목록
+POST /admin/projects/catalog-sections # 카탈로그 섹션 생성
+PUT /admin/projects/catalog-sections/:id # 카탈로그 섹션 수정
+DELETE /admin/projects/catalog-sections/:id # 카탈로그 섹션 삭제
+PUT /admin/projects/catalog-sections/:id/items # 섹션 프로젝트 배치 교체
+GET /admin/projects/slug/:slug/images # 프로젝트 이미지 목록
+PUT /admin/projects/slug/:slug/images # 프로젝트 이미지 전체 교체
 
 # 프로필/소셜 링크 관리
 GET /admin/personal-info    # 개인 정보 조회
@@ -396,6 +407,7 @@ PUT /admin/settings         # 설정 업데이트
 ### **마이그레이션**
 
 신규 스키마는 `migrations/001_schema.sql`부터 순서대로 적용합니다. 초기 관리자 계정은 다음 환경 변수를 설정한 뒤 `npm run migrate`로 생성합니다.
+이미 `001_schema.sql`이 적용된 기존 DB에는 이후 번호의 증분 마이그레이션이 순서대로 적용되며, `006_blog_project_links.sql`은 블로그와 프로젝트 연결 테이블을 추가합니다.
 
 ```env
 ADMIN_BOOTSTRAP_USERNAME=admin
@@ -418,8 +430,15 @@ SOURCE_DB_SCHEMA=portfolio_old TARGET_DB_SCHEMA=portfolio_new npm run migrate:co
 | `personal_info`    | 개인 정보     | name, title, bio, email, avatar_url      |
 | `social_links`     | 소셜 링크     | platform, url, icon, display_order       |
 | `skills`           | 기술 스택     | name, proficiency_level, category_id     |
-| `projects`         | 프로젝트      | title, description, demo_url, github_url |
+| `projects`         | 프로젝트      | title, slug, status, project_type, view_count |
+| `project_catalog_profiles` | 프로젝트 카탈로그 카드 | catalog_title, catalog_summary, catalog_badge |
+| `project_catalog_sections` | 쇼핑몰형 진열 섹션 | name, slug, section_type, display_order |
+| `project_catalog_section_items` | 섹션별 프로젝트 배치 | section_id, project_id, custom_label |
+| `project_metrics` | 프로젝트 성과 지표 | metric_group, label, value, is_highlighted |
+| `project_links` | 프로젝트 CTA 링크 | link_type, label, url, is_primary |
+| `project_images` | 프로젝트 이미지 | image_type, image_url, display_order |
 | `blog_posts`       | 블로그 포스트 | title, content, is_published, view_count |
+| `blog_project_links` | 블로그와 프로젝트 연결 | blog_post_id, project_id, relation_label |
 | `tags`             | 태그          | name, slug, type, usage_count            |
 | `tag_usage`        | 태그 사용처   | tag_id, content_type, content_id         |
 | `admin_users`      | 관리자 계정   | username, password_hash, role            |
@@ -433,11 +452,18 @@ SOURCE_DB_SCHEMA=portfolio_old TARGET_DB_SCHEMA=portfolio_new npm run migrate:co
 erDiagram
     personal_info ||--o{ social_links : "has"
     skill_categories ||--o{ skills : "contains"
+    projects ||--o{ project_catalog_profiles : "has"
+    projects ||--o{ project_catalog_section_items : "placed_in"
+    project_catalog_sections ||--o{ project_catalog_section_items : "contains"
+    projects ||--o{ project_metrics : "has"
+    projects ||--o{ project_links : "has"
     projects ||--o{ project_images : "has"
     projects ||--o{ project_skills : "uses"
     skills ||--o{ project_skills : "used_in"
     projects ||--o{ tag_usage : "tagged_with"
     blog_posts ||--o{ tag_usage : "tagged_with"
+    blog_posts ||--o{ blog_project_links : "references"
+    projects ||--o{ blog_project_links : "referenced_by"
     tags ||--o{ tag_usage : "applied_to"
     admin_users ||--o{ admin_activity_logs : "performs"
     admin_users ||--o{ admin_sessions : "owns"

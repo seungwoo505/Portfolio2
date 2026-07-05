@@ -80,8 +80,11 @@
 
 ```http
 GET /public/projects/catalog
+GET /public/projects/filter-options
+GET /public/projects/recommendations
 GET /public/projects
 GET /public/projects/:slug
+GET /public/projects/:slug/related
 POST /public/projects/:slug/view
 ```
 
@@ -109,6 +112,7 @@ POST /public/projects/:slug/view
 - `project_images`
 - `project_tags`
 - `project_skills`
+- `blog_project_links`
 - `tags`
 - `skills`
 
@@ -380,7 +384,7 @@ portfolio:recent-projects
 
 ### 6.2 보완하면 좋은 API
 
-현재 구조만으로도 시작은 가능하지만, 쇼핑몰형 운영성을 높이려면 아래 API가 있으면 좋다.
+현재 구조만으로도 시작은 가능하지만, 쇼핑몰형 운영성을 높이기 위한 아래 API도 백엔드에 반영되었다.
 
 #### 6.2.1 카탈로그 섹션 관리 API
 
@@ -395,6 +399,8 @@ PUT /admin/projects/catalog-sections/:id
 DELETE /admin/projects/catalog-sections/:id
 PUT /admin/projects/catalog-sections/:id/items
 ```
+
+구현 상태: 완료
 
 필요성:
 
@@ -412,6 +418,8 @@ PUT /admin/projects/catalog-sections/:id/items
 ```http
 GET /public/projects/:slug/related?limit=4
 ```
+
+구현 상태: 완료
 
 추천 기준:
 
@@ -432,6 +440,8 @@ GET /public/projects/:slug/related?limit=4
 ```http
 GET /public/projects/filter-options
 ```
+
+구현 상태: 완료
 
 반환:
 
@@ -523,9 +533,10 @@ GET /public/projects/filter-options
 
 3차 작업:
 
-- 조회수 기반 추천 고도화
-- 블로그와 프로젝트 연결 테이블 검토
-- 관리자 이미지 갤러리 UX 지원 API 보완
+- 조회수 기반 추천 API 추가
+- 블로그와 프로젝트 연결 테이블 추가
+- 관리자 이미지 갤러리 목록/전체 교체 API 추가
+- 캐시 무효화와 문서 정합성 보강
 
 ## 7. 데이터 계약
 
@@ -736,7 +747,7 @@ const getCatalog = (params?: ProjectCatalogParams) =>
 
 - 관련 프로젝트 API
 - 조회 기반 추천
-- 블로그-프로젝트 연결 검토
+- 블로그-프로젝트 연결
 
 ## 10. 작업 순서 제안
 

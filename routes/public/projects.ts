@@ -78,10 +78,39 @@ const normalizeRecommendedProjectLimit = (value: unknown) => {
  *   get:
  *     summary: 조회수와 카탈로그 우선순위 기반 추천 프로젝트 조회
  *     tags: ['Public']
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 8
+ *           maximum: 16
+ *         description: 반환할 추천 프로젝트 수
+ *     responses:
+ *       200:
+ *         description: 추천 프로젝트 조회 성공
  * /public/projects/{slug}/related:
  *   get:
  *     summary: 관련 프로젝트 조회
  *     tags: ['Public']
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 4
+ *           maximum: 12
+ *         description: 반환할 관련 프로젝트 수
+ *     responses:
+ *       200:
+ *         description: 관련 프로젝트 조회 성공
+ *       404:
+ *         description: 기준 프로젝트 없음
  */
 router.get('/projects', async (req: Request, res: Response) => {
     try {

@@ -57,7 +57,7 @@ module.exports = {
      * @returns {void}
      */
     invalidateCache() {
-        CacheUtils.invalidateResources('blog', 'tags');
+        CacheUtils.invalidateResources('blog', 'projects', 'tags');
     }
 };
 export {};

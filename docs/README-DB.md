@@ -23,12 +23,18 @@
 ### 프로젝트 관리
 
 - **projects**: 프로젝트 기본 정보 (제목, 설명, URL, 상태 등)
+- **project_catalog_profiles**: 쇼핑몰형 카드 표시 정보 (제목, 요약, 배지, 라벨, 우선순위)
+- **project_catalog_sections**: 추천/신규/인기/케이스 스터디 같은 카탈로그 섹션
+- **project_catalog_section_items**: 섹션별 프로젝트 배치와 커스텀 라벨/요약
+- **project_metrics**: 프로젝트 성과 지표
+- **project_links**: 데모, GitHub, 문서, 케이스 스터디 링크
 - **project_images**: 프로젝트 이미지 갤러리
 - **project_skills**: 프로젝트에 사용된 기술 스택 연결
 
 ### 블로그 시스템
 
 - **blog_posts**: 블로그 포스트 (제목, 내용, 메타데이터)
+- **blog_project_links**: 블로그 포스트와 프로젝트 연결
 - **tags**: 공통 태그 시스템
 - **tag_usage**: 프로젝트/블로그 포스트와 태그 연결 테이블
 
@@ -129,12 +135,23 @@ npm start
 ### 프로젝트
 
 - `GET /public/projects` - 프로젝트 목록 조회
+- `GET /public/projects/catalog` - 쇼핑몰형 카탈로그 섹션 조회
+- `GET /public/projects/filter-options` - 프로젝트 필터 옵션 조회
+- `GET /public/projects/recommendations` - 추천 프로젝트 조회
 - `GET /public/projects/:slug` - 특정 프로젝트 상세 조회
+- `GET /public/projects/:slug/related` - 관련 프로젝트 조회
 - `GET /admin/projects` - 관리자 프로젝트 목록 조회
 - `POST /admin/projects` - 새 프로젝트 생성
 - `GET /admin/projects/slug/:slug` - 관리자 프로젝트 상세 조회
 - `PUT /admin/projects/slug/:slug` - 프로젝트 수정
 - `DELETE /admin/projects/slug/:slug` - 프로젝트 삭제
+- `GET /admin/projects/catalog-sections` - 카탈로그 섹션 목록 조회
+- `POST /admin/projects/catalog-sections` - 카탈로그 섹션 생성
+- `PUT /admin/projects/catalog-sections/:id` - 카탈로그 섹션 수정
+- `DELETE /admin/projects/catalog-sections/:id` - 카탈로그 섹션 삭제
+- `PUT /admin/projects/catalog-sections/:id/items` - 섹션 프로젝트 배치 전체 교체
+- `GET /admin/projects/slug/:slug/images` - 프로젝트 이미지 목록 조회
+- `PUT /admin/projects/slug/:slug/images` - 프로젝트 이미지 전체 교체
 
 ### 블로그
 
@@ -281,5 +298,7 @@ export const api = {
 2. 새로운 마이그레이션 파일 생성
 3. `migrations/` 폴더에 타임스탬프 기반 파일 추가
 4. `npm run migrate` 실행
+
+현재 쇼핑몰형 포트폴리오 보강에서 기존 DB에 추가로 필요한 연결 테이블은 `migrations/006_blog_project_links.sql`에서 생성합니다. 새 DB를 처음 구성하는 경우에는 `001_schema.sql`에 같은 테이블이 포함되어 있고, `006` 파일은 `CREATE TABLE IF NOT EXISTS`로 안전하게 건너뜁니다.
 
 이 구조를 통해 확장 가능하고 유지보수가 쉬운 포트폴리오 서버를 구축할 수 있습니다!

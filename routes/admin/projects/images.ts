@@ -156,9 +156,64 @@ const parseImagesPayload = (body) => {
  *   get:
  *     summary: 프로젝트 이미지 목록 조회
  *     tags: ['Admin - Projects']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 프로젝트 이미지 목록 조회 성공
  *   put:
  *     summary: 프로젝트 이미지 목록 전체 교체
  *     tags: ['Admin - Projects']
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - images
+ *             properties:
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - image_url
+ *                   properties:
+ *                     image_type:
+ *                       type: string
+ *                       enum: [catalog, cover, gallery, detail, og]
+ *                     image_url:
+ *                       type: string
+ *                     alt_text:
+ *                       type: string
+ *                     caption:
+ *                       type: string
+ *                     width:
+ *                       type: integer
+ *                     height:
+ *                       type: integer
+ *                     display_order:
+ *                       type: integer
+ *                     is_primary:
+ *                       type: boolean
+ *     responses:
+ *       200:
+ *         description: 프로젝트 이미지 목록 교체 성공
  */
 router.get('/projects/slug/:slug/images',
     authenticateToken,

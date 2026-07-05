@@ -16,6 +16,7 @@ const blogPostModelModules = [
     ['models', 'blog-posts', 'filters.ts'],
     ['models', 'blog-posts', 'list.ts'],
     ['models', 'blog-posts', 'mutations.ts'],
+    ['models', 'blog-posts', 'projects.ts'],
     ['models', 'blog-posts', 'search.ts'],
     ['models', 'blog-posts', 'tags.ts']
 ];
@@ -57,7 +58,7 @@ test('resource invalidation clears public blog detail cache keys', () => {
     }
 });
 
-test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', () => {
+test('BlogPosts.invalidateCache uses resource invalidation for blog projects and tags', () => {
     const invalidations = [];
 
     clearRootModules([
@@ -89,7 +90,7 @@ test('BlogPosts.invalidateCache uses resource invalidation for blog and tags', (
     const BlogPosts = require(resolveFromRoot(['models', 'blog-posts.ts']));
     BlogPosts.invalidateCache();
 
-    assert.deepEqual(invalidations, [['blog', 'tags']]);
+    assert.deepEqual(invalidations, [['blog', 'projects', 'tags']]);
 });
 
 test('cacheApiResponse reuses an in-flight loader for the same key', async () => {

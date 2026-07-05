@@ -390,7 +390,7 @@ GET /public/projects?search=database&type=backend&skills=mariadb,express&project
   "skills": ["Express", "MariaDB", "TypeScript"],
   "tags": ["backend", "catalog", "portfolio"],
   "images": [
-    { "image_type": "card", "image_url": "/images/projects/card.png", "alt_text": "프로젝트 카드" }
+    { "image_type": "catalog", "image_url": "/images/projects/card.png", "alt_text": "프로젝트 카드" }
   ]
 }
 ```
