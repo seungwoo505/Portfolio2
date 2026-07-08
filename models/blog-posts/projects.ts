@@ -1,4 +1,5 @@
 const {
+    defaultQueryContext,
     executeQuery,
     normalizeTagNames
 } = require('./common');
@@ -59,7 +60,7 @@ const findProjectId = async (project, db) => {
 module.exports = {
     normalizeRelatedProjects,
 
-    async updateProjects(postId, projects, db) {
+    async updateProjects(postId, projects, db = defaultQueryContext) {
         await db.query('DELETE FROM blog_project_links WHERE blog_post_id = ?', [postId]);
 
         for (const project of normalizeRelatedProjects(projects)) {

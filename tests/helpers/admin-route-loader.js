@@ -41,6 +41,7 @@ const adminBlogRouteModules = [
     ['routes', 'admin', 'blog', 'detail.ts'],
     ['routes', 'admin', 'blog', 'lookup.ts'],
     ['routes', 'admin', 'blog', 'payload.ts'],
+    ['routes', 'admin', 'blog', 'projects.ts'],
     ['routes', 'admin', 'blog', 'status-update.ts'],
     ['routes', 'admin', 'blog', 'status.ts']
 ];
