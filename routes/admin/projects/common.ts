@@ -11,7 +11,12 @@ const {
     trimStringFields
 } = require('../../../utils/request-body');
 const { authenticateToken, requirePermission, logActivity } = require('../../../middleware/auth');
-const { normalizeProjectContentFields, normalizeUndefinedFields } = require('./payload');
+const {
+    normalizeProjectContentFields,
+    normalizeUndefinedFields,
+    parseImagesPayload,
+    validateProjectRelationsPayload
+} = require('./payload');
 
 module.exports = {
     authenticateToken,
@@ -24,12 +29,14 @@ module.exports = {
     logger,
     normalizeProjectContentFields,
     normalizeUndefinedFields,
+    parseImagesPayload,
     parsePagination,
     parseSlugParam,
     Projects,
     requirePermission,
     toOptionalBoolean,
     trimStringFields,
+    validateProjectRelationsPayload,
     verboseDebug
 };
 

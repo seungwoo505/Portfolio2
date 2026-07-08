@@ -123,6 +123,161 @@ test('admin project update accepts catalog summary without base description', as
     });
 });
 
+test('admin project create normalizes nested shop relation payloads before model call', async () => {
+    const createdPayloads = [];
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+        segments: ['models', 'projects.ts'],
+        moduleExports: {
+            create: async (payload) => {
+                createdPayloads.push(payload);
+                return 6;
+            },
+            getById: async (id) => ({ id })
+        }
+    }]);
+
+    const { status } = await requestJson(router, '/projects', {
+        method: 'POST',
+        body: {
+            title: '쇼핑몰형 프로젝트',
+            description: '중첩 입력 검증',
+            links: [
+                {
+                    link_type: 'demo',
+                    label: '  Demo  ',
+                    url: '  https://demo.example.com  ',
+                    is_primary: 'true'
+                }
+            ],
+            metrics: [
+                {
+                    label: '  Tests  ',
+                    value: '  197  ',
+                    unit: '  pass  ',
+                    is_highlighted: 'true'
+                }
+            ],
+            skills: [
+                { name: '  Express  ', importance: 'primary', display_order: '2' },
+                'MariaDB'
+            ],
+            sections: [
+                { slug: 'featured-projects', custom_label: '  대표  ' }
+            ]
+        }
+    });
+
+    assert.equal(status, 201);
+    assert.deepEqual(createdPayloads[0].links, [{
+        link_type: 'demo',
+        label: 'Demo',
+        url: 'https://demo.example.com',
+        display_order: 0,
+        is_primary: true
+    }]);
+    assert.deepEqual(createdPayloads[0].metrics, [{
+        metric_group: 'spec',
+        label: 'Tests',
+        value: '197',
+        unit: 'pass',
+        description: null,
+        display_order: 0,
+        is_highlighted: true
+    }]);
+    assert.deepEqual(createdPayloads[0].skills, [
+        { name: 'Express', importance: 'primary', display_order: 2 },
+        'MariaDB'
+    ]);
+    assert.deepEqual(createdPayloads[0].sections, [{
+        slug: 'featured-projects',
+        display_order: 0,
+        custom_label: '대표',
+        custom_summary: null
+    }]);
+});
+
+test('admin project create rejects invalid nested link types before model call', async () => {
+    let createCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+        segments: ['models', 'projects.ts'],
+        moduleExports: {
+            create: async () => {
+                createCalled = true;
+                return 1;
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/projects', {
+        method: 'POST',
+        body: {
+            title: '검증 프로젝트',
+            description: '링크 검증',
+            links: [
+                { link_type: 'invalid', url: 'https://example.com' }
+            ]
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, '유효한 link_type이 필요합니다.');
+    assert.equal(createCalled, false);
+});
+
+test('admin project update rejects duplicate nested skills before lookup', async () => {
+    let getBySlugCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+        segments: ['models', 'projects.ts'],
+        moduleExports: {
+            getBySlug: async () => {
+                getBySlugCalled = true;
+                return { id: 8 };
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/projects/slug/shop-portfolio', {
+        method: 'PUT',
+        body: {
+            skills: [
+                'React',
+                { name: ' react ' }
+            ]
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, 'skills에 동일한 기술을 중복 입력할 수 없습니다.');
+    assert.equal(getBySlugCalled, false);
+});
+
+test('admin project update rejects duplicate nested sections before lookup', async () => {
+    let getBySlugCalled = false;
+    const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+        segments: ['models', 'projects.ts'],
+        moduleExports: {
+            getBySlug: async () => {
+                getBySlugCalled = true;
+                return { id: 8 };
+            }
+        }
+    }]);
+
+    const { status, body } = await requestJson(router, '/projects/slug/shop-portfolio', {
+        method: 'PUT',
+        body: {
+            sections: [
+                { slug: 'featured-projects' },
+                'featured-projects'
+            ]
+        }
+    });
+
+    assert.equal(status, 400);
+    assert.equal(body.message, 'sections에 동일한 섹션을 중복 입력할 수 없습니다.');
+    assert.equal(getBySlugCalled, false);
+});
+
 test('admin project catalog section create trims and validates payload before model call', async () => {
     const createdPayloads = [];
     const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{

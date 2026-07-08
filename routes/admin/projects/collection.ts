@@ -15,6 +15,7 @@ const {
     requirePermission,
     toOptionalBoolean,
     trimStringFields,
+    validateProjectRelationsPayload,
     verboseDebug
 } = require('./common');
 
@@ -146,7 +147,15 @@ router.post('/projects',
                 });
             }
 
-            const sanitizedData = body;
+            const relationPayload = validateProjectRelationsPayload(body);
+            if (relationPayload.error) {
+                return res.status(400).json({
+                    success: false,
+                    message: relationPayload.error
+                });
+            }
+
+            const sanitizedData = relationPayload.payload;
 
             verboseDebug('원본 데이터:', body);
             verboseDebug('정규화된 데이터:', sanitizedData);
