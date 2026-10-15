@@ -1,5 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
+const { Readable } = require('node:stream');
 const {
     clearRootModules,
     resolveFromRoot
@@ -17,6 +21,29 @@ const uploadModulePaths = [
     ['utils', 'upload', 'storage.ts'],
     ['utils', 'upload', 'validation.ts']
 ];
+
+test('같은 시각에 같은 이름으로 업로드한 파일은 서로 덮어쓰지 않고 삭제 가능한 이름을 갖는다', async t => {
+    const { storage } = require('../utils/upload');
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'portfolio-upload-collision-'));
+    t.after(async () => {
+        for (const filename of await fs.readdir(tempDir)) await fs.unlink(path.join(tempDir, filename));
+        await fs.rmdir(tempDir);
+    });
+    t.mock.method(Date, 'now', () => 1800000000000);
+    t.mock.method(storage, 'getDestination', (_req, _file, cb) => cb(null, tempDir));
+    const contents = ['image-a', 'image-b'];
+    const results = await Promise.all(contents.map(content => new Promise((resolve, reject) => {
+        storage._handleFile({}, {
+            originalname: 'photo.png', mimetype: 'image/png', stream: Readable.from([content])
+        }, (error, result) => error ? reject(error) : resolve(result));
+    })));
+
+    assert.notEqual(results[0].filename, results[1].filename);
+    for (let index = 0; index < results.length; index += 1) {
+        assert.equal(isSafeUploadedImageFilename(results[index].filename), true);
+        assert.equal(await fs.readFile(results[index].path, 'utf8'), contents[index]);
+    }
+});
 
 test('validateImageFile accepts matching image MIME and extension', () => {
     assert.deepEqual(

@@ -18,7 +18,68 @@ const router: Router = express.Router();
  * /public/interests:
  *   get:
  *     summary: 공개 관심사 목록 조회
- *     tags: ['Public']
+ *     tags:
+ *       - Interests
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         required: false
+ *         description: 카테고리와 정확히 일치하는 관심사. 생략하면 전체 목록을 조회합니다.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Success'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                             nullable: true
+ *                           icon:
+ *                             type: string
+ *                             nullable: true
+ *                           category:
+ *                             type: string
+ *                           display_order:
+ *                             type: integer
+ *                             nullable: true
+ *                         additionalProperties: true
+ *                   required:
+ *                     - success
+ *                     - data
+ *       '408':
+ *         description: 요청 처리 시간 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '429':
+ *         description: 요청 횟수 제한 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 처리 중 오류 발생
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/interests', async (req: Request, res: Response) => {
     try {

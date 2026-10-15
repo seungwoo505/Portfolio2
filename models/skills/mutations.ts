@@ -1,4 +1,5 @@
 const { executeQuery } = require('./common');
+const { assertFeaturedDisplayOrderAvailable, assertSkillCategoryExists, withSkillWriteLock } = require('./write-lock');
 
 module.exports = {
     /**
@@ -21,7 +22,7 @@ module.exports = {
             INSERT INTO skills (category_id, name, proficiency_level, years_of_experience, icon, color, display_order, is_featured)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        const result = await executeQuery(query, [
+        const values = [
             category_id,
             name,
             proficiency_level ?? 50,
@@ -30,8 +31,16 @@ module.exports = {
             color ?? null,
             display_order ?? 0,
             is_featured ?? false
-        ]);
-        return result.insertId;
+        ];
+        return await withSkillWriteLock(async (connection) => {
+            await assertSkillCategoryExists(connection, category_id);
+            await assertFeaturedDisplayOrderAvailable(connection, {
+                display_order: display_order ?? 0,
+                is_featured: is_featured ?? false
+            });
+            const [result] = await connection.execute(query, values);
+            return result.insertId;
+        });
     },
 
     /**
@@ -69,8 +78,25 @@ module.exports = {
         updateValues.push(id);
 
         const query = `UPDATE skills SET ${updateFields.join(', ')} WHERE id = ?`;
-        await executeQuery(query, updateValues);
-        return await this.getSkillById(id);
+        return await withSkillWriteLock(async (connection) => {
+            // 라우트에서 읽은 상태는 대기 중 바뀔 수 있으므로 잠금 후 다시 읽는다.
+            const [rows] = await connection.execute('SELECT * FROM skills WHERE id = ?', [id]);
+            if (!rows[0]) return null;
+            if (data.category_id !== undefined) await assertSkillCategoryExists(connection, data.category_id);
+            const nextState = { ...rows[0] };
+            for (const [field, value] of Object.entries(allowedFields)) {
+                if (value !== undefined) nextState[field] = value;
+            }
+            await assertFeaturedDisplayOrderAvailable(connection, nextState, id);
+            await connection.execute(query, updateValues);
+            const [updated] = await connection.execute(`
+                SELECT s.*, sc.name as category_name
+                FROM skills s
+                LEFT JOIN skill_categories sc ON s.category_id = sc.id
+                WHERE s.id = ?
+            `, [id]);
+            return updated[0] || null;
+        });
     },
 
     /**

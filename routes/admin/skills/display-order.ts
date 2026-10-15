@@ -31,10 +31,20 @@ const buildDisplayOrderConflictMessage = (displayOrder) => (
     `표시 순서 ${displayOrder}은(는) 이미 사용 중입니다. 다른 순서를 선택해주세요.`
 );
 
+const respondToDisplayOrderConflict = (error, res) => {
+    if (error?.code !== 'SKILL_DISPLAY_ORDER_CONFLICT') return false;
+    res.status(400).json({
+        success: false,
+        message: buildDisplayOrderConflictMessage(error.displayOrder)
+    });
+    return true;
+};
+
 module.exports = {
     buildDisplayOrderConflictMessage,
     findFeaturedDisplayOrderConflict,
     getNextDisplayOrder,
-    getNextFeaturedState
+    getNextFeaturedState,
+    respondToDisplayOrderConflict
 };
 export {};

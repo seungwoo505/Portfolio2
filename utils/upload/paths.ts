@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const uploadImageDir = path.join(__dirname, '..', '..', 'uploads', 'images');
-const uploadedImageFilenamePattern = /^\d+-[a-zA-Z0-9가-힣]+\.(jpe?g|png|gif|webp)$/i;
+const uploadedImageFilenamePattern = /^\d+-[a-zA-Z0-9가-힣]+(?:-[a-f0-9]{32})?\.(jpe?g|png|gif|webp)$/i;
 
 const ensureUploadImageDir = (): void => {
     if (!fs.existsSync(uploadImageDir)) {

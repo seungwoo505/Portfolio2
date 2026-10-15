@@ -5,7 +5,8 @@ const { createRedisClient } = require('./client');
 type RedisClientLike = {
     isOpen?: boolean;
     connect: () => Promise<void>;
-    quit: () => Promise<void>;
+    close: () => Promise<void>;
+    destroy: () => void;
 };
 
 const getErrorMessage = (error: unknown): string => (
@@ -46,17 +47,18 @@ class RedisCacheConnection {
     }
 
     async connect({ force = false }: { force?: boolean } = {}): Promise<boolean> {
-        if (this.isConnected && this.client?.isOpen) {
+        if (this.connectPromise) {
+            return await this.connectPromise;
+        }
+
+        if (this.client?.isOpen) {
+            this.isConnected = true;
             return true;
         }
 
         const now = Date.now();
         if (!force && this.lastConnectAttemptAt && now - this.lastConnectAttemptAt < this.retryDelayMs) {
             return false;
-        }
-
-        if (this.connectPromise) {
-            return await this.connectPromise;
         }
 
         this.lastConnectAttemptAt = now;
@@ -72,6 +74,9 @@ class RedisCacheConnection {
             } catch (error) {
                 logger.warn('Redis Unix 소켓 초기화 실패', { error: getErrorMessage(error) });
                 this.isConnected = false;
+                if (this.client?.isOpen) {
+                    this.client.destroy();
+                }
                 this.client = null;
                 return false;
             } finally {
@@ -91,9 +96,16 @@ class RedisCacheConnection {
     }
 
     async disconnect(): Promise<void> {
-        if (this.client) {
-            if (this.client.isOpen) {
-                await this.client.quit();
+        const client = this.client;
+        try {
+            if (client?.isOpen) {
+                await client.close();
+            }
+        } catch (error) {
+            logger.warn('Redis Unix 소켓 종료 실패', { error: getErrorMessage(error) });
+        } finally {
+            if (client?.isOpen) {
+                client.destroy();
             }
             this.client = null;
             this.isConnected = false;

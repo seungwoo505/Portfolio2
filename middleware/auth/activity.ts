@@ -27,15 +27,19 @@ const getErrorStack = (error: unknown): string | undefined => (
  */
 const logActivity = (action: string): RequestHandler => {
     return (req, res, next) => {
-        res.on('finish', () => {
-            if (res.statusCode >= 400 || !req.admin) {
+        let recorded = false;
+        let jsonResponseSent = false;
+        const recordSuccess = (data?: unknown) => {
+            if (recorded || !req.admin) {
                 return;
             }
+            recorded = true;
+
+            const resourceType = inferResourceType(req);
+            const resourceId = getResourceId(req, data);
 
             setImmediate(async () => {
                 try {
-                    const resourceType = inferResourceType(req);
-                    const resourceId = getResourceId(req);
                     const details = buildActivityDetails(action, req, resourceType, resourceId);
 
                     await AdminActivityLogs.log(
@@ -56,6 +60,26 @@ const logActivity = (action: string): RequestHandler => {
                     });
                 }
             });
+        };
+
+        const originalJson = res.json;
+        res.json = function jsonWithActivity(body: unknown) {
+            const responseEnded = this.headersSent || this.writableEnded || this.destroyed;
+            if (!responseEnded) jsonResponseSent = true;
+            if (
+                body !== null && typeof body === 'object' && 'success' in body && body.success === true
+                && (this.statusCode < 400 || responseEnded)
+            ) {
+                // 타임아웃 응답 뒤 완료된 변경도 실제 성공 결과를 기준으로 한 번 기록한다.
+                recordSuccess('data' in body ? body.data : undefined);
+            }
+            if (responseEnded) return this;
+            return originalJson.call(this, body);
+        };
+
+        res.once('finish', () => {
+            // JSON 외의 성공 응답도 지원한다. JSON 경로와는 중복 기록하지 않는다.
+            if (!jsonResponseSent && res.statusCode < 400) recordSuccess();
         });
 
         next();

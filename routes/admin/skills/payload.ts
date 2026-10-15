@@ -51,7 +51,7 @@ const setStringField = (payload, body, field, { nullable = true } = {}) => {
         payload[field] = null;
         return null;
     }
-    if (value === '') {
+    if (value === '' || (value === null && !nullable)) {
         return `${field} 값이 필요합니다.`;
     }
 
@@ -60,6 +60,9 @@ const setStringField = (payload, body, field, { nullable = true } = {}) => {
 };
 
 const normalizeSkillPayload = (body: Record<string, any> = {}, { requireRequired = false } = {}) => {
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+        return { error: '기술 스택 입력값은 객체여야 합니다.' };
+    }
     const payload: Record<string, any> = {};
 
     if (requireRequired && !hasOwn(body, 'name')) {

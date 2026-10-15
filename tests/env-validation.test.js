@@ -69,6 +69,19 @@ test('production env validation rejects weak bootstrap credentials when provided
     assert.match(result.errors.join('\n'), /ADMIN_BOOTSTRAP_PASSWORD/);
 });
 
+test('초기 관리자 환경 변수도 잘리는 비밀번호를 허용하지 않는다', () => {
+    for (const password of ['A1' + 'x'.repeat(71), 'A1' + '한'.repeat(24)]) {
+        const result = validateProductionEnv({
+            ...validProductionEnv(),
+            ADMIN_BOOTSTRAP_USERNAME: 'bootstrap',
+            ADMIN_BOOTSTRAP_EMAIL: 'bootstrap@company.net',
+            ADMIN_BOOTSTRAP_PASSWORD: password
+        });
+        assert.equal(result.ok, false);
+        assert.match(result.errors.join('\n'), /ADMIN_BOOTSTRAP_PASSWORD.*72바이트/);
+    }
+});
+
 test('production env validation rejects partially numeric DB_PORT values', () => {
     const result = validateProductionEnv({
         ...validProductionEnv(),

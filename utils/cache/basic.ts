@@ -1,4 +1,4 @@
-const { cache, logger } = require('./store');
+const { cache, logger, invalidatePendingCacheLoads } = require('./store');
 
 const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : String(error)
@@ -42,6 +42,7 @@ module.exports = {
      */
     del(key: string): boolean {
         try {
+            invalidatePendingCacheLoads(pendingKey => pendingKey === key);
             return cache.del(key);
         } catch (error) {
             logger.error('캐시 삭제 실패', { key, error: getErrorMessage(error) });
@@ -67,6 +68,7 @@ module.exports = {
      * @returns {any} 처리 결과
      */
     flush(): void {
+        invalidatePendingCacheLoads(() => true);
         return cache.flushAll();
     },
 
@@ -79,6 +81,8 @@ module.exports = {
         const keys: string[] = cache.keys();
         const regex = new RegExp(pattern);
         let deletedCount = 0;
+
+        invalidatePendingCacheLoads(key => regex.test(key));
 
         keys.forEach((key) => {
             if (regex.test(key)) {

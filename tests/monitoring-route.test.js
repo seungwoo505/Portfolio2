@@ -61,6 +61,7 @@ const loadMonitoringRoute = ({ cacheFlushes, redisFlushes }) => {
     stubRootModule(['utils', 'redis-cache.ts'], {
         flush: async () => {
             redisFlushes.push('redis');
+            return true;
         },
         getStats: async () => ({ connected: false }),
         get: async () => null,

@@ -3,6 +3,7 @@ const { createLogFormat } = require('./format');
 const { attachLoggerExtensions } = require('./extensions');
 const {
     isVerboseEnabled,
+    reportLoggerError,
     slowRequestMs,
     transport
 } = require('./runtime');
@@ -15,8 +16,11 @@ const logger = winston.createLogger({
         new winston.transports.Console({
             format: createLogFormat()
         })
-    ]
+    ].filter(Boolean)
 });
+
+// Winston은 transport 오류를 logger에도 재방출한다.
+logger.on('error', reportLoggerError);
 
 attachLoggerExtensions(logger, {
     isVerboseEnabled,

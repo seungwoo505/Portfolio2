@@ -1,10 +1,14 @@
 const {
     bcrypt,
     crypto,
+    createQueryContext,
+    defaultQueryContext,
     executeQuery,
     executeQuerySingle,
+    executeTransaction,
     logger
 } = require('./common');
+const { getPasswordByteLimitError } = require('../../utils/admin-validation');
 
 module.exports = {
     /**
@@ -37,7 +41,9 @@ module.exports = {
             throw new Error('계정이 일시적으로 잠겨있습니다.');
         }
 
-        const isValidPassword = await bcrypt.compare(password, user.password_hash);
+        const isValidPassword = typeof password === 'string'
+            && !getPasswordByteLimitError(password)
+            && await bcrypt.compare(password, user.password_hash);
 
         if (!isValidPassword) {
             logger.security('로그인 실패 - 잘못된 비밀번호', {
@@ -49,27 +55,47 @@ module.exports = {
             throw new Error('비밀번호가 올바르지 않습니다.');
         }
 
-        await this.handleSuccessfulLogin(user.id, ipAddress);
+        const result = await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            // 비밀번호 교체와 세션 발급이 같은 사용자 행 잠금을 사용한다.
+            const currentUser = await db.querySingle(`
+                SELECT * FROM admin_users WHERE id = ? FOR UPDATE
+            `, [user.id]);
 
-        const sessionId = crypto.randomUUID();
-        const token = this.generateToken(user, ipAddress, sessionId);
-        const refreshToken = this.generateRefreshToken(user, ipAddress, sessionId);
+            if (!currentUser || !currentUser.is_active) {
+                throw new Error('사용자를 찾을 수 없습니다.');
+            }
+            if (currentUser.locked_until && new Date(currentUser.locked_until) > new Date()) {
+                throw new Error('계정이 일시적으로 잠겨있습니다.');
+            }
+            if (currentUser.password_hash !== user.password_hash) {
+                throw new Error('비밀번호가 올바르지 않습니다.');
+            }
 
-        await this.createSession({
-            sessionId,
-            adminId: user.id,
-            refreshToken,
-            ipAddress,
-            userAgent
+            await this.handleSuccessfulLogin(currentUser.id, ipAddress, db);
+
+            const sessionId = crypto.randomUUID();
+            const token = this.generateToken(currentUser, ipAddress, sessionId);
+            const refreshToken = this.generateRefreshToken(currentUser, ipAddress, sessionId);
+
+            await this.createSession({
+                sessionId,
+                adminId: currentUser.id,
+                refreshToken,
+                ipAddress,
+                userAgent
+            }, db);
+
+            return {
+                user: this.sanitizeUser(currentUser),
+                token,
+                refreshToken
+            };
         });
 
-        logger.auth('로그인 성공', this.sanitizeUser(user), { ipAddress });
+        logger.auth('로그인 성공', result.user, { ipAddress });
 
-        return {
-            user: this.sanitizeUser(user),
-            token,
-            refreshToken
-        };
+        return result;
     },
 
     /**
@@ -78,11 +104,12 @@ module.exports = {
      * @returns {Promise<any>} 처리 결과
      */
     async incrementFailedAttempts(id) {
+        // 단일 테이블 UPDATE의 CASE는 앞에서 증가한 실패 횟수로 평가된다.
         await executeQuery(`
             UPDATE admin_users
             SET failed_login_attempts = failed_login_attempts + 1,
                 locked_until = CASE
-                    WHEN failed_login_attempts >= 4 THEN DATE_ADD(NOW(), INTERVAL 30 MINUTE)
+                    WHEN failed_login_attempts >= 5 THEN DATE_ADD(NOW(), INTERVAL 30 MINUTE)
                     ELSE locked_until
                 END
             WHERE id = ?
@@ -95,8 +122,8 @@ module.exports = {
      * @param {*} ipAddress 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async handleSuccessfulLogin(id, ipAddress) {
-        await executeQuery(`
+    async handleSuccessfulLogin(id, ipAddress, db = defaultQueryContext) {
+        await db.query(`
             UPDATE admin_users
             SET failed_login_attempts = 0,
                 locked_until = NULL,

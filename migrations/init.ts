@@ -34,9 +34,13 @@ const ensureMigrationTable = async (connection) => {
 };
 
 const isApplied = async (connection, name) => {
+    // TypeScript 전환 전의 JavaScript 적용 이력도 동일 마이그레이션으로 취급한다.
+    const names = /\.(js|ts)$/.test(name)
+        ? [name.replace(/\.(js|ts)$/, '.js'), name.replace(/\.(js|ts)$/, '.ts')]
+        : [name];
     const [rows] = await connection.execute(
-        'SELECT id FROM schema_migrations WHERE name = ? LIMIT 1',
-        [name]
+        `SELECT id FROM schema_migrations WHERE name IN (${names.map(() => '?').join(', ')}) LIMIT 1`,
+        names
     );
     return rows.length > 0;
 };
@@ -65,11 +69,14 @@ const runJsMigration = async (connection, filePath) => {
     await migration.up(connection, logger);
 };
 
-const getMigrationFiles = () => (
-    fs.readdirSync(migrationsDir)
-        .filter((name) => /^\d+_.+\.(sql|js)$/.test(name))
-        .sort((a, b) => a.localeCompare(b))
-);
+const getMigrationFiles = () => {
+    const files = fs.readdirSync(migrationsDir)
+        .filter((name) => /^\d+_.+\.(sql|js|ts)$/.test(name));
+    const names = new Set(files);
+    return files
+        .filter((name) => !name.endsWith('.js') || !names.has(name.replace(/\.js$/, '.ts')))
+        .sort((a, b) => a.localeCompare(b));
+};
 
 async function runMigration() {
     const connection = await createConnection();

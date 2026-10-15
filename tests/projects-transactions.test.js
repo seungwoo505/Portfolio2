@@ -2,6 +2,20 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createModelFixture, hasOperation } = require('./helpers/content-model-fixture');
 
+test('프로젝트 목록과 개수 검색에 저장된 기본 설명을 포함한다', async () => {
+    const fixture = createModelFixture(['models', 'projects.ts']);
+    await fixture.model.getWithFilters({ search: '설명 검색' });
+    await fixture.model.getCountWithFilters({ search: '설명 검색' });
+    const queries = fixture.operations.filter(operation => operation.sql.startsWith('pool'));
+
+    assert.equal(queries.length, 2);
+    for (const query of queries) {
+        assert.match(query.sql, /p\.description like \?/);
+        assert.equal(query.params.filter(value => value === '%설명 검색%').length, 7);
+        assert.equal((query.sql.match(/\?/g) || []).length, query.params.length);
+    }
+});
+
 test('Projects.create writes the project and tags inside one transaction connection', async () => {
     const fixture = createModelFixture(['models', 'projects.ts']);
 
@@ -81,7 +95,7 @@ test('Projects.getWithFilters normalizes array query values', async () => {
     const listQuery = fixture.operations.find((operation) => operation.sql.startsWith('pool:select p.*'));
     assert.ok(listQuery);
     assert.equal(listQuery.sql.includes('order by p.is_featured desc, p.title desc'), true);
-    assert.deepEqual(listQuery.params, [0, 'backend', 'Node.js', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', 10, 0]);
+    assert.deepEqual(listQuery.params, [0, 'backend', 'Node.js', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', '%portfolio%', 10, 0]);
 });
 
 test('Projects.update can explicitly clear demo_url through project_url', async () => {

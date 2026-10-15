@@ -37,18 +37,18 @@ const extractKeywords = async function (this: GeminiServiceContext, content: str
         });
         const result = await this.model.generateContent(prompt);
         const response = await result.response;
-        let keywordsText = response.text().trim();
+        const keywordsText = response.text().trim();
 
         verboseDebug('Gemini API 키워드 원본 응답:', keywordsText);
         verboseDebug('보호된 기술 명칭들:', protectedTerms);
 
-        Object.entries(protectedTerms).forEach(([placeholder, originalTerm]) => {
-            keywordsText = keywordsText.replace(new RegExp(placeholder, 'g'), originalTerm);
-        });
-
-        verboseDebug('기술 명칭 복원 후 키워드:', keywordsText);
-
-        const keywords = this.parseAndCleanKeywords(keywordsText, maxKeywords);
+        // 구분자가 포함된 기술명도 한 키워드로 유지하도록 파싱 후 복원한다.
+        const keywords = [...new Set(this.parseAndCleanKeywords(keywordsText, maxKeywords).map(keyword => (
+            Object.entries(protectedTerms).reduce(
+                (restored, [placeholder, originalTerm]) => restored.replaceAll(placeholder, originalTerm),
+                keyword
+            )
+        )))];
 
         verboseDebug('최종 파싱된 키워드:', keywords);
         return keywords.length > 0 ? keywords : this.fallbackKeywords(content, maxKeywords);

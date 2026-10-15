@@ -1,9 +1,14 @@
 const {
     bcrypt,
+    createQueryContext,
+    defaultQueryContext,
     executeQuery,
     executeQuerySingle,
+    executeTransaction,
     hasOwn
 } = require('./common');
+const { assertPasswordByteLimit, getPasswordByteLimitError } = require('../../utils/admin-validation');
+const { assertIdentifiersAvailable, withIdentifierWriteTransaction } = require('./identifier-lock');
 
 module.exports = {
     /**
@@ -11,8 +16,8 @@ module.exports = {
      * @param {*} id 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async getById(id) {
-        const user = await executeQuerySingle(`
+    async getById(id, db = defaultQueryContext) {
+        const user = await db.querySingle(`
             SELECT * FROM admin_users WHERE id = ?
         `, [id]);
 
@@ -50,24 +55,19 @@ module.exports = {
      * @returns {Promise<any>} 처리 결과
      */
     async create(data) {
-        const { username, email, password, full_name, role = 'admin' } = data;
-
-        const existing = await executeQuerySingle(`
-            SELECT id FROM admin_users WHERE username = ? OR email = ?
-        `, [username, email]);
-
-        if (existing) {
-            throw new Error('이미 존재하는 사용자명 또는 이메일입니다.');
-        }
+        const { username, email, password, full_name = null, role = 'admin' } = data;
+        assertPasswordByteLimit(password);
 
         const password_hash = await bcrypt.hash(password, 10);
-
-        const result = await executeQuery(`
-            INSERT INTO admin_users (username, email, password_hash, full_name, role)
-            VALUES (?, ?, ?, ?, ?)
-        `, [username, email, password_hash, full_name, role]);
-
-        return result.insertId;
+        return await withIdentifierWriteTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            await assertIdentifiersAvailable(db, username, email);
+            const result = await db.query(`
+                INSERT INTO admin_users (username, email, password_hash, full_name, role)
+                VALUES (?, ?, ?, ?, ?)
+            `, [username, email, password_hash, full_name, role]);
+            return result.insertId;
+        });
     },
 
     /**
@@ -96,6 +96,7 @@ module.exports = {
         }
 
         if (hasOwn(data, 'password') && data.password !== undefined) {
+            assertPasswordByteLimit(data.password);
             const passwordHash = await bcrypt.hash(data.password, 10);
             updateFields.push('password_hash = ?');
             updateValues.push(passwordHash);
@@ -109,14 +110,31 @@ module.exports = {
         updateFields.push('updated_at = NOW()');
         updateValues.push(id);
 
+        const changesIdentifiers = ['username', 'email'].some(field => hasOwn(data, field) && data[field] !== undefined);
+        if (shouldRevokeSessions || changesIdentifiers) {
+            const transaction = changesIdentifiers ? withIdentifierWriteTransaction : executeTransaction;
+            return await transaction(async (connection) => {
+                const db = createQueryContext(connection);
+                const currentUser = await db.querySingle('SELECT * FROM admin_users WHERE id = ? FOR UPDATE', [id]);
+                if (changesIdentifiers && currentUser) {
+                    await assertIdentifiersAvailable(db,
+                        hasOwn(data, 'username') && data.username !== undefined ? data.username : currentUser.username,
+                        hasOwn(data, 'email') && data.email !== undefined ? data.email : currentUser.email,
+                        id);
+                }
+                await db.query(
+                    `UPDATE admin_users SET ${updateFields.join(', ')} WHERE id = ?`,
+                    updateValues
+                );
+                if (shouldRevokeSessions) await this.revokeUserSessions(id, null, db);
+                return await this.getById(id, db);
+            });
+        }
+
         await executeQuery(
             `UPDATE admin_users SET ${updateFields.join(', ')} WHERE id = ?`,
             updateValues
         );
-
-        if (shouldRevokeSessions) {
-            await this.revokeUserSessions(id);
-        }
 
         return await this.getById(id);
     },
@@ -129,6 +147,7 @@ module.exports = {
      * @returns {Promise<any>} 처리 결과
      */
     async changePassword(id, oldPassword, newPassword, currentSessionId = null) {
+        assertPasswordByteLimit(newPassword);
         const user = await executeQuerySingle(`
             SELECT password_hash FROM admin_users WHERE id = ?
         `, [id]);
@@ -137,20 +156,35 @@ module.exports = {
             throw new Error('사용자를 찾을 수 없습니다.');
         }
 
-        const isValid = await bcrypt.compare(oldPassword, user.password_hash);
+        const isValid = typeof oldPassword === 'string'
+            && !getPasswordByteLimitError(oldPassword)
+            && await bcrypt.compare(oldPassword, user.password_hash);
         if (!isValid) {
             throw new Error('기존 비밀번호가 올바르지 않습니다.');
         }
 
         const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
-        await executeQuery(`
-            UPDATE admin_users
-            SET password_hash = ?, updated_at = NOW()
-            WHERE id = ?
-        `, [newPasswordHash, id]);
+        await executeTransaction(async (connection) => {
+            const db = createQueryContext(connection);
+            const currentUser = await db.querySingle(`
+                SELECT password_hash FROM admin_users WHERE id = ? FOR UPDATE
+            `, [id]);
+            if (!currentUser) {
+                throw new Error('사용자를 찾을 수 없습니다.');
+            }
+            if (currentUser.password_hash !== user.password_hash) {
+                throw new Error('기존 비밀번호가 올바르지 않습니다.');
+            }
 
-        await this.revokeUserSessions(id, currentSessionId);
+            await db.query(`
+                UPDATE admin_users
+                SET password_hash = ?, updated_at = NOW()
+                WHERE id = ?
+            `, [newPasswordHash, id]);
+
+            await this.revokeUserSessions(id, currentSessionId, db);
+        });
     },
 
     /**

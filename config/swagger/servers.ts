@@ -1,7 +1,3 @@
-type SwaggerPort = string | number;
-type SwaggerPortOptions = {
-    port: SwaggerPort;
-};
 type SwaggerServer = {
     url: string;
     description: string;
@@ -14,21 +10,13 @@ function normalizeServerUrl(url: string | undefined): string | undefined {
     return url.replace(/\/+$/, "").replace(/\/api$/i, "");
 }
 
-const createSwaggerServers = ({ port }: SwaggerPortOptions): SwaggerServer[] => {
-    const productionServerUrl = normalizeServerUrl(process.env.MY_HOST || `http://localhost:${port}`);
-    const developmentServerUrl = normalizeServerUrl(`http://localhost:${port}`);
-
-    return [
-        {
-            url: productionServerUrl,
-            description: "Production Server"
-        },
-        {
-            url: developmentServerUrl,
-            description: "Development Server"
-        }
-    ];
-};
+// 상대 주소를 사용해야 문서를 연 API 서버로 요청하고 운영 CSP의 same-origin 정책을 지킵니다.
+const createSwaggerServers = (): SwaggerServer[] => [
+    {
+        url: "/",
+        description: "현재 API 서버"
+    }
+];
 
 module.exports = {
     createSwaggerServers,

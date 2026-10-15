@@ -3,6 +3,48 @@ const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const { createAdminUsersFixture } = require('./helpers/admin-auth-fixture');
 
+test('User-Agent 없이 로그인해도 세션 메타데이터를 SQL NULL로 저장한다', async () => {
+    const { AdminUsers, sessions, queryCalls } = await createAdminUsersFixture();
+    const result = await AdminUsers.login('admin', 'correct-password', '127.0.0.1');
+    assert.ok(result.token);
+    assert.equal(sessions[0].user_agent, null);
+    assert.equal(queryCalls.some(call => call.params.includes(undefined)), false);
+});
+
+test('동일한 리프레시 토큰의 동시 갱신은 한 번만 성공하고 반환된 토큰은 유효하다', async () => {
+    const { AdminUsers } = await createAdminUsersFixture();
+    const login = await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'unit-agent');
+    const decoded = AdminUsers.verifyRefreshToken(login.refreshToken);
+    const results = await Promise.allSettled([1, 2].map(() => (
+        AdminUsers.rotateRefreshSession(login.refreshToken, decoded, login.user, '127.0.0.1')
+    )));
+    const successes = results.filter(result => result.status === 'fulfilled');
+
+    assert.equal(successes.length, 1);
+    assert.equal(results.filter(result => result.status === 'rejected').length, 1);
+    await AdminUsers.verifyRefreshSession(successes[0].value, decoded);
+});
+
+for (const state of ['revoked', 'expired']) {
+    test(`검증 직후 ${state} 상태가 된 세션의 갱신은 성공으로 처리하지 않는다`, async () => {
+        const { AdminUsers, sessions } = await createAdminUsersFixture();
+        const login = await AdminUsers.login('admin', 'correct-password', '127.0.0.1', 'unit-agent');
+        const decoded = AdminUsers.verifyRefreshToken(login.refreshToken);
+        const generateRefreshToken = AdminUsers.generateRefreshToken.bind(AdminUsers);
+        AdminUsers.generateRefreshToken = (...args) => {
+            if (state === 'revoked') sessions[0].revoked_at = new Date();
+            else sessions[0].expires_at = new Date(Date.now() - 1000);
+            return generateRefreshToken(...args);
+        };
+
+        await assert.rejects(
+            AdminUsers.rotateRefreshSession(login.refreshToken, decoded, login.user, '127.0.0.1'),
+            /Refresh Token 세션/
+        );
+        assert.equal(sessions[0].refresh_token_hash, AdminUsers.hashToken(login.refreshToken));
+    });
+}
+
 test('AdminUsers.login creates a server session with a hashed refresh token', async () => {
     const { AdminUsers, sessions } = await createAdminUsersFixture();
 

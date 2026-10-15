@@ -1,4 +1,5 @@
 import type { Request } from 'express';
+const { getTagNamesError } = require('../../../utils/tag-names');
 
 type ProjectPayload = Record<string, unknown>;
 
@@ -45,6 +46,8 @@ const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
     }
 
     const body = trimStringFields(getPlainBody(req), ['title', 'description']);
+    const tagError = getTagNamesError(body.tags);
+    if (tagError) return { error: { statusCode: 400, message: tagError } };
     verboseDebug('projectSlug:', projectSlug);
 
     if (Object.keys(body).length === 0) {
@@ -75,7 +78,7 @@ const parseProjectUpdateRequest = (req: Request): ProjectUpdateParseResult => {
         };
     }
 
-    const sanitizedData = normalizeProjectContentFields(body);
+    const sanitizedData = normalizeProjectContentFields(body, { partial: true });
     verboseDebug('프로젝트 수정 - 원본 데이터:', body);
     verboseDebug('프로젝트 수정 - 정규화된 데이터:', sanitizedData);
     verboseDebug('프로젝트 수정 - undefined 값이 있는지 확인:', Object.values(sanitizedData).some(v => v === undefined));

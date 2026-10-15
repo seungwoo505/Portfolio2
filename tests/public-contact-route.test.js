@@ -14,8 +14,7 @@ test('public contact rejects duplicate submissions before creating another messa
     const router = loadPublicRoute({
         CacheUtils: createCacheStub(),
         ContactMessages: {
-            countRecentByIp: async () => 0,
-            create: async (payload) => {
+            createWithRateLimit: async (payload) => {
                 createdPayloads.push(payload);
                 return 42;
             }
@@ -48,8 +47,7 @@ test('public contact claims duplicate key before create completes', async () => 
     const router = loadPublicRoute({
         CacheUtils: createCacheStub(),
         ContactMessages: {
-            countRecentByIp: async () => 0,
-            create: async (payload) => {
+            createWithRateLimit: async (payload) => {
                 createdPayloads.push(payload);
                 await createBlock;
                 return 42;

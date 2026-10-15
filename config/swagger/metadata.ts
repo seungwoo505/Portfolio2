@@ -20,29 +20,43 @@ const swaggerInfo = {
                 - **권한**: super_admin, admin, editor 등급별 접근 제어
 
                 ## Rate Limiting
-                - 일반 API: 1분에 300회
+                - 일반 API: 1분에 실패 요청 300회 (성공 응답 제외)
                 - 관리자 API: 1분에 100회
-                - 로그인 API: 15분에 5회
+                - 로그인 API: 15분에 로그인 실패 5회 (성공 응답 제외)
                 - 문의 API: 15분에 5회
 
                 ## API 태그
-                - **Authentication**: 로그인/로그아웃, 토큰 관리
-                - **Dashboard**: 관리자 대시보드 통계
-                - **Blog**: 블로그 포스트 관리
-                - **Projects**: 프로젝트 관리
-                - **Profile**: 개인정보 조회/수정
-                - **Social**: 소셜 링크 관리
-                - **Skills**: 기술 스택 관리
-                - **Tags**: 태그 데이터
-                - **Experiences**: 경력 관리
-                - **Contact**: 연락처 메시지
-                - **Settings**: 사이트 설정
-                - **Search**: 검색 관련 API
+                ### 공개 API
+                - **Blog**: 공개 블로그 글 조회 및 조회수 증가
+                - **Projects**: 공개 프로젝트 조회 및 조회수 증가
+                - **Profile**: 공개 프로필 조회
+                - **Social**: 공개 소셜 링크 조회
+                - **Skills**: 공개 기술 스택 조회
+                - **Tags**: 공개 태그 조회
+                - **Experiences**: 공개 경력 및 타임라인 조회
+                - **Interests**: 공개 관심사 조회
+                - **Contact**: 문의 메시지 접수
+                - **Settings**: 공개 사이트 설정 조회
                 - **Health**: 서비스 상태 확인
-                - **Monitoring**: 시스템 모니터링
-                - **AI**: AI 지원 기능
-                - **Logs**: 시스템 활동 로그
-            `,
+                ### 시스템 모니터링
+                - **Monitoring**: 관리자 인증이 필요한 시스템 모니터링 및 캐시 제어
+                ### 관리자 API
+                - **Admin - Auth**: 관리자 로그인/로그아웃 및 토큰 관리
+                - **Admin - Profile**: 관리자 계정 정보 및 비밀번호 관리
+                - **Admin - Dashboard**: 관리자 대시보드 통계 조회
+                - **Admin - Users**: 관리자 계정 및 권한 관리
+                - **Admin - Projects**: 프로젝트 관리
+                - **Admin - Blog**: 블로그 콘텐츠 관리
+                - **Admin - AI**: AI 지원 기능
+                - **Admin - Contacts**: 문의 메시지 관리
+                - **Admin - Tags**: 태그 관리
+                - **Admin - Skills**: 기술 스택 및 카테고리 관리
+                - **Admin - Files**: 파일 업로드 및 삭제
+                - **Admin - Settings**: 사이트 설정 관리
+                - **Admin - Logs**: 관리자 활동 로그 및 통계
+                - **Admin - Experiences**: 경력 및 활동 관리
+                - **Admin - Interests**: 관심사 관리
+            `.split("\n").map(line => line.trim()).join("\n").trim(),
     contact: {
         name: "GitHub Issues",
         url: "https://github.com/seungwoo505/Portfolio2/issues"
@@ -68,7 +82,11 @@ const swaggerComponents = {
             properties: {
                 page: { type: "integer", example: 1 },
                 limit: { type: "integer", example: 10 },
-                total: { type: "integer", example: 42 },
+                total: {
+                    description: "전체 개수. DB COUNT 값은 숫자 문자열로 반환될 수 있습니다.",
+                    oneOf: [{ type: "integer", minimum: 0 }, { type: "string", pattern: "^[0-9]+$" }],
+                    example: "42"
+                },
                 totalPages: { type: "integer", example: 5 }
             }
         },
@@ -122,33 +140,43 @@ const swaggerComponents = {
         },
         LoginResponse: {
             type: "object",
+            required: ["success", "message", "data"],
             properties: {
                 success: {
                     type: "boolean",
                     example: true
                 },
-                token: {
-                    type: "string",
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                refreshToken: {
-                    type: "string",
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                user: {
+                message: { type: "string", example: "로그인되었습니다." },
+                data: {
                     type: "object",
+                    required: ["token", "refreshToken", "user", "permissions"],
                     properties: {
-                        id: {
-                            type: "integer",
-                            example: 1
+                        token: { type: "string", description: "액세스 토큰", example: "eyJhbGciOiJIUzI1NiIs..." },
+                        refreshToken: { type: "string", description: "갱신 토큰", example: "eyJhbGciOiJIUzI1NiIs..." },
+                        user: {
+                            type: "object",
+                            description: "password_hash를 제외한 관리자 정보",
+                            required: ["id", "username", "role"],
+                            properties: {
+                                id: { type: "integer", example: 1 },
+                                username: { type: "string", example: "admin" },
+                                email: { type: "string", format: "email" },
+                                full_name: { type: "string", nullable: true },
+                                role: { type: "string", enum: ["super_admin", "admin", "editor"] }
+                            }
                         },
-                        username: {
-                            type: "string",
-                            example: "admin"
-                        },
-                        role: {
-                            type: "string",
-                            example: "super_admin"
+                        permissions: {
+                            type: "array",
+                            description: "역할 권한과 직접 부여 권한을 합친 목록",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string", example: "dashboard.read" },
+                                    resource: { type: "string", example: "dashboard" },
+                                    action: { type: "string", example: "read" },
+                                    description: { type: "string", nullable: true }
+                                }
+                            }
                         }
                     }
                 }
@@ -205,9 +233,9 @@ const swaggerComponents = {
                     example: true
                 },
                 data: {
-                    type: "object",
-                    description: "응답 데이터"
-                }
+                    description: "응답 데이터. API에 따라 객체, 배열, 원시값 또는 null을 반환합니다."
+                },
+                message: { type: "string", description: "처리 결과 메시지" }
             }
         }
     }

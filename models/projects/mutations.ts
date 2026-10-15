@@ -3,9 +3,10 @@ const {
     createUniqueSlug,
     executeTransaction,
     hasOwn,
-    normalizeOptionalUrl,
-    toCsvStringArray
+    normalizeOptionalUrl
 } = require('./common');
+const { normalizeTagNames } = require('../../utils/tag-names');
+const { withSlugRetry } = require('../../utils/slug');
 
 const serializeContentJson = (value) => {
     if (value === undefined || value === null || value === '') {
@@ -26,10 +27,11 @@ module.exports = {
      * @returns {Promise<number>} 신규 프로젝트 ID
      */
     async create(data) {
+        const normalizedTags = normalizeTagNames(data.tags);
         const { title, slug: providedSlug, description, detailed_description, content, content_json, content_html, content_text, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         const finalDemoUrl = demo_url || project_url;
 
-        return await executeTransaction(async (connection) => {
+        return await withSlugRetry('projects', insert => executeTransaction(async (connection) => {
             const db = createQueryContext(connection);
             const slug = await createUniqueSlug({
                 value: title,
@@ -71,16 +73,15 @@ module.exports = {
                 INSERT INTO projects (title, slug, description, detailed_description, content, content_json, content_html, content_text, excerpt, meta_description, thumbnail_image, featured_image, demo_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
-            const result = await db.query(query, sanitizedData);
+            const result = await insert(() => db.query(query, sanitizedData));
             const projectId = result.insertId;
 
-            const normalizedTags = toCsvStringArray(tags);
             if (normalizedTags.length > 0) {
                 await this.updateTags(projectId, normalizedTags, db);
             }
 
             return projectId;
-        });
+        }));
     },
 
     /**
@@ -90,6 +91,7 @@ module.exports = {
      * @returns {Promise<Object>} 갱신된 프로젝트 정보
      */
     async update(id, data) {
+        const normalizedTags = normalizeTagNames(data.tags);
         const { title, slug: providedSlug, description, detailed_description, content, content_json, content_html, content_text, excerpt, meta_description, thumbnail_image, featured_image, demo_url, project_url, github_url, start_date, end_date, is_ongoing, status, is_featured, is_published, display_order, meta_keywords, tags } = data;
         const finalDemoUrl = hasOwn(data, 'demo_url')
             ? demo_url
@@ -99,7 +101,7 @@ module.exports = {
             const db = createQueryContext(connection);
             let slug = null;
 
-            if (providedSlug !== undefined || title !== undefined) {
+            if (providedSlug !== undefined) {
                 slug = await createUniqueSlug({
                     value: title,
                     providedSlug,
@@ -119,7 +121,7 @@ module.exports = {
                 updateFields.push('title = ?');
                 updateValues.push(title);
             }
-            if (providedSlug !== undefined || title !== undefined) {
+            if (providedSlug !== undefined) {
                 updateFields.push('slug = ?');
                 updateValues.push(slug);
             }
@@ -156,7 +158,7 @@ module.exports = {
             }
 
             if (hasOwn(data, 'tags')) {
-                await this.updateTags(id, tags, db);
+                await this.updateTags(id, normalizedTags, db);
             }
         });
 

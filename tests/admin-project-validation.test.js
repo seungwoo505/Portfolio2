@@ -2,6 +2,25 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
+for (const field of ['content_text', 'excerpt', 'meta_description']) {
+    test(`${field}만 수정할 때 기존 프로젝트 설명을 보존한다`, async () => {
+        const existing = { id: 1, description: '기존 사용자 지정 설명' };
+        const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{
+            segments: ['models', 'projects.ts'],
+            moduleExports: {
+                getBySlug: async () => existing,
+                update: async (_id, payload) => ({ ...existing, ...payload })
+            }
+        }]);
+        const result = await requestJson(router, '/projects/slug/project-a', {
+            method: 'PUT', body: { [field]: '수정 내용' }
+        });
+        assert.equal(result.status, 200);
+        assert.equal(result.body.data.description, '기존 사용자 지정 설명');
+        assert.equal(result.body.data[field], '수정 내용');
+    });
+}
+
 test('admin project create trims required strings before model call', async () => {
     const createdPayloads = [];
     const router = loadAdminRoute(['routes', 'admin', 'projects.ts'], [{

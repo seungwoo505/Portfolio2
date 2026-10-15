@@ -5,6 +5,23 @@ const {
     requestJson
 } = require('./helpers/skills-route-loader');
 
+for (const method of ['POST', 'PUT']) {
+    test(`기술명 null은 ${method} 저장 전에 400으로 거절한다`, async () => {
+        let saved = false;
+        const router = loadSkillsRoute({
+            getSkillById: async () => ({ id: 9 }),
+            createSkill: async () => { saved = true; return 9; },
+            updateSkill: async () => { saved = true; }
+        });
+        const response = await requestJson(router, method === 'POST' ? '/skills' : '/skills/9', {
+            method, body: { name: null, category_id: 1 }
+        });
+        assert.equal(response.status, 400);
+        assert.equal(response.body.message, '기술명을 입력해주세요.');
+        assert.equal(saved, false);
+    });
+}
+
 test('admin skills create normalizes numeric and boolean fields', async () => {
     const createdPayloads = [];
     const router = loadSkillsRoute({

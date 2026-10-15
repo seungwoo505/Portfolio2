@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { assertPasswordByteLimit } = require('../utils/admin-validation');
 
 const permissions = [
     ['dashboard.read', 'dashboard', 'read', '대시보드 조회'],
@@ -109,6 +110,7 @@ async function up(connection, logger) {
         return;
     }
 
+    assertPasswordByteLimit(password);
     const passwordHash = await bcrypt.hash(password, 10);
     await connection.execute(`
         INSERT INTO admin_users (username, email, password_hash, full_name, role, is_active)

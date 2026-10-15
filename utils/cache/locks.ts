@@ -19,6 +19,9 @@ module.exports = {
         const isStored = this.set(key, true, ttl);
         if (!isStored) {
             logger.warn('캐시 선점 저장 실패', { key });
+            throw Object.assign(new Error('캐시 선점을 저장하지 못했습니다.'), {
+                code: 'CACHE_CLAIM_UNAVAILABLE'
+            });
         }
         return true;
     },

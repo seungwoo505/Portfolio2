@@ -19,7 +19,7 @@ const findNaturalCutPoint = (text: string, maxLength: number): number => {
 
     const cutPoints = [' ', ',', '.', '!', '?', ')', ']', '}'];
 
-    for (let i = maxLength; i > maxLength * 0.7; i--) {
+    for (let i = maxLength - 1; i > maxLength * 0.7; i--) {
         if (cutPoints.includes(text[i])) {
             return i + 1;
         }
@@ -42,17 +42,16 @@ const formatSingleSentence = (sentence: string, maxLength: number): string => {
     return formatted;
 };
 
-const createKeywordBasedSummary = (text: string, _maxLength?: number): string => {
-    const words = text.match(/[가-힣A-Za-z]+/g) || [];
+const createKeywordBasedSummary = (text: string, maxLength = 160): string => {
+    // 기술명 내부의 점과 연결 문자를 유지해 Next.js를 Next로 줄이지 않는다.
+    const words = text.match(/\.?[A-Za-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*/g) || [];
     const techKeywords = words.filter(word =>
-        ['React', 'Next', 'JavaScript', 'TypeScript', 'Node', 'CSS', 'HTML'].includes(word)
+        ['React', 'Next.js', 'Next', 'JavaScript', 'TypeScript', 'Node.js', 'Node', '.NET', 'CSS', 'HTML'].includes(word)
     );
-
-    if (techKeywords.length > 0) {
-        return `${techKeywords[0]}를 사용한 개발 내용입니다.`;
-    }
-
-    return '개발 관련 내용입니다.';
+    const summary = techKeywords.length > 0
+        ? `${techKeywords[0]}를 사용한 개발 내용입니다.`
+        : '개발 관련 내용입니다.';
+    return summary.substring(0, maxLength);
 };
 
 function handleNoSentences(this: GeminiServiceContext, text: string, maxLength: number): string {

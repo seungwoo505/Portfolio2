@@ -6,6 +6,7 @@ const {
     hasOwn
 } = require('./common');
 const { serializeSettingValue } = require('./values');
+const { normalizeSettingValue } = require('../../utils/setting-values');
 
 module.exports = {
     /**
@@ -17,7 +18,7 @@ module.exports = {
      * @param {*} description 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async set(key, value, type = 'string', is_public = false, description = null, db = defaultQueryContext) {
+    async set(key, value, type = 'string', is_public = false, description = undefined, db = defaultQueryContext) {
         const stringValue = serializeSettingValue(value, type);
         const query = `
             INSERT INTO site_settings (setting_key, setting_value, setting_type, is_public, description)
@@ -26,10 +27,10 @@ module.exports = {
             setting_value = VALUES(setting_value),
             setting_type = VALUES(setting_type),
             is_public = VALUES(is_public),
-            description = COALESCE(VALUES(description), description),
+            ${description !== undefined ? 'description = VALUES(description),' : ''}
             updated_at = NOW()
         `;
-        await db.query(query, [key, stringValue, type, is_public, description]);
+        await db.query(query, [key, stringValue, type, is_public, description ?? null]);
         return await db.querySingle('SELECT * FROM site_settings WHERE setting_key = ?', [key]);
     },
 
@@ -44,11 +45,20 @@ module.exports = {
             const updatedSettings = [];
 
             for (const [key, config] of Object.entries(settings) as Array<[string, Record<string, any>]>) {
+                const existing = await db.querySingle(
+                    'SELECT * FROM site_settings WHERE setting_key = ? FOR UPDATE', [key]
+                );
+                const type = config.type ?? existing?.setting_type ?? 'string';
+                const isPublic = config.is_public ?? existing?.is_public ?? false;
+                const normalized = normalizeSettingValue(key, config.value, type);
+                if (normalized.error) {
+                    throw Object.assign(new Error(normalized.error), { code: 'INVALID_SETTING_VALUE' });
+                }
                 const setting = await this.set(
                     key,
-                    config.value,
-                    config.type,
-                    config.is_public,
+                    normalized.value,
+                    type,
+                    isPublic,
                     config.description,
                     db
                 );

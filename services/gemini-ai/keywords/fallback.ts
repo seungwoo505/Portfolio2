@@ -11,7 +11,7 @@ const fallbackKeywords = function (this: GeminiServiceContext, content: string, 
     allKeywords = allKeywords.filter(keyword => this.isValidKeyword(keyword));
 
     if (allKeywords.length === 0) {
-        return this.getDefaultKeywords(cleanText);
+        return this.getDefaultKeywords(cleanText).slice(0, maxKeywords);
     }
 
     return allKeywords.slice(0, maxKeywords);

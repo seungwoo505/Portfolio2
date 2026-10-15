@@ -4,9 +4,9 @@ const {
     resolveFromRoot,
     stubRootModule
 } = require('./module-loader');
-const { requestJson } = require('./admin-route-loader');
+const { requestJson } = require('./http-route-server');
 
-const loadSkillsRoute = (Skills) => {
+const loadSkillsRoute = (Skills, CacheUtils = { invalidateResources: () => 0 }) => {
     clearRootModules([
         ['routes', 'admin', 'skills.ts'],
         ['routes', 'admin', 'skills', 'index.ts'],
@@ -32,7 +32,7 @@ const loadSkillsRoute = (Skills) => {
         buildErrorLog: (error) => ({ error: error.message })
     });
     stubRootModule(['models', 'skills.ts'], Skills);
-    stubRootModule(['utils', 'cache.ts'], { invalidateResources: () => 0 });
+    stubRootModule(['utils', 'cache.ts'], CacheUtils);
     stubRootModule(['middleware', 'auth.ts'], {
         authenticateToken: (req, _res, next) => {
             req.admin = { id: 1, role: 'super_admin' };

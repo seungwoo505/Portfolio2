@@ -2,7 +2,7 @@ const { executeQuery } = require('../db-utils');
 const { getById } = require('./queries');
 
 const create = async (data) => {
-    const { title, description, icon, category, display_order } = data;
+    const { title, description = null, icon = null, category, display_order = 0 } = data;
     const query = `
         INSERT INTO interests (title, description, icon, category, display_order, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, NOW(), NOW())

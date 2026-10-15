@@ -20,27 +20,177 @@ const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : String(error)
 );
 
+
 /**
  * @swagger
  * /admin/users:
  *   get:
  *     summary: 관리자 계정 목록 조회
- *     tags: ['Admin - Users']
+ *     tags:
+ *       - Admin - Users
  *     security:
  *       - bearerAuth: []
+ *     description: '필요 권한: super_admin 역할.'
  *     responses:
- *       200:
- *         description: 관리자 목록 조회 성공
+ *       '200':
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       username:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                         format: email
+ *                       full_name:
+ *                         type: string
+ *                         nullable: true
+ *                       role:
+ *                         type: string
+ *                         enum:
+ *                           - super_admin
+ *                           - admin
+ *                           - editor
+ *                       is_active:
+ *                         oneOf:
+ *                           - type: boolean
+ *                           - type: integer
+ *                     additionalProperties: true
+ *                     description: password_hash를 제외한 관리자 계정 정보
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   post:
  *     summary: 관리자 계정 생성
- *     tags: ['Admin - Users']
+ *     tags:
+ *       - Admin - Users
  *     security:
  *       - bearerAuth: []
+ *     description: '필요 권한: super_admin 역할.'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 1
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 12
+ *                 maxLength: 72
+ *                 description: 영문과 숫자를 포함한 12자 이상. UTF-8 인코딩 기준 72바이트 이하입니다.
+ *                 example: NewStrongPass123
+ *               full_name:
+ *                 type: string
+ *                 nullable: true
+ *               role:
+ *                 type: string
+ *                 enum:
+ *                   - super_admin
+ *                   - admin
+ *                   - editor
+ *                 default: admin
+ *             required:
+ *               - username
+ *               - email
+ *               - password
  *     responses:
- *       201:
+ *       '201':
  *         description: 관리자 생성 성공
- *       400:
- *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                     full_name:
+ *                       type: string
+ *                       nullable: true
+ *                     role:
+ *                       type: string
+ *                       enum:
+ *                         - super_admin
+ *                         - admin
+ *                         - editor
+ *                     is_active:
+ *                       oneOf:
+ *                         - type: boolean
+ *                         - type: integer
+ *                   additionalProperties: true
+ *                   description: password_hash를 제외한 관리자 계정 정보
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/users', ...superAdminOnly, async (req: Request, res: Response) => {
     try {

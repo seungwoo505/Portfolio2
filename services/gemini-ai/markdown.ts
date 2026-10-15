@@ -1,5 +1,6 @@
 import type { CleanMarkdownResult, ProtectedTerms, TechTag } from "./types";
 
+const crypto = require('crypto');
 const { verboseDebug } = require('./common');
 
 type TagRow = {
@@ -73,11 +74,26 @@ module.exports = {
         }
 
         const protectedTerms: ProtectedTerms = {};
-        let protectedContent = content;
-        techTerms.forEach((term, index) => {
-            const placeholder = `__TECH_TERM_${index}__`;
-            protectedTerms[placeholder] = term;
-            protectedContent = protectedContent.replace(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), placeholder);
+        const canonicalTerms = new Map<string, string>(techTerms
+            .filter(term => typeof term === 'string' && term.length > 0)
+            .map((term): [string, string] => [term.toLowerCase(), term]));
+        const termPattern = [...canonicalTerms.values()]
+            .sort((left, right) => right.length - left.length)
+            .map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+            .join('|');
+        const tokenPrefix = `TECH${crypto.randomBytes(12).toString('hex')}TERM`;
+        const termTokens = new Map<string, string>();
+        let tokenIndex = 0;
+        // 한 번에 치환해 짧은 기술명이 이미 생성된 보호 표식을 다시 바꾸지 않게 한다.
+        const protectedContent = content.replace(new RegExp(termPattern, 'gi'), matchedTerm => {
+            const termKey = matchedTerm.toLowerCase();
+            const existingToken = termTokens.get(termKey);
+            if (existingToken) return existingToken;
+
+            const placeholder = `${tokenPrefix}${tokenIndex++}END`;
+            termTokens.set(termKey, placeholder);
+            protectedTerms[placeholder] = canonicalTerms.get(termKey) || matchedTerm;
+            return placeholder;
         });
 
         const cleaned = protectedContent

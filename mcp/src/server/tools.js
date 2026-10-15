@@ -1,3 +1,5 @@
+const { slugSchema } = require('./slug');
+
 const tools = [
     {
         name: 'get_profile',
@@ -34,7 +36,7 @@ const tools = [
             additionalProperties: false,
             required: ['slug'],
             properties: {
-                slug: { type: 'string', minLength: 1 }
+                slug: slugSchema
             }
         }
     },
@@ -63,7 +65,7 @@ const tools = [
             additionalProperties: false,
             required: ['slug'],
             properties: {
-                slug: { type: 'string', minLength: 1 }
+                slug: slugSchema
             }
         }
     },

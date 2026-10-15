@@ -1,6 +1,8 @@
 const logger = require('../../log');
 
 type RedisCommandClient = {
+    isOpen?: boolean;
+    ping: () => Promise<string>;
     get: (key: string) => Promise<string | null>;
     setEx: (key: string, ttl: number, value: string) => Promise<unknown>;
     del: (key: string | string[]) => Promise<unknown>;
@@ -39,7 +41,7 @@ const runWithClient = async function <T>(
         return await operation(this.client);
     } catch (error) {
         logger.error(errorMessage, { ...meta, error: getErrorMessage(error) });
-        this.isConnected = false;
+        this.isConnected = Boolean(this.client?.isOpen);
         return fallback;
     }
 };
@@ -49,6 +51,12 @@ const get = async function (this: RedisCommandContext, key: string): Promise<unk
         const value = await this.client.get(key);
         return value ? JSON.parse(value) : null;
     }, null, 'Redis GET 오류', { key });
+};
+
+const ping = async function (this: RedisCommandContext): Promise<boolean> {
+    return await this.runWithClient(async (client) => (
+        await client.ping() === 'PONG'
+    ), false, 'Redis PING 오류');
 };
 
 const set = async function (this: RedisCommandContext, key: string, value: unknown, ttl = 3600): Promise<boolean> {
@@ -88,6 +96,7 @@ module.exports = {
     delPattern,
     flush,
     get,
+    ping,
     runWithClient,
     set
 };

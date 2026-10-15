@@ -29,6 +29,10 @@ const createCacheStub = () => {
             invalidations.push(['delPattern', pattern]);
             return 0;
         },
+        invalidateResources: (...resources) => {
+            invalidations.push(['invalidateResources', ...resources]);
+            return 0;
+        },
         generateKey: (prefix, ...parts) => `${prefix}:${parts.join(':')}`,
         cacheApiResponse: async (_key, loader) => loader()
     };

@@ -81,12 +81,14 @@ const appendProjectFilterConditions = (normalizedFilters) => {
         const searchTerm = `%${normalizedFilters.search}%`;
         whereConditions.push(`(
             p.title LIKE ? OR
+            p.description LIKE ? OR
             p.short_description LIKE ? OR
             p.detailed_description LIKE ? OR
             p.content LIKE ? OR
+            p.content_text LIKE ? OR
             p.technologies LIKE ?
         )`);
-        queryParams.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+        queryParams.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
     }
 
     return {

@@ -8,6 +8,7 @@ const {
 } = require('../db-utils');
 const CacheUtils = require('../../utils/cache');
 const { createUniqueSlug } = require('../../utils/slug');
+const { withContentTags } = require('../content-tags');
 const {
     toBooleanOrNull,
     toChoice,
@@ -28,8 +29,12 @@ const defaultQueryContext = {
 const mapBlogPostListItem = (post) => ({
     ...post,
     featured: Boolean(post.is_featured),
-    tags: post.tags ? post.tags.split(',') : []
+    tags: post.tags || []
 });
+
+const mapBlogPostListItems = async (posts) => (
+    (await withContentTags(posts, 'blog_post', executeQuery)).map(mapBlogPostListItem)
+);
 
 const normalizeTagNames = (tagNames) => {
     if (Array.isArray(tagNames)) return tagNames;
@@ -47,6 +52,7 @@ module.exports = {
     executeQuerySingle,
     executeTransaction,
     mapBlogPostListItem,
+    mapBlogPostListItems,
     normalizeTagNames,
     toBooleanOrNull,
     toChoice,

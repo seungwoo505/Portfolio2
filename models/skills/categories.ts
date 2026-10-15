@@ -1,4 +1,5 @@
 const { executeQuery, executeQuerySingle } = require('./common');
+const { withSkillWriteLock } = require('./write-lock');
 
 module.exports = {
     /**
@@ -52,7 +53,18 @@ module.exports = {
      * @returns {Promise<any>} 처리 결과
      */
     async deleteCategory(id) {
-        await executeQuery('DELETE FROM skill_categories WHERE id = ?', [id]);
+        return await withSkillWriteLock(async (connection) => {
+            const [categories] = await connection.execute('SELECT id FROM skill_categories WHERE id = ?', [id]);
+            if (!categories[0]) return false;
+            const [skills] = await connection.execute('SELECT id, name FROM skills WHERE category_id = ?', [id]);
+            if (skills.length > 0) {
+                throw Object.assign(new Error('이 카테고리를 사용하는 기술 스택이 있어서 삭제할 수 없습니다.'), {
+                    code: 'SKILL_CATEGORY_IN_USE', categoryId: id, skills
+                });
+            }
+            await connection.execute('DELETE FROM skill_categories WHERE id = ?', [id]);
+            return true;
+        });
     }
 };
 export {};

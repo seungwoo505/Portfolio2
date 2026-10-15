@@ -138,3 +138,57 @@ test('cacheApiResponse reuses an in-flight loader for the same key', async () =>
         CacheUtils.flush();
     }
 });
+
+for (const method of ['resource', 'key', 'flush']) {
+    test(`${method} 무효화 후 이전 로딩이 새 로딩이나 캐시를 덮어쓰지 않는다`, async () => {
+        clearRootModules([...cacheModules, ['log.ts']]);
+        stubRootModule(['log.ts'], createNoopLogger());
+        const CacheUtils = require(resolveFromRoot(['utils', 'cache.ts']));
+        CacheUtils.flush();
+        const key = 'blog_post:public:slug:post-a';
+        let resolveOld;
+        let resolveNew;
+        let newCalls = 0;
+        const oldBarrier = new Promise(resolve => { resolveOld = resolve; });
+        const newBarrier = new Promise(resolve => { resolveNew = resolve; });
+        const oldLoad = CacheUtils.cacheApiResponse(key, async () => {
+            await oldBarrier;
+            return { content: '이전 공개 내용' };
+        });
+        const loads = [oldLoad];
+
+        try {
+            if (method === 'resource') CacheUtils.invalidateResources('blog');
+            if (method === 'key') CacheUtils.del(key);
+            if (method === 'flush') CacheUtils.flush();
+
+            const freshLoad = CacheUtils.cacheApiResponse(key, async () => {
+                newCalls += 1;
+                await newBarrier;
+                return null;
+            });
+            loads.push(freshLoad);
+            assert.equal(newCalls, 1);
+
+            resolveOld();
+            await oldLoad;
+            assert.equal(CacheUtils.has(key), false);
+
+            const joinedLoad = CacheUtils.cacheApiResponse(key, async () => {
+                newCalls += 1;
+                return { content: '중복 로딩' };
+            });
+            loads.push(joinedLoad);
+            assert.equal(newCalls, 1);
+
+            resolveNew();
+            assert.deepEqual(await Promise.all([freshLoad, joinedLoad]), [null, null]);
+            assert.equal(CacheUtils.get(key), null);
+        } finally {
+            resolveOld();
+            resolveNew();
+            await Promise.allSettled(loads);
+            CacheUtils.flush();
+        }
+    });
+}

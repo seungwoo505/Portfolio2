@@ -14,12 +14,15 @@ const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : String(error)
 );
 
-const sendAuthError = (res: Response, { statusCode, message }: AuthError) => (
-    res.status(statusCode).json({
+const responseEnded = (res: Response): boolean => res.headersSent || res.writableEnded || res.destroyed;
+
+const sendAuthError = (res: Response, { statusCode, message }: AuthError) => {
+    if (responseEnded(res)) return;
+    return res.status(statusCode).json({
         success: false,
         message
-    })
-);
+    });
+};
 
 const sendExpiredTokenError = (res: Response) => sendAuthError(res, {
     statusCode: 401,
@@ -35,6 +38,7 @@ const sendExpiredTokenError = (res: Response) => sendAuthError(res, {
  */
 const authenticateToken: RequestHandler = async (req, res, next) => {
     try {
+        if (req.aborted || responseEnded(res)) return;
         const { token, refreshToken } = extractAuthTokens(req);
 
         if (!token) {
@@ -46,6 +50,7 @@ const authenticateToken: RequestHandler = async (req, res, next) => {
 
         try {
             const result = await authenticateAccessToken(req, token);
+            if (req.aborted || responseEnded(res)) return;
             if (result.error) {
                 return sendAuthError(res, result.error);
             }
@@ -53,12 +58,14 @@ const authenticateToken: RequestHandler = async (req, res, next) => {
             req.admin = result.admin;
             return next();
         } catch (_tokenError) {
+            if (req.aborted || responseEnded(res)) return;
             if (!refreshToken) {
                 return sendExpiredTokenError(res);
             }
 
             try {
                 const result = await refreshAccessToken(req, res, refreshToken);
+                if (req.aborted || responseEnded(res)) return;
                 if (result.error) {
                     return sendAuthError(res, result.error);
                 }
@@ -66,6 +73,7 @@ const authenticateToken: RequestHandler = async (req, res, next) => {
                 req.admin = result.admin;
                 return next();
             } catch (refreshError) {
+                if (req.aborted || responseEnded(res)) return;
                 logger.warn('토큰 재발급 실패', {
                     error: getErrorMessage(refreshError),
                     ip: getClientIp(req)
@@ -75,6 +83,7 @@ const authenticateToken: RequestHandler = async (req, res, next) => {
             }
         }
     } catch (error) {
+        if (req.aborted || responseEnded(res)) return;
         logger.error('인증 미들웨어 오류', { error: getErrorMessage(error) });
         return res.status(500).json({
             success: false,

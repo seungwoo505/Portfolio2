@@ -18,13 +18,16 @@ const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : String(error)
 );
 
+
 /**
  * @swagger
  * /admin/login:
  *   post:
  *     summary: 관리자 로그인
- *     description: 관리자 계정으로 로그인하여 JWT 토큰을 발급받습니다.
- *     tags: ['Admin - Auth']
+ *     tags:
+ *       - Admin - Auth
+ *     security: []
+ *     description: 사용자명 또는 이메일과 비밀번호로 로그인합니다. 비밀번호는 UTF-8 기준 72바이트 이하여야 합니다. 실패 사유는 공통 인증 실패 메시지로 반환합니다.
  *     requestBody:
  *       required: true
  *       content:
@@ -32,20 +35,26 @@ const getErrorMessage = (error: unknown): string => (
  *           schema:
  *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
- *       200:
- *         description: 로그인 성공
+ *       '200':
+ *         description: 성공
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/LoginResponse'
- *       401:
- *         description: 인증 실패
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       429:
- *         description: 너무 많은 로그인 시도
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '429':
+ *         description: 요청 제한 초과
  *         content:
  *           application/json:
  *             schema:

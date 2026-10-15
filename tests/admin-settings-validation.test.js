@@ -2,6 +2,35 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { loadAdminRoute, requestJson } = require('./helpers/admin-route-loader');
 
+test('설명 생략은 명시적 null과 구분하여 모델에 전달한다', async () => {
+    let saved;
+    const router = loadAdminRoute(['routes', 'admin', 'settings.ts'], [{
+        segments: ['models', 'site-settings.ts'], moduleExports: { setMany: async settings => { saved = settings; } }
+    }]);
+    const result = await requestJson(router, '/settings', {
+        method: 'PUT', body: { settings: { unchanged: { value: 'a' }, cleared: { value: 'b', description: null } } }
+    });
+    assert.equal(result.status, 200);
+    assert.equal(saved.unchanged.description, undefined);
+    assert.equal(saved.cleared.description, null);
+});
+
+test('기존 설정 타입의 유효성 오류는 400으로 반환한다', async () => {
+    const router = loadAdminRoute(['routes', 'admin', 'settings.ts'], [{
+        segments: ['models', 'site-settings.ts'],
+        moduleExports: { setMany: async () => {
+            const error = new Error('page_size 설정 값은 숫자여야 합니다.');
+            error.code = 'INVALID_SETTING_VALUE';
+            throw error;
+        } }
+    }]);
+    const result = await requestJson(router, '/settings', {
+        method: 'PUT', body: { settings: { page_size: { value: ' ' } } }
+    });
+    assert.equal(result.status, 400);
+    assert.equal(result.body.message, 'page_size 설정 값은 숫자여야 합니다.');
+});
+
 test('admin settings update normalizes setting configs before model calls', async () => {
     const savedPayloads = [];
     const router = loadAdminRoute(['routes', 'admin', 'settings.ts'], [{
@@ -48,13 +77,13 @@ test('admin settings update normalizes setting configs before model calls', asyn
             value: 3,
             type: 'number',
             is_public: false,
-            description: null
+            description: undefined
         },
         feature_enabled: {
             value: false,
             type: 'boolean',
             is_public: undefined,
-            description: null
+            description: undefined
         }
     }]);
 });

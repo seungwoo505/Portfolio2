@@ -34,10 +34,9 @@ module.exports = {
     async getPublicSettings() {
         const settings = await this.getAll(true);
 
-        return settings.reduce((acc, setting) => {
-            acc[setting.setting_key] = parseSettingValue(setting);
-            return acc;
-        }, {});
+        return Object.fromEntries(settings.map(setting => [
+            setting.setting_key, parseSettingValue(setting)
+        ]));
     },
 
     /**
@@ -47,16 +46,15 @@ module.exports = {
     async getAllSettings() {
         const settings = await this.getAll(false);
 
-        return settings.reduce((acc, setting) => {
-            acc[setting.setting_key] = {
+        return Object.fromEntries(settings.map(setting => [
+            setting.setting_key, {
                 value: parseSettingValue(setting),
                 type: setting.setting_type,
                 is_public: setting.is_public,
                 description: setting.description,
                 updated_at: setting.updated_at
-            };
-            return acc;
-        }, {});
+            }
+        ]));
     },
 
     /**

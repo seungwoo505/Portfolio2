@@ -1,9 +1,5 @@
 const swaggerTags = [
     {
-        name: "Public",
-        description: "인증 없이 사용하는 공개 API"
-    },
-    {
         name: "Blog",
         description: "블로그 포스트 관련 API"
     },
@@ -30,6 +26,10 @@ const swaggerTags = [
     {
         name: "Experiences",
         description: "경력 및 활동"
+    },
+    {
+        name: "Interests",
+        description: "공개 관심사 조회"
     },
     {
         name: "Contact",
@@ -98,6 +98,14 @@ const swaggerTags = [
     {
         name: "Admin - Logs",
         description: "관리자 활동 로그 및 통계"
+    },
+    {
+        name: "Admin - Experiences",
+        description: "경력 및 활동 관리"
+    },
+    {
+        name: "Admin - Interests",
+        description: "관심사 관리"
     }
 ];
 
@@ -105,7 +113,6 @@ const swaggerTagGroups = [
     {
         name: "공개 API",
         tags: [
-            "Public",
             "Blog",
             "Projects",
             "Profile",
@@ -113,9 +120,15 @@ const swaggerTagGroups = [
             "Skills",
             "Tags",
             "Experiences",
+            "Interests",
             "Contact",
             "Settings",
-            "Health",
+            "Health"
+        ]
+    },
+    {
+        name: "시스템 모니터링",
+        tags: [
             "Monitoring"
         ]
     },
@@ -134,7 +147,9 @@ const swaggerTagGroups = [
             "Admin - Skills",
             "Admin - Files",
             "Admin - Settings",
-            "Admin - Logs"
+            "Admin - Logs",
+            "Admin - Experiences",
+            "Admin - Interests"
         ]
     }
 ];

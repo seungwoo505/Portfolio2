@@ -1,4 +1,4 @@
-const { executeQuery } = require('./common');
+const { executeQuery, mapBlogPostListItems } = require('./common');
 
 module.exports = {
     /**
@@ -10,7 +10,6 @@ module.exports = {
     async search(query, limit = 10) {
         const searchQuery = `
             SELECT bp.*,
-                   GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags,
                    MATCH(bp.title, bp.content) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance
             FROM blog_posts bp
             LEFT JOIN tag_usage tu ON tu.content_type = 'blog_post' AND tu.content_id = bp.id
@@ -29,10 +28,7 @@ module.exports = {
         const searchTerm = `%${query}%`;
         const posts = await executeQuery(searchQuery, [query, query, searchTerm, searchTerm, searchTerm, limit]);
 
-        return posts.map(post => ({
-            ...post,
-            tags: post.tags ? post.tags.split(',') : []
-        }));
+        return await mapBlogPostListItems(posts);
     },
 
     /**
@@ -44,8 +40,7 @@ module.exports = {
      */
     async getByTag(tagSlug, limit = 10, offset = 0) {
         const query = `
-            SELECT bp.*,
-                   GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags
+            SELECT bp.*
             FROM blog_posts bp
             INNER JOIN tag_usage tu ON tu.content_type = 'blog_post' AND tu.content_id = bp.id
             INNER JOIN tags t ON tu.tag_id = t.id
@@ -56,10 +51,7 @@ module.exports = {
         `;
 
         const posts = await executeQuery(query, [tagSlug, limit, offset]);
-        return posts.map(post => ({
-            ...post,
-            tags: post.tags ? post.tags.split(',') : []
-        }));
+        return await mapBlogPostListItems(posts);
     }
 };
 export {};

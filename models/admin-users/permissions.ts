@@ -30,8 +30,8 @@ module.exports = {
             return this._userPermissionColumn;
         } catch (error) {
             logger.warn('사용자별 권한 테이블 컬럼 확인 실패', { error: error.message });
-            this._userPermissionColumn = null;
-            return this._userPermissionColumn;
+            // 조회 실패는 스키마 부재로 확정하지 않고 다음 요청에서 재시도한다.
+            return null;
         }
     },
 

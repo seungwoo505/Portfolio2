@@ -19,25 +19,136 @@ const {
 
 const router: Router = express.Router();
 
+
 /**
  * @swagger
  * /admin/ai/summarize:
  *   post:
- *     summary: AI 기반 요약 생성
- *     tags: ['Admin - AI']
+ *     summary: 본문 요약과 선택적 키워드 생성
+ *     tags:
+ *       - Admin - AI
  *     security:
  *       - bearerAuth: []
+ *     description: >-
+ *       필요 권한: blog.create. 요약 길이는 최대 160자입니다. AI 키가 없거나 모델 호출에 실패하면 대체 처리 결과를 반환합니다. includeKeywords=true이면
+ *       keywords와 keywordsString도 반환합니다.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: 공백만 있는 입력은 거절합니다. 기본 최대 20000자이며 AI_CONTENT_MAX_LENGTH로 변경할 수 있습니다.
+ *               techTags:
+ *                 type: array
+ *                 description: 기술명 문자열 또는 name 필드를 가진 객체. 기본 최대 30개, 항목당 80자이며 환경 변수로 변경할 수 있습니다.
+ *                 items:
+ *                   oneOf:
+ *                     - type: string
+ *                       maxLength: 80
+ *                     - type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                           maxLength: 80
+ *                       required:
+ *                         - name
+ *                 example:
+ *                   - Next.js
+ *                   - TypeScript
+ *               includeKeywords:
+ *                 oneOf:
+ *                   - type: boolean
+ *                   - type: integer
+ *                     enum:
+ *                       - 0
+ *                       - 1
+ *                   - type: string
+ *                     enum:
+ *                       - 'true'
+ *                       - 'false'
+ *                       - '1'
+ *                       - '0'
+ *                       - 'yes'
+ *                       - 'no'
+ *                       - 'on'
+ *                       - 'off'
+ *                 description: boolean 또는 대응하는 숫자·문자열을 허용합니다.
+ *                 default: false
+ *             required:
+ *               - content
  *     responses:
- *       200:
- *         description: 요약 생성 성공
- *       400:
- *         description: 잘못된 요청
- *       413:
- *         description: content 길이 초과
- *       504:
- *         description: AI 응답 시간 초과
- *       500:
+ *       '200':
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     summary:
+ *                       type: string
+ *                     originalLength:
+ *                       type: integer
+ *                     summaryLength:
+ *                       type: integer
+ *                     keywords:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     keywordsString:
+ *                       type: string
+ *                   required:
+ *                     - summary
+ *                     - originalLength
+ *                     - summaryLength
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '413':
+ *         description: 허용된 요청 또는 파일 크기 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
  *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '504':
+ *         description: AI 처리 시간 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/ai/summarize',
     authenticateToken,

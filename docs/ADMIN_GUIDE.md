@@ -272,7 +272,7 @@ npm install bcryptjs jsonwebtoken
 초기 `super_admin` 계정은 마이그레이션 실행 시 `ADMIN_BOOTSTRAP_USERNAME`, `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD` 환경 변수로 생성됩니다.
 
 - 기본 계정/기본 비밀번호는 제공하지 않습니다.
-- `ADMIN_BOOTSTRAP_PASSWORD`는 운영에서 추측 불가능한 12자 이상의 값으로 설정해야 합니다.
+- `ADMIN_BOOTSTRAP_PASSWORD`는 운영에서 추측 불가능한 12자 이상, UTF-8 기준 72바이트 이하의 값으로 설정해야 합니다. 관리자 비밀번호 생성·변경과 로그인에도 72바이트 제한을 적용합니다.
 - 운영 서버 최초 로그인 후 비밀번호를 다시 변경하고, 불필요한 bootstrap 환경 변수는 제거하는 것을 권장합니다.
 
 ##  **프론트엔드 연동**

@@ -2,6 +2,26 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createResponse, loadAuthMiddleware } = require('./helpers/admin-auth-fixture');
 
+test('권한을 낮춘 계정은 기존 최고 관리자 토큰으로 권한 검사를 우회할 수 없다', async () => {
+    const { authenticateToken, requirePermission } = loadAuthMiddleware({
+        verifyToken: () => ({ id: 1, username: 'admin', role: 'super_admin', sid: 'session-1' }),
+        getById: async () => ({ id: 1, username: 'editor', role: 'editor', is_active: 1 }),
+        assertActiveSession: async () => ({}),
+        hasPermission: async () => false
+    });
+    const req = { headers: { authorization: 'Bearer old-token' }, ip: '127.0.0.1' };
+    const res = createResponse();
+    let authorized = false;
+
+    await authenticateToken(req, res, () => {});
+    await requirePermission('users.delete')(req, res, () => { authorized = true; });
+
+    assert.equal(authorized, false);
+    assert.equal(res.statusCode, 403);
+    assert.equal(req.admin.role, 'editor');
+    assert.equal(req.admin.username, 'editor');
+});
+
 test('authenticateToken accepts an access token only when its session is active', async () => {
     let assertedSession = false;
     const AdminUsers = {

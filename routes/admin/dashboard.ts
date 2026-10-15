@@ -5,18 +5,20 @@ const ContactMessages = require('../../models/contact-messages');
 const { executeQuery } = require('../../models/db-utils');
 const { authenticateToken, requirePermission } = require('../../middleware/auth');
 
+
 /**
  * @swagger
  * /admin/dashboard:
  *   get:
- *     summary: 관리자 대시보드 통계
- *     description: 블로그, 프로젝트, 연락처 메시지, 관리자 활동 등의 통계 정보를 조회합니다.
- *     tags: ['Admin - Dashboard']
+ *     summary: 관리자 대시보드 통계 조회
+ *     tags:
+ *       - Admin - Dashboard
  *     security:
  *       - bearerAuth: []
+ *     description: '필요 권한: dashboard.read.'
  *     responses:
- *       200:
- *         description: 대시보드 통계 조회 성공
+ *       '200':
+ *         description: 성공
  *         content:
  *           application/json:
  *             schema:
@@ -25,16 +27,151 @@ const { authenticateToken, requirePermission } = require('../../middleware/auth'
  *                 success:
  *                   type: boolean
  *                   example: true
+ *                 message:
+ *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/DashboardStats'
- *       401:
- *         description: 인증되지 않음
+ *                   type: object
+ *                   properties:
+ *                     blog:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         published:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         drafts:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                     projects:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         featured:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                     contacts:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         unread:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         unreplied:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         today:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         this_week:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         this_month:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                     activities:
+ *                       type: object
+ *                       properties:
+ *                         total_activities:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         active_admins:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         active_days:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         creates:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         updates:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         deletes:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         today:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *                         this_week:
+ *                           oneOf:
+ *                             - type: integer
+ *                             - type: string
+ *                               nullable: true
+ *                           description: DB 집계값입니다. DB 드라이버에 따라 문자열이며 SUM 결과는 null일 수 있습니다.
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: 권한 없음
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 오류
  *         content:
  *           application/json:
  *             schema:

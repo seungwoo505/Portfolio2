@@ -1,4 +1,4 @@
-const { logger } = require('./store');
+const { logger, pendingCacheLoads } = require('./store');
 
 type CacheContext = {
     get: (key: string) => unknown;
@@ -8,8 +8,6 @@ type CacheContext = {
 const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : String(error)
 );
-
-const pendingCacheLoads = new Map<string, Promise<unknown>>();
 
 module.exports = {
     async cacheApiResponse(
@@ -25,24 +23,33 @@ module.exports = {
 
         const pendingLoad = pendingCacheLoads.get(key);
         if (pendingLoad) {
-            return await pendingLoad;
+            return await pendingLoad.promise;
         }
 
-        const loadPromise = (async () => {
+        const load = {
+            promise: null as Promise<unknown> | null,
+            invalidated: false
+        };
+        pendingCacheLoads.set(key, load);
+        load.promise = (async () => {
             try {
                 const result = await fetchFunction();
-                this.set(key, result, ttl);
+                // 무효화 이전에 시작한 조회가 오래된 데이터를 다시 저장하지 않게 한다.
+                if (!load.invalidated) {
+                    this.set(key, result, ttl);
+                }
                 return result;
             } catch (error) {
                 logger.error('캐시 API 응답 실패', { key, error: getErrorMessage(error) });
                 throw error;
             } finally {
-                pendingCacheLoads.delete(key);
+                if (pendingCacheLoads.get(key) === load) {
+                    pendingCacheLoads.delete(key);
+                }
             }
         })();
 
-        pendingCacheLoads.set(key, loadPromise);
-        return await loadPromise;
+        return await load.promise;
     }
 };
 

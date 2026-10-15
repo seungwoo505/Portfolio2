@@ -6,7 +6,8 @@ const {
     buildErrorLog,
     logActivity,
     logger,
-    superAdminOnly
+    superAdminOnly,
+    userCreateClientErrors
 } = require('./common');
 const {
     getUpdateUserPayload,
@@ -32,6 +33,281 @@ const sendRouteError = (res: Response, error: UserRouteError) => (
     })
 );
 
+/**
+ * @swagger
+ * /admin/users/{id}:
+ *   get:
+ *     summary: 관리자 계정 상세 조회
+ *     tags:
+ *       - Admin - Users
+ *     security:
+ *       - bearerAuth: []
+ *     description: '필요 권한: super_admin 역할.'
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: 대상의 양의 정수 ID
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       '200':
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                     full_name:
+ *                       type: string
+ *                       nullable: true
+ *                     role:
+ *                       type: string
+ *                       enum:
+ *                         - super_admin
+ *                         - admin
+ *                         - editor
+ *                     is_active:
+ *                       oneOf:
+ *                         - type: boolean
+ *                         - type: integer
+ *                   additionalProperties: true
+ *                   description: password_hash를 제외한 관리자 계정 정보
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '404':
+ *         description: 대상을 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   put:
+ *     summary: 관리자 계정 일부 수정
+ *     tags:
+ *       - Admin - Users
+ *     security:
+ *       - bearerAuth: []
+ *     description: '필요 권한: super_admin 역할. 보낸 필드만 수정합니다. 비밀번호를 변경하면 해당 계정의 모든 세션을 폐기합니다.'
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: 대상의 양의 정수 ID
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 1
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 12
+ *                 maxLength: 72
+ *                 description: 영문과 숫자를 포함한 12자 이상. UTF-8 인코딩 기준 72바이트 이하입니다.
+ *                 example: NewStrongPass123
+ *               full_name:
+ *                 type: string
+ *                 nullable: true
+ *               role:
+ *                 type: string
+ *                 enum:
+ *                   - super_admin
+ *                   - admin
+ *                   - editor
+ *               is_active:
+ *                 oneOf:
+ *                   - type: boolean
+ *                   - type: integer
+ *                     enum:
+ *                       - 0
+ *                       - 1
+ *                   - type: string
+ *                     enum:
+ *                       - 'true'
+ *                       - 'false'
+ *                       - '1'
+ *                       - '0'
+ *                       - 'yes'
+ *                       - 'no'
+ *                       - 'on'
+ *                       - 'off'
+ *                 description: boolean 또는 대응하는 숫자·문자열을 허용합니다.
+ *             minProperties: 1
+ *     responses:
+ *       '200':
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                     full_name:
+ *                       type: string
+ *                       nullable: true
+ *                     role:
+ *                       type: string
+ *                       enum:
+ *                         - super_admin
+ *                         - admin
+ *                         - editor
+ *                     is_active:
+ *                       oneOf:
+ *                         - type: boolean
+ *                         - type: integer
+ *                   additionalProperties: true
+ *                   description: password_hash를 제외한 관리자 계정 정보
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '404':
+ *         description: 대상을 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: 관리자 계정 삭제
+ *     tags:
+ *       - Admin - Users
+ *     security:
+ *       - bearerAuth: []
+ *     description: '필요 권한: super_admin 역할. 자신의 계정은 삭제할 수 없습니다.'
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: 대상의 양의 정수 ID
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       '200':
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: 필요한 권한 또는 역할 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '404':
+ *         description: 대상을 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/users/:id', ...superAdminOnly, async (req: Request, res: Response) => {
     try {
         const parsed = parseUserIdParam(req.params.id);
@@ -60,34 +336,7 @@ router.get('/users/:id', ...superAdminOnly, async (req: Request, res: Response) 
     }
 });
 
-/**
- * @swagger
- * /admin/users/{id}:
- *   put:
- *     summary: 관리자 계정 수정
- *     tags: ['Admin - Users']
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 관리자 정보 수정 성공
- *       400:
- *         description: 잘못된 요청
- *       404:
- *         description: 관리자 없음
- *   delete:
- *     summary: 관리자 계정 삭제
- *     tags: ['Admin - Users']
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 관리자 삭제 성공
- *       400:
- *         description: 잘못된 요청
- *       404:
- *         description: 관리자 없음
- */
+
 router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (req: Request, res: Response) => {
     try {
         const parsed = parseUserIdParam(req.params.id);
@@ -117,6 +366,9 @@ router.put('/users/:id', ...superAdminOnly, logActivity('update_admin'), async (
             data: updatedUser
         });
     } catch (error) {
+        if (error instanceof Error && userCreateClientErrors.has(error.message)) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
         logger.error('사용자 정보 수정 실패', buildErrorLog(error, req, {
             userId: req.params.id,
             requestBody: req.body

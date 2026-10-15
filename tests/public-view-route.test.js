@@ -92,8 +92,7 @@ test('public post view increments only once for repeated client requests', async
     assert.equal(second.status, 200);
     assert.deepEqual(increments, [20]);
     assert.deepEqual(CacheUtils.invalidations, [
-        ['del', 'blog_post:public:slug:post-a'],
-        ['delPattern', 'blog_posts:public:']
+        ['invalidateResources', 'blog']
     ]);
 });
 

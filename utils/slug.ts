@@ -71,10 +71,45 @@ const createUniqueSlug = async ({
     throw new Error('고유한 slug를 생성하지 못했습니다.');
 };
 
+class SlugInsertConflict extends Error {
+    original: any;
+
+    constructor(error) {
+        super('slug INSERT 충돌');
+        this.original = error;
+    }
+}
+
+// INSERT만 표식 처리하므로 후속 관계 저장의 다른 UNIQUE 오류는 재시도하지 않는다.
+// 트랜잭션을 사용하는 호출자는 operation 안에서 전체 트랜잭션을 실행한다.
+const withSlugRetry = async (table: string, operation) => {
+    const insert = async (write) => {
+        try {
+            return await write();
+        } catch (error) {
+            const key = /for key ['`]([^'`]+)['`]\s*$/i.exec(error.sqlMessage || error.message || '')?.[1];
+            if (error.code === 'ER_DUP_ENTRY' && (key === 'slug' || key === `${table}.slug`)) {
+                throw new SlugInsertConflict(error);
+            }
+            throw error;
+        }
+    };
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+            return await operation(insert);
+        } catch (error) {
+            if (!(error instanceof SlugInsertConflict)) throw error;
+            if (attempt === 2) throw error.original;
+        }
+    }
+};
+
 module.exports = {
     generateSlug,
     isValidSlug,
-    createUniqueSlug
+    createUniqueSlug,
+    withSlugRetry
 };
 
 export {};

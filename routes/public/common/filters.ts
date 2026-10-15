@@ -1,7 +1,7 @@
 import type { ParsedQs } from 'qs';
 
 const { parsePagination } = require('../../../utils/pagination');
-const { toOptionalBoolean, toCsvStringArray, toStringValue } = require('../../../utils/filter-values');
+const { toOptionalBoolean, toCsvStringArray, toStringArray, toStringValue } = require('../../../utils/filter-values');
 
 const buildProjectFilters = (query: ParsedQs) => {
     const featured = toOptionalBoolean(query.featured);
@@ -16,13 +16,20 @@ const buildProjectFilters = (query: ParsedQs) => {
         maxLimit: 50
     });
 
+    // 명시 배열과 반복 키는 각 기술명을 보존하고 단일 문자열은 기존 CSV 계약을 유지한다.
+    const skills = query['skills[]'] !== undefined
+        ? toStringArray(query['skills[]'])
+        : Array.isArray(query.skills)
+            ? toStringArray(query.skills)
+            : toCsvStringArray(query.skills);
+
     return {
         limit,
         page,
         offset,
         search: toStringValue(query.search),
         tags: toCsvStringArray(query.tags),
-        skills: toCsvStringArray(query.skills),
+        skills,
         featured: featured.value,
         status: 'published',
         sort: toStringValue(query.sort, 'display_order'),

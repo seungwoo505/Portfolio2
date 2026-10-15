@@ -1,4 +1,5 @@
 const swaggerJsdoc = require("swagger-jsdoc");
+const path = require("path");
 
 const { mountSwaggerDocs } = require("./mount");
 const { swaggerUiOptions } = require("./options");
@@ -11,14 +12,12 @@ type SwaggerPortOptions = {
 };
 
 const swaggerApis = [
-    "./routes/*.js",
-    "./routes/monitoring/*.js",
-    "./routes/public/*.js",
-    "./routes/admin/*.js",
-    "./routes/admin/**/*.js"
+    path.resolve(__dirname, "../../routes/**/*.{ts,js}").replace(/\\/g, "/"),
+    path.resolve(__dirname, "../../app.{ts,js}").replace(/\\/g, "/")
 ];
 
 const createSwaggerSpec = ({ port }: SwaggerPortOptions): object => swaggerJsdoc({
+    failOnErrors: true,
     definition: createSwaggerDefinition({ port }),
     apis: swaggerApis
 });

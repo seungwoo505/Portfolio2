@@ -16,47 +16,116 @@ const router: Router = express.Router();
  * /monitoring/dashboard:
  *   get:
  *     summary: 시스템 모니터링 대시보드
- *     tags: [Monitoring]
+ *     tags:
+ *       - Monitoring
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
- *         description: 모니터링 데이터 조회 성공
+ *       '200':
+ *         description: 조회 성공
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Success'
+ *                 - type: object
  *                   properties:
- *                     system:
+ *                     data:
  *                       type: object
  *                       properties:
- *                         nodeVersion:
- *                           type: string
- *                           example: "v18.18.0"
- *                         platform:
- *                           type: string
- *                           example: "darwin"
- *                         uptime:
- *                           type: string
- *                           example: "3600s"
- *                     cache:
- *                       type: object
- *                       properties:
- *                         memory:
+ *                         system:
  *                           type: object
- *                         redis:
+ *                           properties:
+ *                             nodeVersion:
+ *                               type: string
+ *                             platform:
+ *                               type: string
+ *                             arch:
+ *                               type: string
+ *                             pid:
+ *                               type: integer
+ *                             uptime:
+ *                               type: string
+ *                               example: 3600s
+ *                             memory:
+ *                               type: object
+ *                               properties:
+ *                                 rss:
+ *                                   type: string
+ *                                   example: 64MB
+ *                                 heapTotal:
+ *                                   type: string
+ *                                   example: 64MB
+ *                                 heapUsed:
+ *                                   type: string
+ *                                   example: 64MB
+ *                                 external:
+ *                                   type: string
+ *                                   example: 64MB
+ *                                 arrayBuffers:
+ *                                   type: string
+ *                                   example: 64MB
+ *                         cache:
  *                           type: object
- *                     timestamp:
- *                       type: string
- *                       format: date-time
- *       500:
- *         description: 서버 오류
+ *                           properties:
+ *                             memory:
+ *                               type: object
+ *                               properties:
+ *                                 hits:
+ *                                   type: integer
+ *                                 misses:
+ *                                   type: integer
+ *                                 keys:
+ *                                   type: integer
+ *                                 ksize:
+ *                                   type: integer
+ *                                 vsize:
+ *                                   type: integer
+ *                             redis:
+ *                               type: object
+ *                               properties:
+ *                                 connected:
+ *                                   type: boolean
+ *                                 dbSize:
+ *                                   type: integer
+ *                                   description: Redis 연결 시 포함되는 키 개수
+ *                                 memory:
+ *                                   type: string
+ *                                   description: Redis 연결 시 포함되는 INFO memory 원문
+ *                               required:
+ *                                 - connected
+ *                         timestamp:
+ *                           type: string
+ *                           format: date-time
+ *                   required:
+ *                     - success
+ *                     - data
+ *       '401':
+ *         description: 인증 토큰 누락 또는 만료
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: super_admin 또는 admin 역할 필요
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '408':
+ *         description: 요청 처리 시간 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '429':
+ *         description: 요청 횟수 제한 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 처리 중 오류 발생
  *         content:
  *           application/json:
  *             schema:

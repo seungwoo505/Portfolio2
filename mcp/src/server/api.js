@@ -9,9 +9,12 @@ async function apiGet(path, query = {}) {
     const url = new URL(`${apiBaseUrl}${path}`);
 
     Object.entries(query).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-            url.searchParams.set(key, String(value));
-        }
+        const values = Array.isArray(value) ? value : [value];
+        values.forEach((entry) => {
+            if (entry !== undefined && entry !== null && entry !== '') {
+                url.searchParams.append(key, String(entry));
+            }
+        });
     });
 
     const response = await fetch(url, {
@@ -45,7 +48,12 @@ function normalizeListArgs(args = {}, arrayFields = []) {
 
     arrayFields.forEach((field) => {
         if (Array.isArray(args[field]) && args[field].length > 0) {
-            query[field] = args[field].map((value) => String(value).trim()).filter(Boolean).join(',');
+            const values = args[field].map((value) => String(value).trim()).filter(Boolean);
+            if (field === 'skills') {
+                query['skills[]'] = values;
+            } else {
+                query[field] = values.join(',');
+            }
         }
     });
 

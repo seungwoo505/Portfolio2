@@ -20,7 +20,7 @@ const SocialLinks = {
      * @returns {Promise<any>} 처리 결과
      */
     async create(data) {
-        const { platform, url, icon, display_order, is_active = true } = data;
+        const { platform, url, icon = null, display_order, is_active = true } = data;
         const query = `
             INSERT INTO social_links (platform, url, icon, display_order, is_active) 
             VALUES (?, ?, ?, ?, ?)

@@ -4,6 +4,8 @@ const {
     crypto,
     executeTransaction
 } = require('./common');
+const { normalizeTagNames } = require('../../utils/tag-names');
+const { withSlugRetry } = require('../../utils/slug');
 
 const serializeContentJson = (value) => {
     if (value === undefined) return undefined;
@@ -24,10 +26,11 @@ module.exports = {
      * @returns {Promise<number>} 생성된 글 ID
      */
     async _create(data) {
+        const normalizedTags = normalizeTagNames(data.tags);
         const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
         const uuid = crypto.randomUUID();
 
-        return await executeTransaction(async (connection) => {
+        return await withSlugRetry('blog_posts', insert => executeTransaction(async (connection) => {
             const db = createQueryContext(connection);
             const finalSlug = await createUniqueSlug({
                 value: title,
@@ -48,14 +51,20 @@ module.exports = {
             `;
 
             const published_at = is_published ? new Date() : null;
-            const result = await db.query(query, [uuid, title, finalSlug, excerpt, content, serializeContentJson(content_json), content_html, content_text, featured_image, is_published || false, is_featured || false, reading_time, meta_title, meta_description, meta_keywords, published_at]);
+            const values = [
+                uuid, title, finalSlug, excerpt, content,
+                serializeContentJson(content_json), content_html, content_text,
+                featured_image, is_published || false, is_featured || false,
+                reading_time, meta_title, meta_description, meta_keywords, published_at
+            ].map(value => value === undefined ? null : value);
+            const result = await insert(() => db.query(query, values));
 
-            if (tags && tags.length > 0) {
-                await this.updateTags(result.insertId, tags, db);
+            if (normalizedTags.length > 0) {
+                await this.updateTags(result.insertId, normalizedTags, db);
             }
 
             return result.insertId;
-        });
+        }));
     },
 
     /**
@@ -65,6 +74,7 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async _update(id, data) {
+        const normalizedTags = normalizeTagNames(data.tags);
         const { title, slug, excerpt, content, content_json, content_html, content_text, featured_image, is_published, is_featured, meta_title, meta_description, meta_keywords, tags } = data;
 
         await executeTransaction(async (connection) => {
@@ -73,7 +83,7 @@ module.exports = {
             const updateFields = [];
             const updateValues = [];
 
-            if (slug !== undefined || title !== undefined) {
+            if (slug !== undefined) {
                 finalSlug = await createUniqueSlug({
                     value: title,
                     providedSlug: slug,
@@ -94,7 +104,7 @@ module.exports = {
             };
 
             pushField('title', title);
-            if (slug !== undefined || title !== undefined) {
+            if (slug !== undefined) {
                 pushField('slug', finalSlug);
             }
             pushField('excerpt', excerpt);
@@ -114,7 +124,7 @@ module.exports = {
             }
 
             if (is_published !== undefined) {
-                updateFields.push(`published_at = ${is_published ? 'NOW()' : 'NULL'}`);
+                updateFields.push(`published_at = ${is_published ? 'COALESCE(published_at, NOW())' : 'NULL'}`);
             }
 
             if (updateFields.length > 0) {
@@ -125,7 +135,7 @@ module.exports = {
             }
 
             if (tags !== undefined) {
-                await this.updateTags(id, tags || [], db);
+                await this.updateTags(id, normalizedTags, db);
             }
         });
 

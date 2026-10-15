@@ -47,6 +47,28 @@ const checkSwaggerServerConfig = () => {
         });
     }
 
+    const { createSwaggerSpec } = require('../../config/swagger');
+    const spec = createSwaggerSpec({ port: 3333 });
+    const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
+    let operationCount = 0;
+    for (const [routePath, pathItem] of Object.entries(spec.paths || {}) as Array<[string, Record<string, any>]>) {
+        for (const method of methods) {
+            const operation = pathItem[method];
+            if (!operation) continue;
+            operationCount++;
+            if (Object.keys(operation.responses || {}).length === 0) {
+                failures.push(`${method.toUpperCase()} ${routePath}: 응답 정의가 없습니다.`);
+            }
+            const parameters = [...(pathItem.parameters || []), ...(operation.parameters || [])];
+            for (const [, name] of routePath.matchAll(/\{([^}]+)\}/g)) {
+                if (!parameters.some(parameter => parameter.in === 'path' && parameter.name === name && parameter.required)) {
+                    failures.push(`${method.toUpperCase()} ${routePath}: 필수 경로 변수 ${name} 정의가 없습니다.`);
+                }
+            }
+        }
+    }
+    if (operationCount === 0) failures.push('Swagger 명세에 API 작업이 없습니다. 라우트 검색 경로를 확인하세요.');
+
     if (failures.length > 0) {
         throw new Error(`swagger server config check failed:\n${failures.join('\n')}`);
     }

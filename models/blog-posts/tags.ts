@@ -2,9 +2,9 @@ const {
     CacheUtils,
     createUniqueSlug,
     defaultQueryContext,
-    executeQuery,
-    normalizeTagNames
+    executeQuery
 } = require('./common');
+const { normalizeTagNames } = require('../../utils/tag-names');
 
 module.exports = {
     /**
@@ -14,9 +14,8 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async updateTags(postId, tagNames, db = defaultQueryContext) {
-        await db.query("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [postId]);
-
         const tagArray = normalizeTagNames(tagNames);
+        await db.query("DELETE FROM tag_usage WHERE content_type = 'blog_post' AND content_id = ?", [postId]);
 
         for (const tagName of tagArray) {
             const trimmed = String(tagName).trim();

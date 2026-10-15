@@ -5,6 +5,39 @@ const {
     requestJson
 } = require('./helpers/skills-route-loader');
 
+for (const action of ['order', 'featured']) {
+    test(`기술 ${action} PATCH도 다른 추천 기술과 순서가 겹치면 거절한다`, async () => {
+        let saved = false;
+        const checks = [];
+        const router = loadSkillsRoute({
+            getSkillById: async () => ({ id: 9, display_order: 7, is_featured: action === 'order' }),
+            getByDisplayOrder: async (...args) => { checks.push(args); return { id: 10 }; },
+            updateSkill: async () => { saved = true; }
+        });
+        const response = await requestJson(router, `/skills/9/${action}`, {
+            method: 'PATCH', body: action === 'order' ? { display_order: 7 } : { is_featured: true }
+        });
+        assert.equal(response.status, 400);
+        assert.match(response.body.message, /이미 사용 중/);
+        assert.deepEqual(checks, [[7, 9]]);
+        assert.equal(saved, false);
+    });
+
+    test(`기술 ${action} PATCH는 자신을 제외한 충돌이 없으면 저장한다`, async () => {
+        let saved = false;
+        const router = loadSkillsRoute({
+            getSkillById: async () => ({ id: 9, display_order: 7, is_featured: 1 }),
+            getByDisplayOrder: async (order, excludeId) => { assert.equal(excludeId, 9); return null; },
+            updateSkill: async () => { saved = true; }
+        });
+        const response = await requestJson(router, `/skills/9/${action}`, {
+            method: 'PATCH', body: action === 'order' ? { display_order: 7 } : { is_featured: true }
+        });
+        assert.equal(response.status, 200);
+        assert.equal(saved, true);
+    });
+}
+
 test('admin skills featured toggle normalizes boolean-like strings', async () => {
     const updatedPayloads = [];
     const router = loadSkillsRoute({

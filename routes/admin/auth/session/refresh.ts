@@ -11,27 +11,31 @@ const {
 
 const router: Router = express.Router();
 
+
 /**
  * @swagger
  * /admin/refresh:
  *   post:
- *     summary: 액세스 토큰 재발급
- *     tags: ['Admin - Auth']
+ *     summary: 액세스·리프레시 토큰 갱신
+ *     tags:
+ *       - Admin - Auth
+ *     security: []
+ *     description: 유효한 서버 세션과 발급 IP를 확인하고 리프레시 토큰을 교체합니다. 교체 전 토큰은 다시 사용할 수 없습니다.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - refreshToken
  *             properties:
  *               refreshToken:
  *                 type: string
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 minLength: 1
+ *             required:
+ *               - refreshToken
  *     responses:
- *       200:
- *         description: 토큰 재발급 성공
+ *       '200':
+ *         description: 성공
  *         content:
  *           application/json:
  *             schema:
@@ -42,31 +46,30 @@ const router: Router = express.Router();
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "토큰이 재발급되었습니다."
  *                 data:
  *                   type: object
  *                   properties:
  *                     token:
  *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIs..."
  *                     refreshToken:
  *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIs..."
- *       400:
- *         description: Refresh Token 누락
+ *       '400':
+ *         description: 필수 값 누락 또는 유효하지 않은 입력
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       401:
- *         description: 인증 실패
+ *       '401':
+ *         description: 인증 토큰이 없거나 유효하지 않음
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/refresh', async (req: Request, res: Response) => {
+    const isRequestActive = () => !req.aborted && !res.headersSent && !res.writableEnded && !res.destroyed;
     try {
+        if (!isRequestActive()) return;
         const { refreshToken } = getPlainBody(req);
 
         if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
@@ -93,6 +96,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
         }
 
         const user = await AdminUsers.getById(decoded.id);
+        if (!isRequestActive()) return;
         if (!user || !user.is_active) {
             logger.warn('토큰 재발급 실패 - 비활성 사용자', {
                 requestId: req.requestId,
@@ -106,7 +110,10 @@ router.post('/refresh', async (req: Request, res: Response) => {
             });
         }
 
-        const newRefreshToken = await AdminUsers.rotateRefreshSession(refreshToken, decoded, user, clientIP);
+        const newRefreshToken = await AdminUsers.rotateRefreshSession(
+            refreshToken, decoded, user, clientIP, isRequestActive
+        );
+        if (!isRequestActive()) return;
         const newToken = AdminUsers.generateToken(user, clientIP, decoded.sid);
 
         res.json({
@@ -118,6 +125,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
             }
         });
     } catch (error) {
+        if (!isRequestActive()) return;
         logger.warn('토큰 재발급 실패', buildErrorLog(error, req));
         res.status(401).json({
             success: false,

@@ -17,7 +17,7 @@ const AI_REQUEST_TIMEOUT = parseIntegerEnv(process.env.AI_REQUEST_TIMEOUT, {
 });
 
 const getRequestTimeout = (req: Request): number => (
-    req.originalUrl && req.originalUrl.startsWith("/admin/ai")
+    req.originalUrl && /^\/admin\/ai(?:\/|\?|$)/i.test(req.originalUrl)
         ? AI_REQUEST_TIMEOUT
         : REQUEST_TIMEOUT
 );
@@ -44,19 +44,9 @@ const requestTimeoutMiddleware = (req: Request, res: Response, next: NextFunctio
         }
     }, requestTimeout);
 
-    const originalEnd = res.end;
-    res.end = function endWithTimeoutCleanup(...args: unknown[]) {
-        if (!isTimedOut) {
-            clearTimeout(timeoutId);
-        }
-        return originalEnd.apply(this, args as Parameters<Response["end"]>);
-    } as Response["end"];
-
-    req.on("close", () => {
-        if (!isTimedOut) {
-            clearTimeout(timeoutId);
-        }
-    });
+    const clearRequestTimeout = () => clearTimeout(timeoutId);
+    res.once("finish", clearRequestTimeout);
+    res.once("close", clearRequestTimeout);
 
     next();
 };

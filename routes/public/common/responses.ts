@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 const logger = require('../../../log');
 const {
     sendBadRequest,
+    sendError,
     sendNotFound,
     sendServerError,
     sendSuccess
@@ -40,6 +41,11 @@ const fail = (res: Response, error: unknown, req: Request, message: string) => {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
     });
+
+    if (error !== null && typeof error === 'object' && 'code' in error && error.code === 'CACHE_CLAIM_UNAVAILABLE') {
+        res.setHeader('Cache-Control', 'no-store');
+        return sendError(res, 503, '요청을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.');
+    }
 
     return sendServerError(res, message);
 };

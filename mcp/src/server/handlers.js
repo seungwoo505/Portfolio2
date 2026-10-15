@@ -1,9 +1,9 @@
 const {
     apiGet,
     normalizeListArgs,
-    pickDefined,
-    requireString
+    pickDefined
 } = require('./api');
+const { requireSlug } = require('./slug');
 const { tools } = require('./tools');
 
 const MCP_PROTOCOL_VERSION = '2024-11-05';
@@ -11,9 +11,9 @@ const MCP_PROTOCOL_VERSION = '2024-11-05';
 const toolHandlers = {
     get_profile: async () => apiGet('/public/profile'),
     list_projects: async (args) => apiGet('/public/projects', normalizeListArgs(args, ['tags', 'skills'])),
-    get_project: async (args) => apiGet(`/public/projects/${encodeURIComponent(requireString(args, 'slug'))}`),
+    get_project: async (args) => apiGet(`/public/projects/${encodeURIComponent(requireSlug(args))}`),
     list_blog_posts: async (args) => apiGet('/public/posts', normalizeListArgs(args, ['tags'])),
-    get_blog_post: async (args) => apiGet(`/public/posts/${encodeURIComponent(requireString(args, 'slug'))}`),
+    get_blog_post: async (args) => apiGet(`/public/posts/${encodeURIComponent(requireSlug(args))}`),
     list_skills: async (args) => apiGet(args.featured ? '/public/skills/featured' : '/public/skills'),
     list_experiences: async (args) => {
         if (args.timeline) {

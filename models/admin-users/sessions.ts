@@ -1,6 +1,9 @@
 const {
+    createQueryContext,
+    defaultQueryContext,
     executeQuery,
     executeQuerySingle,
+    executeTransaction,
     logger,
     parseIntegerEnv
 } = require('./common');
@@ -11,10 +14,10 @@ module.exports = {
      * @param {*} session 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async createSession(session) {
-        const { sessionId, adminId, refreshToken, ipAddress, userAgent } = session;
+    async createSession(session, db = defaultQueryContext) {
+        const { sessionId, adminId, refreshToken, ipAddress = null, userAgent = null } = session;
 
-        await executeQuery(`
+        await db.query(`
             INSERT INTO admin_sessions (
                 session_id, admin_id, refresh_token_hash, ip_address, user_agent, expires_at
             )
@@ -93,27 +96,48 @@ module.exports = {
      * @param {*} decoded 입력값
      * @param {*} user 입력값
      * @param {*} ipAddress 입력값
+     * @param {() => boolean} isRequestActive 요청이 아직 응답을 받을 수 있는지 확인한다.
      * @returns {Promise<string>} 처리 결과
      */
-    async rotateRefreshSession(refreshToken, decoded, user, ipAddress) {
+    async rotateRefreshSession(refreshToken, decoded, user, ipAddress, isRequestActive = () => true) {
         await this.verifyRefreshSession(refreshToken, decoded);
 
         const newRefreshToken = this.generateRefreshToken(user, ipAddress, decoded.sid);
 
-        await executeQuery(`
-            UPDATE admin_sessions
-            SET refresh_token_hash = ?,
-                expires_at = ?,
-                last_used_at = NOW()
-            WHERE session_id = ?
-                AND revoked_at IS NULL
-        `, [
-            this.hashToken(newRefreshToken),
-            this.getRefreshTokenExpiresAt(),
-            decoded.sid
-        ]);
+        return await executeTransaction(async connection => {
+            const db = createQueryContext(connection);
+            if (!isRequestActive()) {
+                throw new Error('요청이 종료되어 토큰 갱신을 취소했습니다.');
+            }
 
-        return newRefreshToken;
+            const result = await db.query(`
+                UPDATE admin_sessions
+                SET refresh_token_hash = ?,
+                    expires_at = ?,
+                    last_used_at = NOW()
+                WHERE session_id = ?
+                    AND admin_id = ?
+                    AND refresh_token_hash = ?
+                    AND revoked_at IS NULL
+                    AND expires_at > NOW()
+            `, [
+                this.hashToken(newRefreshToken),
+                this.getRefreshTokenExpiresAt(),
+                decoded.sid,
+                decoded.id,
+                this.hashToken(refreshToken)
+            ]);
+
+            if (result.affectedRows !== 1) {
+                throw new Error('Refresh Token 세션이 유효하지 않습니다.');
+            }
+            // SQL 대기 중 408 또는 연결 종료가 확인되면 교체를 커밋하지 않는다.
+            if (!isRequestActive()) {
+                throw new Error('요청이 종료되어 토큰 갱신을 취소했습니다.');
+            }
+
+            return newRefreshToken;
+        });
     },
 
     /**
@@ -139,7 +163,7 @@ module.exports = {
      * @param {*} exceptSessionId 입력값
      * @returns {Promise<any>} 처리 결과
      */
-    async revokeUserSessions(adminId, exceptSessionId = null) {
+    async revokeUserSessions(adminId, exceptSessionId = null, db = defaultQueryContext) {
         const params = [adminId];
         let query = `
             UPDATE admin_sessions
@@ -153,7 +177,7 @@ module.exports = {
             params.push(exceptSessionId);
         }
 
-        await executeQuery(query, params);
+        await db.query(query, params);
     },
 
     /**

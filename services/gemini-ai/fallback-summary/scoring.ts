@@ -40,23 +40,16 @@ const prioritizeSentences = (sentences: string[]): string[] => (
 function summarizeMultipleSentences(this: GeminiServiceContext, sentences: string[], maxLength: number): string {
     const prioritized = this.prioritizeSentences(sentences);
     let summary = '';
-    let remainingLength = maxLength;
 
     for (const sentence of prioritized) {
-        if (sentence.length < remainingLength) {
-            if (summary) summary += ' 또한 ';
-            summary += sentence;
-            remainingLength -= sentence.length + 4;
-        } else {
-            break;
+        const candidate = summary ? `${summary} 또한 ${sentence}` : sentence;
+        const punctuationLength = /[.!?]$/.test(candidate) ? 0 : 1;
+        if (candidate.length + punctuationLength <= maxLength) {
+            summary = candidate;
         }
     }
 
-    if (!summary.match(/[.!?]$/)) {
-        summary += '.';
-    }
-
-    return summary;
+    return this.formatSingleSentence(summary || prioritized[0] || '', maxLength);
 }
 
 module.exports = {

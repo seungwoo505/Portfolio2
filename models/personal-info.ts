@@ -1,4 +1,5 @@
-const { executeQuery, executeQuerySingle } = require('./db-utils');
+const { executeQuerySingle, executeConnectionQuery, executeConnectionQuerySingle } = require('./db-utils');
+const { withPersonalInfoWriteLock } = require('./personal-info-lock');
 
 const profileFields = [
     'name',
@@ -67,43 +68,49 @@ const PersonalInfo = {
      */
     async update(data) {
         const normalized = normalizeProfileInput(data);
-        const existingData = await executeQuerySingle('SELECT id FROM personal_info ORDER BY id DESC LIMIT 1');
-
-        if (existingData) {
-            const updateFields = [];
-            const updateValues = [];
-
-            for (const field of profileFields) {
-                if (normalized[field] !== undefined) {
-                    updateFields.push(`${field} = ?`);
-                    updateValues.push(normalized[field]);
-                }
-            }
-
-            if (updateFields.length === 0) {
-                return await this.get();
-            }
-
-            updateFields.push('updated_at = NOW()');
-            updateValues.push(existingData.id);
-
-            await executeQuery(
-                `UPDATE personal_info SET ${updateFields.join(', ')} WHERE id = ?`,
-                updateValues
+        return await withPersonalInfoWriteLock(async connection => {
+            const getCurrent = async () => formatProfile(await executeConnectionQuerySingle(
+                connection, 'SELECT * FROM personal_info ORDER BY id DESC LIMIT 1'
+            ));
+            const existingData = await executeConnectionQuerySingle(
+                connection, 'SELECT id FROM personal_info ORDER BY id DESC LIMIT 1'
             );
-            return await this.get();
-        }
 
-        const insertValues = profileFields.map((field) => (
-            normalized[field] === undefined ? null : normalized[field]
-        ));
+            if (existingData) {
+                const updateFields = [];
+                const updateValues = [];
 
-        await executeQuery(`
-            INSERT INTO personal_info (${profileFields.join(', ')}, created_at, updated_at)
-            VALUES (${profileFields.map(() => '?').join(', ')}, NOW(), NOW())
-        `, insertValues);
+                for (const field of profileFields) {
+                    if (normalized[field] !== undefined) {
+                        updateFields.push(`${field} = ?`);
+                        updateValues.push(normalized[field]);
+                    }
+                }
 
-        return await this.get();
+                if (updateFields.length === 0) return await getCurrent();
+
+                updateFields.push('updated_at = NOW()');
+                updateValues.push(existingData.id);
+
+                await executeConnectionQuery(
+                    connection,
+                    `UPDATE personal_info SET ${updateFields.join(', ')} WHERE id = ?`,
+                    updateValues
+                );
+                return await getCurrent();
+            }
+
+            const insertValues = profileFields.map((field) => (
+                normalized[field] === undefined ? null : normalized[field]
+            ));
+
+            await executeConnectionQuery(connection, `
+                INSERT INTO personal_info (${profileFields.join(', ')}, created_at, updated_at)
+                VALUES (${profileFields.map(() => '?').join(', ')}, NOW(), NOW())
+            `, insertValues);
+
+            return await getCurrent();
+        });
     }
 };
 

@@ -1,7 +1,7 @@
 const {
     executeQuery,
     executeQuerySingle,
-    mapProjectListItem
+    mapProjectListItems
 } = require('./common');
 const {
     appendProjectFilterConditions,
@@ -19,17 +19,8 @@ module.exports = {
     async getAll(limit = null, offset = 0) {
         const queryParams = [];
         let query = `
-            SELECT p.*,
-                   GROUP_CONCAT(DISTINCT s.name ORDER BY s.name ASC) as skills,
-                   GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags,
-                   GROUP_CONCAT(DISTINCT pi.image_url ORDER BY pi.display_order ASC) as images
+            SELECT p.*
             FROM projects p
-            LEFT JOIN project_skills ps ON p.id = ps.project_id
-            LEFT JOIN skills s ON ps.skill_id = s.id
-            LEFT JOIN tag_usage tu ON tu.content_type = 'project' AND tu.content_id = p.id
-            LEFT JOIN tags t ON t.id = tu.tag_id
-            LEFT JOIN project_images pi ON p.id = pi.project_id
-            GROUP BY p.id
             ORDER BY p.is_featured DESC, p.display_order ASC, p.created_at DESC
         `;
 
@@ -39,7 +30,7 @@ module.exports = {
         }
 
         const projects = await executeQuery(query, queryParams);
-        return projects.map(mapProjectListItem);
+        return await mapProjectListItems(projects);
     },
 
     /**
@@ -53,18 +44,9 @@ module.exports = {
         const orderClause = buildProjectOrderClause(normalizedFilters);
 
         const query = `
-            SELECT p.*,
-                   GROUP_CONCAT(DISTINCT s.name ORDER BY s.name ASC) as skills,
-                   GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags,
-                   GROUP_CONCAT(DISTINCT pi.image_url ORDER BY pi.display_order ASC) as images
+            SELECT p.*
             FROM projects p
-            LEFT JOIN project_skills ps ON p.id = ps.project_id
-            LEFT JOIN skills s ON ps.skill_id = s.id
-            LEFT JOIN tag_usage tu ON tu.content_type = 'project' AND tu.content_id = p.id
-            LEFT JOIN tags t ON t.id = tu.tag_id
-            LEFT JOIN project_images pi ON p.id = pi.project_id
             ${whereClause}
-            GROUP BY p.id
             ${orderClause}
             LIMIT ? OFFSET ?
         `;
@@ -72,7 +54,7 @@ module.exports = {
         queryParams.push(normalizedFilters.limit, normalizedFilters.offset);
         const projects = await executeQuery(query, queryParams);
 
-        return projects.map(mapProjectListItem);
+        return await mapProjectListItems(projects);
     },
 
     /**
@@ -106,24 +88,15 @@ module.exports = {
      */
     async getFeatured(limit = 5, offset = 0) {
         const query = `
-            SELECT p.*,
-                   GROUP_CONCAT(DISTINCT s.name ORDER BY s.name ASC) as skills,
-                   GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags,
-                   GROUP_CONCAT(DISTINCT pi.image_url ORDER BY pi.display_order ASC) as images
+            SELECT p.*
             FROM projects p
-            LEFT JOIN project_skills ps ON p.id = ps.project_id
-            LEFT JOIN skills s ON ps.skill_id = s.id
-            LEFT JOIN tag_usage tu ON tu.content_type = 'project' AND tu.content_id = p.id
-            LEFT JOIN tags t ON t.id = tu.tag_id
-            LEFT JOIN project_images pi ON p.id = pi.project_id
             WHERE p.is_featured = 1 AND p.is_published = 1
-            GROUP BY p.id
             ORDER BY p.display_order ASC, p.created_at DESC
             LIMIT ? OFFSET ?
         `;
 
         const projects = await executeQuery(query, [limit, offset]);
-        return projects.map(mapProjectListItem);
+        return await mapProjectListItems(projects);
     }
 };
 export {};

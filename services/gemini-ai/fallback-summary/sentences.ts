@@ -7,7 +7,8 @@ const cleanSentence = (sentence: string): string => sentence.replace(/^\s*[,-]\s
 
 const extractCleanSentences = (text: string): string[] => (
     text
-        .split(/[.!?]+/)
+        // 기술명과 버전의 내부 점(Next.js, .NET, 20.5)은 문장 종결 부호가 아니다.
+        .split(/[!?]+|\.+(?=\s|$)|(?<=[가-힣])\.+/)
         .map(s => s.trim())
         .filter(s => s.length > 5)
         .filter(s => s.length < 200)

@@ -19,24 +19,29 @@ const router: Router = express.Router();
  * /monitoring/cache/clear:
  *   post:
  *     summary: 캐시 초기화
- *     tags: [Monitoring]
+ *     tags:
+ *       - Monitoring
  *     security:
  *       - bearerAuth: []
+ *     description: 캐시 종류의 앞뒤 공백과 대소문자를 정규화합니다.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - type
  *             properties:
  *               type:
  *                 type: string
- *                 enum: [memory, redis, all]
- *                 example: "all"
+ *                 enum:
+ *                   - memory
+ *                   - redis
+ *                   - all
+ *                 example: all
+ *             required:
+ *               - type
  *     responses:
- *       200:
+ *       '200':
  *         description: 캐시 초기화 성공
  *         content:
  *           application/json:
@@ -48,15 +53,48 @@ const router: Router = express.Router();
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "all 캐시가 성공적으로 초기화되었습니다."
- *       400:
- *         description: 잘못된 요청
+ *                   example: all 캐시가 성공적으로 초기화되었습니다.
+ *               required:
+ *                 - success
+ *                 - message
+ *       '400':
+ *         description: 요청 값 또는 형식이 올바르지 않음
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: 서버 오류
+ *       '401':
+ *         description: 인증 토큰 누락 또는 만료
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '403':
+ *         description: super_admin 또는 admin 역할 필요
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '408':
+ *         description: 요청 처리 시간 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '429':
+ *         description: 요청 횟수 제한 초과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '503':
+ *         description: Redis 연결 또는 초기화 실패. 전체 초기화 요청이면 메모리 캐시도 유지합니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: 서버 처리 중 오류 발생
  *         content:
  *           application/json:
  *             schema:
@@ -73,16 +111,19 @@ router.post('/cache/clear', ...adminOnly, async (req: Request, res: Response) =>
             });
         }
 
-        if (type === 'memory') {
+        if (type === 'redis' || type === 'all') {
+            const cleared = await redisCache.flush();
+            if (!cleared) {
+                return res.status(503).json({
+                    success: false,
+                    message: 'Redis 캐시 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.'
+                });
+            }
+            logger.info('Redis 캐시가 초기화되었습니다');
+        }
+        if (type === 'memory' || type === 'all') {
             CacheUtils.flush();
             logger.info('메모리 캐시가 초기화되었습니다');
-        } else if (type === 'redis') {
-            await redisCache.flush();
-            logger.info('Redis 캐시가 초기화되었습니다');
-        } else if (type === 'all') {
-            CacheUtils.flush();
-            await redisCache.flush();
-            logger.info('모든 캐시가 초기화되었습니다');
         }
 
         res.json({

@@ -1,4 +1,5 @@
 const { parseIntegerEnv } = require('./env-number');
+const { getPasswordByteLimitError } = require('./admin-validation');
 
 type EnvMap = NodeJS.ProcessEnv | Record<string, unknown>;
 
@@ -100,6 +101,8 @@ const validateBootstrapCredentials = (failures: string[], env: EnvMap): void => 
     if (password && password.length < 12) {
         failures.push('ADMIN_BOOTSTRAP_PASSWORD 값은 최소 12자 이상이어야 합니다.');
     }
+    const byteLimitError = getPasswordByteLimitError(env.ADMIN_BOOTSTRAP_PASSWORD);
+    if (byteLimitError) failures.push(`ADMIN_BOOTSTRAP_PASSWORD: ${byteLimitError}`);
 };
 
 const validateProductionEnv = (env: EnvMap = process.env) => {

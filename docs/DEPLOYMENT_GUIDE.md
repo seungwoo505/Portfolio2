@@ -56,7 +56,7 @@ ADMIN_BOOTSTRAP_EMAIL=admin@company.com
 ADMIN_BOOTSTRAP_PASSWORD=StrongBootstrapPass!2026
 ```
 
-`ADMIN_BOOTSTRAP_PASSWORD`는 운영 환경에서 placeholder나 짧은 값을 사용할 수 없습니다. 서버는 `NODE_ENV=production`에서 필수 환경 변수와 약한 예시값을 검증하고, 안전하지 않으면 시작하지 않습니다.
+`ADMIN_BOOTSTRAP_PASSWORD`는 12자 이상, UTF-8 기준 72바이트 이하여야 하며 운영 환경에서 placeholder를 사용할 수 없습니다. 서버는 `NODE_ENV=production`에서 필수 환경 변수와 약한 예시값을 검증하고, 안전하지 않으면 시작하지 않습니다.
 
 #### **데이터베이스 사용자 생성**
 

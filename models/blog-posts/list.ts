@@ -2,7 +2,7 @@ const {
     CacheUtils,
     executeQuery,
     executeQuerySingle,
-    mapBlogPostListItem
+    mapBlogPostListItems
 } = require('./common');
 const {
     appendBlogFilterConditions,
@@ -25,8 +25,7 @@ module.exports = {
             const whereClause = published_only ? 'WHERE bp.is_published = TRUE' : '';
 
             const query = `
-                SELECT bp.*,
-                       GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags
+                SELECT bp.*
                 FROM blog_posts bp
                 LEFT JOIN tag_usage tu ON tu.content_type = 'blog_post' AND tu.content_id = bp.id
                 LEFT JOIN tags t ON tu.tag_id = t.id
@@ -37,7 +36,7 @@ module.exports = {
             `;
 
             const posts = await executeQuery(query, [limit, offset]);
-            return posts.map(mapBlogPostListItem);
+            return await mapBlogPostListItems(posts);
         }, 300);
     },
 
@@ -52,8 +51,7 @@ module.exports = {
         const orderClause = buildBlogOrderClause(normalizedFilters);
 
         const query = `
-            SELECT bp.*,
-                   GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags
+            SELECT bp.*
             FROM blog_posts bp
             LEFT JOIN tag_usage tu ON tu.content_type = 'blog_post' AND tu.content_id = bp.id
             LEFT JOIN tags t ON tu.tag_id = t.id
@@ -66,7 +64,7 @@ module.exports = {
         queryParams.push(normalizedFilters.limit, normalizedFilters.offset);
         const posts = await executeQuery(query, queryParams);
 
-        return posts.map(mapBlogPostListItem);
+        return await mapBlogPostListItems(posts);
     },
 
     /**
@@ -101,8 +99,7 @@ module.exports = {
 
         return await CacheUtils.cacheApiResponse(cacheKey, async () => {
             const posts = await executeQuery(`
-                SELECT bp.*,
-                       GROUP_CONCAT(DISTINCT t.name ORDER BY t.name ASC) as tags
+                SELECT bp.*
                 FROM blog_posts bp
                 LEFT JOIN tag_usage tu ON tu.content_type = 'blog_post' AND tu.content_id = bp.id
                 LEFT JOIN tags t ON tu.tag_id = t.id
@@ -112,7 +109,7 @@ module.exports = {
                 LIMIT ? OFFSET ?
             `, [limit, offset]);
 
-            return posts.map(mapBlogPostListItem);
+            return await mapBlogPostListItems(posts);
         }, 300);
     }
 };

@@ -1,4 +1,5 @@
 import type { Request } from 'express';
+const { getTagNamesError } = require('../../../utils/tag-names');
 
 const {
     getPlainBody,
@@ -35,6 +36,8 @@ const normalizeBlogContentFields = (body: BlogPayload): BlogPayload => {
 
 const normalizeBlogUpdatePayload = (req: Request): BlogUpdatePayloadResult => {
     const body = normalizeBlogContentFields(getPlainBody(req));
+    const tagError = getTagNamesError(body.tags);
+    if (tagError) return { error: tagError };
 
     if (Object.keys(body).length === 0) {
         return {

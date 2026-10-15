@@ -23,10 +23,12 @@ child.on('error', (error) => {
     fail(`failed to start MCP server: ${error.message}`);
 });
 
-child.on('exit', (code, signal) => {
-    if (responses.length < 2) {
-        fail(`MCP server exited early with code=${code} signal=${signal} stderr=${stderr}`);
+child.on('close', (code, signal) => {
+    if (code !== 0 || responses.length !== 2 || buffer.length !== 0) {
+        fail(`MCP server closed with code=${code} signal=${signal} responses=${responses.length} pendingBytes=${buffer.length} stderr=${stderr}`);
     }
+    clearTimeout(timeout);
+    console.log('portfolio MCP smoke test passed');
 });
 
 send({
@@ -43,44 +45,41 @@ send({
     }
 });
 
-send({
-    jsonrpc: '2.0',
-    id: 2,
-    method: 'tools/list',
-    params: {}
-});
-
-setTimeout(() => {
+const timeout = setTimeout(() => {
     fail('timed out waiting for MCP responses');
 }, 5000).unref();
 
 function readMessages() {
     while (true) {
-        const headerEnd = buffer.indexOf('\r\n\r\n');
-        if (headerEnd === -1) {
+        const lineEnd = buffer.indexOf('\n');
+        if (lineEnd === -1) {
             return;
         }
 
-        const header = buffer.subarray(0, headerEnd).toString('utf8');
-        const match = /content-length:\s*(\d+)/i.exec(header);
-        if (!match) {
-            fail('missing Content-Length in response');
+        const body = buffer.subarray(0, lineEnd).toString('utf8');
+        buffer = buffer.subarray(lineEnd + 1);
+        let response;
+        try {
+            response = JSON.parse(body);
+        } catch (error) {
+            fail(`invalid JSON line in MCP stdout: ${error.message}`);
         }
-
-        const bodyStart = headerEnd + 4;
-        const bodyEnd = bodyStart + Number(match[1]);
-        if (buffer.length < bodyEnd) {
-            return;
+        if (response?.jsonrpc !== '2.0') {
+            fail('MCP stdout included a non-JSON-RPC message');
         }
+        responses.push(response);
 
-        const body = buffer.subarray(bodyStart, bodyEnd).toString('utf8');
-        buffer = buffer.subarray(bodyEnd);
-        responses.push(JSON.parse(body));
-
-        if (responses.length === 2) {
+        if (responses.length === 1) {
+            if (response.id !== 1 || !response.result?.serverInfo?.name) {
+                fail('initialize response is missing serverInfo');
+            }
+            send({ jsonrpc: '2.0', method: 'notifications/initialized' });
+            send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
+        } else if (responses.length === 2) {
             assertSmokeResult();
-            child.kill();
-            console.log('portfolio MCP smoke test passed');
+            child.stdin.end();
+        } else {
+            fail('MCP stdout included an unexpected response');
         }
     }
 }
@@ -99,8 +98,7 @@ function assertSmokeResult() {
 }
 
 function send(message) {
-    const body = JSON.stringify(message);
-    child.stdin.write(`Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n${body}`);
+    child.stdin.write(`${JSON.stringify(message)}\n`);
 }
 
 function fail(message) {

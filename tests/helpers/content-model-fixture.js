@@ -43,7 +43,7 @@ const getModelModules = (modelPath) => {
     return [modelPath];
 };
 
-const createModelFixture = (modelPath) => {
+const createModelFixture = (modelPath, { execute } = {}) => {
     clearRootModules([
         ...getModelModules(modelPath),
         ['models', 'db-utils.ts'],
@@ -61,6 +61,8 @@ const createModelFixture = (modelPath) => {
         execute: async (query, params = []) => {
             const sql = normalizeSql(query);
             operations.push({ sql, params });
+
+            if (execute) return [await execute(query, params)];
 
             if (sql.includes('insert into blog_posts')) {
                 return [{ insertId: 101 }];
@@ -86,11 +88,12 @@ const createModelFixture = (modelPath) => {
     const dbUtils = {
         executeQuery: async (query, params = []) => {
             operations.push({ sql: `pool:${normalizeSql(query)}`, params });
-            return [];
+            return execute ? await execute(query, params) : [];
         },
         executeQuerySingle: async (query, params = []) => {
             operations.push({ sql: `pool-single:${normalizeSql(query)}`, params });
-            return null;
+            if (execute) return (await execute(query, params))[0] || null;
+            return normalizeSql(query).startsWith('select count(') ? { total: 0 } : null;
         },
         executeConnectionQuery: async (activeConnection, query, params = []) => {
             const [result] = await activeConnection.execute(query, params);
@@ -108,6 +111,7 @@ const createModelFixture = (modelPath) => {
 
     stubRootModule(['models', 'db-utils.ts'], dbUtils);
     stubRootModule(['utils', 'slug.js'], {
+        withSlugRetry: require(resolveFromRoot(['utils', 'slug.ts'])).withSlugRetry,
         generateSlug: (value, fallback = 'item') => (
             String(value || fallback).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || fallback
         ),

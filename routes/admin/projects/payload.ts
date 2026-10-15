@@ -10,19 +10,19 @@ const normalizeUndefinedFields = (body: ProjectPayload): ProjectPayload => {
     return normalizedData;
 };
 
-const normalizeProjectContentFields = (body: ProjectPayload): ProjectPayload => {
+const normalizeProjectContentFields = (body: ProjectPayload, { partial = false } = {}): ProjectPayload => {
     const normalizedData = normalizeUndefinedFields(body);
     const description = typeof normalizedData.description === 'string'
         ? normalizedData.description.trim()
         : '';
 
-    if (!description) {
-    const fallback = [
-        normalizedData.excerpt,
-        normalizedData.meta_description,
-        normalizedData.content_text,
-        normalizedData.content
-    ].find((value): value is string => typeof value === 'string' && value.trim().length > 0);
+    if (!description && (!partial || Object.prototype.hasOwnProperty.call(normalizedData, 'description'))) {
+        const fallback = [
+            normalizedData.excerpt,
+            normalizedData.meta_description,
+            normalizedData.content_text,
+            normalizedData.content
+        ].find((value): value is string => typeof value === 'string' && value.trim().length > 0);
 
         if (fallback) {
             normalizedData.description = fallback.trim().slice(0, 500);

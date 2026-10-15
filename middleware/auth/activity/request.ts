@@ -11,9 +11,9 @@ const summarizeUserAgent = (userAgent = ''): string | null => {
     }
 
     const os = userAgent.includes('Windows') ? 'Windows'
-        : userAgent.includes('Macintosh') || userAgent.includes('Mac OS X') ? 'macOS'
-            : userAgent.includes('Android') ? 'Android'
-                : userAgent.includes('iPhone') || userAgent.includes('iPad') ? 'iOS'
+        : userAgent.includes('iPhone') || userAgent.includes('iPad') ? 'iOS'
+            : userAgent.includes('Macintosh') || userAgent.includes('Mac OS X') ? 'macOS'
+                : userAgent.includes('Android') ? 'Android'
                     : userAgent.includes('Linux') ? 'Linux'
                         : 'Unknown';
 
@@ -44,14 +44,14 @@ const inferResourceType = (req: Request): string => {
     return req.baseUrl.split('/').pop() || 'unknown';
 };
 
-const getResourceId = (req: Request): unknown => (
-    req.params.id ||
-    req.params.slug ||
-    req.params.postId ||
-    req.params.projectId ||
-    req.body?.id ||
-    null
-);
+const getResourceId = (req: Request, responseData?: unknown): unknown => {
+    if (responseData !== null && typeof responseData === 'object' && 'id' in responseData) {
+        const id = responseData.id;
+        if (typeof id === 'number' || typeof id === 'string') return id;
+    }
+
+    return req.params.id || req.params.slug || req.params.postId || req.params.projectId || null;
+};
 
 module.exports = {
     getClientIp,

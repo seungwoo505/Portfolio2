@@ -7,10 +7,10 @@ type SwaggerPortOptions = {
     port: SwaggerPort;
 };
 
-const createSwaggerDefinition = ({ port }: SwaggerPortOptions) => ({
+const createSwaggerDefinition = (_options: SwaggerPortOptions) => ({
     openapi: "3.0.0",
     info: swaggerInfo,
-    servers: createSwaggerServers({ port }),
+    servers: createSwaggerServers(),
     components: swaggerComponents,
     tags: swaggerTags,
     "x-tagGroups": swaggerTagGroups

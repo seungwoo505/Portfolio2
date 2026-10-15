@@ -1,5 +1,5 @@
-const { executeQuery, executeQuerySingle } = require('../db-utils');
-const { createUniqueSlug } = require('../../utils/slug');
+const { executeQuery, executeQuerySingle, executeTransaction, executeConnectionQuery } = require('../db-utils');
+const { createUniqueSlug, withSlugRetry } = require('../../utils/slug');
 const { getById } = require('./queries');
 
 const createTagSlug = async ({ name, slug, id = null }) => (
@@ -18,8 +18,8 @@ const createTagSlug = async ({ name, slug, id = null }) => (
     })
 );
 
-const create = async (data) => {
-    const { name, slug, description, color, type = 'general' } = data;
+const create = async (data) => withSlugRetry('tags', async insert => {
+    const { name, slug, description, color = null, type = 'general' } = data;
     const finalSlug = await createTagSlug({ name, slug });
     const cleanParams = [
         name,
@@ -33,15 +33,15 @@ const create = async (data) => {
         INSERT INTO tags (name, slug, description, color, type)
         VALUES (?, ?, ?, ?, ?)
     `;
-    const result = await executeQuery(query, cleanParams);
+    const result = await insert(() => executeQuery(query, cleanParams));
     return result.insertId;
-};
+});
 
 const update = async (id, data) => {
     const { name, slug, description, color, type } = data;
     let finalSlug = null;
 
-    if (slug !== undefined || name !== undefined) {
+    if (slug !== undefined) {
         finalSlug = await createTagSlug({ name, slug, id });
     }
 
@@ -52,7 +52,7 @@ const update = async (id, data) => {
         updateFields.push('name = ?');
         updateValues.push(name);
     }
-    if (slug !== undefined || name !== undefined) {
+    if (slug !== undefined) {
         updateFields.push('slug = ?');
         updateValues.push(finalSlug);
     }
@@ -82,8 +82,10 @@ const update = async (id, data) => {
 };
 
 const deleteTag = async (id) => {
-    await executeQuery('DELETE FROM tag_usage WHERE tag_id = ?', [id]);
-    await executeQuery('DELETE FROM tags WHERE id = ?', [id]);
+    await executeTransaction(async connection => {
+        await executeConnectionQuery(connection, 'DELETE FROM tag_usage WHERE tag_id = ?', [id]);
+        await executeConnectionQuery(connection, 'DELETE FROM tags WHERE id = ?', [id]);
+    });
 };
 
 module.exports = {

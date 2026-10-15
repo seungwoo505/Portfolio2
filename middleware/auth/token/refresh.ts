@@ -17,6 +17,7 @@ type AuthFailure = {
 };
 
 const refreshAccessToken = async (req: Request, res: Response, refreshToken: string) => {
+    const isRequestActive = () => !req.aborted && !res.headersSent && !res.writableEnded && !res.destroyed;
     const refreshDecoded = AdminUsers.verifyRefreshToken(refreshToken);
     const clientIP = getClientIp(req);
 
@@ -43,8 +44,12 @@ const refreshAccessToken = async (req: Request, res: Response, refreshToken: str
         refreshToken,
         refreshDecoded,
         user,
-        clientIP
+        clientIP,
+        isRequestActive
     );
+    if (!isRequestActive()) {
+        throw new Error('요청이 종료되어 토큰 갱신을 취소했습니다.');
+    }
     const newToken = AdminUsers.generateToken(user, clientIP, refreshDecoded.sid);
 
     res.setHeader('X-New-Token', newToken);

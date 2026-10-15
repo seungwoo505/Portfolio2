@@ -71,12 +71,18 @@ const configureCoreMiddleware = (app: any): void => {
 };
 
 const configureSecurityMiddleware = (app: any): void => {
+    const allowedOrigins = [process.env.LOCALHOST, process.env.MY_HOST].flatMap((value) => {
+        if (!value?.trim()) return [];
+        try {
+            const url = new URL(value.trim());
+            return ['http:', 'https:'].includes(url.protocol) ? [url.origin] : [];
+        } catch (_error) {
+            return [];
+        }
+    });
     app.use(
         cors({
-            origin: [
-                process.env.LOCALHOST,
-                process.env.MY_HOST
-            ],
+            origin: allowedOrigins,
             credentials: true,
             exposedHeaders: [
                 "X-New-Token",

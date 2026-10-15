@@ -57,3 +57,9 @@ test('ContactMessages.countAll can count unread messages', async () => {
     assert.equal(fixture.operations[0].sql.includes('where is_read = false'), true);
     assert.deepEqual(fixture.operations[0].params, []);
 });
+
+test('문의의 선택적 클라이언트 정보는 생략하면 SQL NULL로 저장한다', async () => {
+    const fixture = createContactMessagesFixture();
+    await fixture.model.create({ name: '방문자', email: 'test@example.com', subject: null, message: '문의' });
+    assert.deepEqual(fixture.operations[0].params, ['방문자', 'test@example.com', null, '문의', null, null]);
+});

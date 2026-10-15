@@ -39,7 +39,7 @@ const authenticateAccessToken = async (req: Request, token: string) => {
     await AdminUsers.assertActiveSession(decoded.sid, decoded.id);
 
     return {
-        admin: buildAdminContext({ decoded })
+        admin: buildAdminContext({ decoded, user })
     };
 };
 

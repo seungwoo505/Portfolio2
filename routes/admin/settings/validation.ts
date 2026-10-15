@@ -1,4 +1,5 @@
 const { toBooleanOrNull } = require('../../../utils/filter-values');
+const { normalizeSettingValue } = require('../../../utils/setting-values');
 
 const allowedSettingTypes = new Set(['string', 'number', 'boolean', 'json']);
 const settingKeyMaxLength = 120;
@@ -26,38 +27,16 @@ const normalizeSettingConfig = (key, config) => {
 
     const type = hasOwn(config, 'type')
         ? String(config.type ?? '').trim().toLowerCase()
-        : 'string';
-    if (!allowedSettingTypes.has(type)) {
+        : undefined;
+    if (type !== undefined && !allowedSettingTypes.has(type)) {
         return {
             error: `${settingKey} 설정 타입은 string, number, boolean, json 중 하나여야 합니다.`
         };
     }
 
-    let value = config.value;
-    if (type === 'number' && value !== null) {
-        if (typeof value === 'string' && value.trim() === '') {
-            return {
-                error: `${settingKey} 설정 값은 숫자여야 합니다.`
-            };
-        }
-        const numberValue = Number(value);
-        if (!Number.isFinite(numberValue)) {
-            return {
-                error: `${settingKey} 설정 값은 숫자여야 합니다.`
-            };
-        }
-        value = numberValue;
-    }
-
-    if (type === 'boolean' && value !== null) {
-        const booleanValue = toBooleanOrNull(value);
-        if (booleanValue === null) {
-            return {
-                error: `${settingKey} 설정 값은 boolean이어야 합니다.`
-            };
-        }
-        value = booleanValue;
-    }
+    const normalizedValue = normalizeSettingValue(settingKey, config.value, type);
+    if (normalizedValue.error) return { error: normalizedValue.error };
+    const value = normalizedValue.value;
 
     let isPublic;
     if (hasOwn(config, 'is_public')) {
@@ -69,7 +48,7 @@ const normalizeSettingConfig = (key, config) => {
         }
     }
 
-    let description = null;
+    let description;
     if (hasOwn(config, 'description')) {
         if (config.description !== null && config.description !== undefined && typeof config.description !== 'string') {
             return {
@@ -97,7 +76,7 @@ const normalizeSettingsPayload = (settings) => {
         };
     }
 
-    const normalizedSettings = {};
+    const normalizedEntries = [];
     for (const [key, config] of Object.entries(settings)) {
         const result = normalizeSettingConfig(key, config);
         if (result.error) {
@@ -106,11 +85,11 @@ const normalizeSettingsPayload = (settings) => {
             };
         }
 
-        normalizedSettings[result.key] = result.config;
+        normalizedEntries.push([result.key, result.config]);
     }
 
     return {
-        settings: normalizedSettings
+        settings: Object.fromEntries(normalizedEntries)
     };
 };
 

@@ -13,34 +13,24 @@ function startReading(handleMessage) {
 
 function readMessages(handleMessage) {
     while (true) {
-        const headerEnd = inputBuffer.indexOf('\r\n\r\n');
-        if (headerEnd === -1) {
+        const lineEnd = inputBuffer.indexOf('\n');
+        if (lineEnd === -1) {
             return;
         }
 
-        const header = inputBuffer.subarray(0, headerEnd).toString('utf8');
-        const contentLengthMatch = /content-length:\s*(\d+)/i.exec(header);
-        if (!contentLengthMatch) {
-            inputBuffer = Buffer.alloc(0);
-            writeError(null, -32600, 'Missing Content-Length header');
-            return;
-        }
-
-        const contentLength = Number(contentLengthMatch[1]);
-        const bodyStart = headerEnd + 4;
-        const bodyEnd = bodyStart + contentLength;
-        if (inputBuffer.length < bodyEnd) {
-            return;
-        }
-
-        const body = inputBuffer.subarray(bodyStart, bodyEnd).toString('utf8');
-        inputBuffer = inputBuffer.subarray(bodyEnd);
+        const body = inputBuffer.subarray(0, lineEnd).toString('utf8');
+        inputBuffer = inputBuffer.subarray(lineEnd + 1);
 
         let message;
         try {
             message = JSON.parse(body);
         } catch (error) {
             writeError(null, -32700, `Invalid JSON: ${error.message}`);
+            continue;
+        }
+
+        if (message === null || typeof message !== 'object' || Array.isArray(message)) {
+            writeError(null, -32600, 'Invalid Request');
             continue;
         }
 
@@ -74,8 +64,7 @@ function writeError(id, code, message) {
 }
 
 function writeMessage(message) {
-    const body = JSON.stringify(message);
-    process.stdout.write(`Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n${body}`);
+    process.stdout.write(`${JSON.stringify(message)}\n`);
 }
 
 module.exports = {
