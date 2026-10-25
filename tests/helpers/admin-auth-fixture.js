@@ -37,7 +37,7 @@ const authMiddlewareModules = [
     ['middleware', 'auth', 'activity', 'request.ts']
 ];
 
-const createAdminUsersFixture = async ({ password = 'correct-password', hooks = {} } = {}) => {
+const createAdminUsersFixture = async ({ password = 'correct-password', hooks = {}, databaseNow = Date.now } = {}) => {
     clearRootModules([
         ...adminUsersModules,
         ['models', 'db-utils.ts'],
@@ -120,7 +120,7 @@ const createAdminUsersFixture = async ({ password = 'correct-password', hooks = 
                 adminUser.failed_login_attempts += 1;
                 const threshold = Number(sql.match(/when failed_login_attempts >= (\d+)/)?.[1]);
                 if (adminUser.failed_login_attempts >= threshold) {
-                    adminUser.locked_until = new Date(Date.now() + 30 * 60 * 1000);
+                    adminUser.locked_until = new Date(databaseNow() + 30 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' ');
                 }
             }
             return { affectedRows: 1 };
@@ -204,13 +204,27 @@ const createAdminUsersFixture = async ({ password = 'correct-password', hooks = 
             return { affectedRows: beforeCount - sessions.length };
         }
 
+        const selectUser = () => {
+            const row = { ...adminUser };
+            // dateStrings:true의 실제 DATETIME 경계와 DB NOW() 비교를 재현한다.
+            if (row.locked_until instanceof Date) {
+                row.locked_until = row.locked_until.toISOString().slice(0, 19).replace('T', ' ');
+            }
+            if (sql.includes('as login_is_locked')) {
+                const lockedAt = row.locked_until && Date.parse(row.locked_until.replace(' ', 'T') + 'Z');
+                // bigNumberStrings:true 비교식 결과와 SQL NULL을 보존한다.
+                row.login_is_locked = row.locked_until == null ? null : lockedAt > databaseNow() ? '1' : '0';
+            }
+            return row;
+        };
+
         if (sql.includes('from admin_users') && sql.includes('(username = ? or email = ?)')) {
             return (params[0] === adminUser.username || params[0] === adminUser.email)
-                && adminUser.is_active ? [{ ...adminUser }] : [];
+                && adminUser.is_active ? [selectUser()] : [];
         }
 
         if (sql.includes('from admin_users') && sql.includes('where id = ?')) {
-            return Number(params[0]) === adminUser.id ? [{ ...adminUser }] : [];
+            return Number(params[0]) === adminUser.id ? [selectUser()] : [];
         }
 
         if (sql.includes('from admin_sessions')) {

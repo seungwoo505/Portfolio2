@@ -80,3 +80,35 @@ test('public contact claims duplicate key before create completes', async () => 
         await server.close();
     }
 });
+
+const validContact = { name: '홍길동', email: 'person@example.com', subject: '문의', message: '협업 문의입니다.' };
+for (const field of ['name', 'email', 'subject', 'message']) {
+    for (const [label, value] of Object.entries({ object: {}, array: [validContact[field]], number: 123, boolean: true, invalidToString: { toString: null } })) {
+        test(`public contact: ${field}의 ${label} 입력은 저장 전에 400으로 거절한다`, async () => {
+            const created = [];
+            const router = loadPublicRoute({ ContactMessages: {
+                createWithRateLimit: async payload => { created.push(payload); return 42; }
+            } });
+            const result = await requestJson(router, '/contact', {
+                method: 'POST', body: { ...validContact, [field]: value }
+            });
+            assert.equal(result.status, 400);
+            assert.equal(created.length, 0);
+        });
+    }
+}
+
+for (const subject of [undefined, null, '   ']) {
+    test(`public contact: 선택 제목 ${JSON.stringify(subject)}은 NULL로 저장하고 문자열을 정규화한다`, async () => {
+        const created = [];
+        const router = loadPublicRoute({ ContactMessages: {
+            createWithRateLimit: async payload => { created.push(payload); return 42; }
+        } });
+        const result = await requestJson(router, '/contact', { method: 'POST', body: {
+            ...validContact, name: ' 홍길동 ', email: ' Person@Example.com ', message: ' 협업 문의입니다. ', subject
+        } });
+        assert.equal(result.status, 201);
+        assert.deepEqual([created[0].name, created[0].email, created[0].subject, created[0].message],
+            ['홍길동', 'person@example.com', null, '협업 문의입니다.']);
+    });
+}

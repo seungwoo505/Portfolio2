@@ -129,6 +129,13 @@ const router: Router = express.Router();
  */
 router.post('/contact', async (req: Request, res: Response) => {
     try {
+        for (const field of Object.keys(CONTACT_FIELD_LABELS) as Array<keyof typeof CONTACT_FIELD_LABELS>) {
+            const value = req.body?.[field];
+            if (value !== undefined && value !== null && typeof value !== 'string') {
+                return badRequest(res, `${CONTACT_FIELD_LABELS[field]} 값은 문자열이어야 합니다.`);
+            }
+        }
+
         const name = normalizeContactField(req.body?.name);
         const email = normalizeContactField(req.body?.email).toLowerCase();
         const subject = normalizeContactField(req.body?.subject);

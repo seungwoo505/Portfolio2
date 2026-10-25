@@ -21,7 +21,7 @@ const CONTACT_FIELD_LABELS = {
     message: '메시지'
 };
 
-const normalizeContactField = (value: unknown): string => String(value ?? '').trim();
+const normalizeContactField = (value: unknown): string => typeof value === 'string' ? value.trim() : '';
 
 const validateContactLength = (field: ContactField, value: string): boolean => {
     const maxLength = CONTACT_FIELD_LIMITS[field];
